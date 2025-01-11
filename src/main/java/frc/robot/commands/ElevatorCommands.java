@@ -20,7 +20,7 @@ public class ElevatorCommands {
         return new InstantCommand(()->elevator.setGoal(goal.getAsDouble()));
     }
 
-    public InstantCommand seManualControl(BooleanSupplier manualControl){
+    public InstantCommand setManualControl(BooleanSupplier manualControl){
         return new InstantCommand(()->elevator.setManualControl(manualControl.getAsBoolean()));
     }
 }

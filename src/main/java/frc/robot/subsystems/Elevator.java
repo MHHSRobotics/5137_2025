@@ -58,9 +58,13 @@ public class Elevator extends SubsystemBase{
         return (leftMotor.getPosition().getValueAsDouble()+ElevatorConstants.elevatorOffset)*ElevatorConstants.elevatorRatio;
     }
 
+    public boolean atSetpoint(){
+        return controller.atSetpoint();
+    }
+
     @Override
     public void periodic(){
-        if(manualControl){
+        if(!manualControl){
             double extra=feedforward.calculate(0.0);
             double voltage=controller.calculate(getMeasurement(), getGoal())+extra;
             leftMotor.setVoltage(voltage);
