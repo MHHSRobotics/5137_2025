@@ -3,49 +3,59 @@ package frc.robot.commands;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.ElevatorConstants;
 import frc.robot.subsystems.Elevator;
 
 public class ElevatorCommands {
     Elevator elevator;
     public ElevatorCommands(Elevator elevator){
-        this.elevator=elevator;
+        this.elevator = elevator;
     }
 
-    public InstantCommand setSpeed(DoubleSupplier speed){
-        return new InstantCommand(()->elevator.setSpeed(speed.getAsDouble()));
+    public Command setSpeed(DoubleSupplier speed){
+        return new InstantCommand(()->elevator.setSpeed(speed.getAsDouble()),elevator);
     }
 
-    public InstantCommand setGoal(DoubleSupplier goal){
-        return new InstantCommand(()->elevator.setGoal(goal.getAsDouble()));
+    public Command setGoal(DoubleSupplier goal){
+        return new InstantCommand(()->elevator.setGoal(goal.getAsDouble()),elevator);
     }
 
-    public InstantCommand setManualControl(BooleanSupplier manualControl){
-        return new InstantCommand(()->elevator.setManualControl(manualControl.getAsBoolean()));
+    public Command setManualControl(BooleanSupplier manualControl){
+        return new InstantCommand(()->elevator.setManualControl(manualControl.getAsBoolean()),elevator);
     }
 
-    public InstantCommand moveToL1(){
-        return new InstantCommand(()->elevator.setGoal(ElevatorConstants.L1goal));
+    public Command moveToL1(){
+        return new InstantCommand(()->elevator.setGoal(ElevatorConstants.L1goal),elevator);
     }
     
-    public InstantCommand moveToL2(){
-        return new InstantCommand(()->elevator.setGoal(ElevatorConstants.L2goal));
+    public Command moveToL2(){
+        return new InstantCommand(()->elevator.setGoal(ElevatorConstants.L2goal),elevator);
     }
 
-    public InstantCommand moveToL3(){
-        return new InstantCommand(()->elevator.setGoal(ElevatorConstants.L3goal));
+    public Command moveToL3(){
+        return new InstantCommand(()->elevator.setGoal(ElevatorConstants.L3goal),elevator);
     }
 
-    public InstantCommand moveToL4(){
-        return new InstantCommand(()->elevator.setGoal(ElevatorConstants.L4goal));
+    public Command moveToL4(){
+        return new InstantCommand(()->elevator.setGoal(ElevatorConstants.L4goal),elevator);
     }
 
-    public InstantCommand moveToIntake(){
-        return new InstantCommand(()->elevator.setGoal(ElevatorConstants.intakeGoal));
+    public Command moveToIntake(){
+        return new InstantCommand(()->elevator.setGoal(ElevatorConstants.intakeGoal),elevator);
     }
 
-    public InstantCommand moveToGroundIntake(){
-        return new InstantCommand(()->elevator.setGoal(ElevatorConstants.groundIntakeGoal));
+    public Command moveToGroundIntake(){
+        return new InstantCommand(()->elevator.setGoal(ElevatorConstants.groundIntakeGoal),elevator);
+    }
+
+    public Command sysIdQuasistatic(SysIdRoutine.Direction dir){
+        return elevator.sysIdRoutine.quasistatic(dir);
+    }
+
+    public Command sysIdDynamic(SysIdRoutine.Direction dir){
+        return elevator.sysIdRoutine.dynamic(dir);
     }
 }
