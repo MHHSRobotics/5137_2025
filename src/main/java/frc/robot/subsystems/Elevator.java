@@ -27,9 +27,14 @@ import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import edu.wpi.first.wpilibj.simulation.EncoderSim;
+import edu.wpi.first.wpilibj.simulation.RoboRioSim;
+import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -46,6 +51,10 @@ public class Elevator extends SubsystemBase{
 
     private ElevatorFeedforward feedforward;
 
+    private ElevatorSim elevatorSim=new ElevatorSim(DCMotor.getKrakenX60(2), ElevatorConstants.elevatorGearing, ElevatorConstants.carriageMass, ElevatorConstants.drumRadius, ElevatorConstants.minHeight, ElevatorConstants.maxHeight, true,ElevatorConstants.startingHeight);
+    private TalonFXSimState leftMotorSim=new TalonFXSimState(leftMotor);
+    private TalonFXSimState rightMotorSim=new TalonFXSimState(rightMotor);
+    
     private double goal = 0;
 
     private boolean manualControl;
@@ -80,6 +89,13 @@ public class Elevator extends SubsystemBase{
                 // Tell SysId to make generated commands require this subsystem, suffix test state in
                 // WPILog with this subsystem's name ("shooter")
                 this));
+
+    // Create a Mechanism2d visualization of the elevator
+    private final Mechanism2d mech2d = new Mechanism2d(20, 50);
+    private final MechanismRoot2d mech2dRoot = mech2d.getRoot("Elevator Root", 10, 0);
+    private final MechanismLigament2d elevatorMech2d =
+        mech2dRoot.append(
+            new MechanismLigament2d("Elevator", elevatorSim.getPositionMeters(), 90));
 
     public Elevator(){
         controller = new PIDController(ElevatorConstants.kP,ElevatorConstants.kI,ElevatorConstants.kD);
@@ -140,6 +156,7 @@ public class Elevator extends SubsystemBase{
         SmartDashboard.putNumber("Elevator Position", getMeasurement());
         SmartDashboard.putNumber("Elevator Velocity", getVelocity());
         SmartDashboard.putNumber("Elevator Speed",leftMotor.get());
+        elevatorMech2d.setLength(elevatorSim.getPositionMeters());
     }
 
     @Override
@@ -150,5 +167,17 @@ public class Elevator extends SubsystemBase{
             double voltage = controller.calculate(getMeasurement(), getGoal())+extra;
             setVoltage(Volts.of(voltage));
         }
+    }
+
+    @Override
+    public void simulationPeriodic(){
+        leftMotorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
+        rightMotorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
+        elevatorSim.setInput((leftMotorSim.getMotorVoltage()+rightMotorSim.getMotorVoltage())/2);
+        elevatorSim.update(0.02);
+        double pos=elevatorSim.getPositionMeters();
+        leftMotorSim.setRawRotorPosition(pos/ElevatorConstants.metersPerRotation-ElevatorConstants.elevatorOffset);
+        rightMotorSim.setRawRotorPosition(pos/ElevatorConstants.metersPerRotation-ElevatorConstants.elevatorOffset);
+        RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(elevatorSim.getCurrentDrawAmps()));
     }
 }
