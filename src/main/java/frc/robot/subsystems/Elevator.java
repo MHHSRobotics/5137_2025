@@ -95,7 +95,7 @@ public class Elevator extends SubsystemBase{
     private final MechanismRoot2d mech2dRoot = mech2d.getRoot("Elevator Root", 10, 0);
     private final MechanismLigament2d elevatorMech2d =
         mech2dRoot.append(
-            new MechanismLigament2d("Elevator", elevatorSim.getPositionMeters(), 90));
+            new MechanismLigament2d("Elevator", 0, 90));
 
     public Elevator(){
         controller = new PIDController(ElevatorConstants.kP,ElevatorConstants.kI,ElevatorConstants.kD);
@@ -156,7 +156,8 @@ public class Elevator extends SubsystemBase{
         SmartDashboard.putNumber("Elevator Position", elevatorSim.getPositionMeters());
         SmartDashboard.putNumber("Elevator Velocity", getVelocity());
         SmartDashboard.putNumber("Elevator Speed",leftMotor.get());
-        elevatorMech2d.setLength(elevatorSim.getPositionMeters());
+        elevatorMech2d.setLength(elevatorSim.getPositionMeters()*30);
+        SmartDashboard.putData("Elevator", mech2d);
     }
 
     @Override

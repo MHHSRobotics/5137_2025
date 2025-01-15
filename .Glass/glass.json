@@ -1,6 +1,29 @@
 {
+  "NetworkTables": {
+    "transitory": {
+      "SmartDashboard": {
+        "open": true
+      }
+    },
+    "types": {
+      "/FMSInfo": "FMSInfo",
+      "/Shuffleboard/PID Controller/PIDController[1]": "PIDController",
+      "/SmartDashboard/Elevator": "Mechanism2d"
+    },
+    "windows": {
+      "/SmartDashboard/Elevator": {
+        "window": {
+          "visible": true
+        }
+      }
+    }
+  },
   "NetworkTables Info": {
     "visible": true
+  },
+  "NetworkTables Settings": {
+    "mode": "Client (NT4)",
+    "serverTeam": "localhost"
   },
   "Plots": {
     "Plot <0>": {
