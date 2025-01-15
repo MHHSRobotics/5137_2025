@@ -1,7 +1,19 @@
 {
   "NetworkTables": {
     "transitory": {
+      "Shuffleboard": {
+        "PID Controller": {
+          "PIDController[1]": {
+            "open": true
+          },
+          "open": true
+        },
+        "open": true
+      },
       "SmartDashboard": {
+        "Elevator": {
+          "open": true
+        },
         "open": true
       }
     },
@@ -23,7 +35,7 @@
   },
   "NetworkTables Settings": {
     "mode": "Client (NT4)",
-    "serverTeam": "localhost"
+    "serverTeam": "5137"
   },
   "Plots": {
     "Plot <0>": {
