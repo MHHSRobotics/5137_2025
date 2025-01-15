@@ -30,7 +30,7 @@ public class ElevatorConstants {
     public static final double groundIntakeGoal = 0.0;
 
     // Simulation constants
-    public static final double elevatorGearing = 1.0; // gear ratio
+    public static final double elevatorGearing = 100.0; // gear ratio
     public static final double carriageMass = 10.0; // in kg
     public static final double drumRadius = 0.2; // in meters
     public static final double minHeight = 0.0; // in meters

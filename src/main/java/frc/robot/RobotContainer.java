@@ -19,6 +19,7 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
+    //elevator.setManualControl(true);
     elevator.setDefaultCommand(elevatorCommands.setSpeed(()->-operator.getLeftY()));
     // TODO
   }

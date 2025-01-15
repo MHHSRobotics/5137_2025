@@ -42,8 +42,8 @@ import frc.robot.constants.ElevatorConstants;
 
 public class Elevator extends SubsystemBase{
 
-    private TalonFX leftMotor;
-    private TalonFX rightMotor;
+    private TalonFX leftMotor = new TalonFX(ElevatorConstants.leftMotorId, "rhino");
+    private TalonFX rightMotor = new TalonFX(ElevatorConstants.rightMotorId, "rhino");
 
     private final DutyCycleOut request = new DutyCycleOut(0.0);
 
@@ -100,8 +100,6 @@ public class Elevator extends SubsystemBase{
     public Elevator(){
         controller = new PIDController(ElevatorConstants.kP,ElevatorConstants.kI,ElevatorConstants.kD);
         feedforward = new ElevatorFeedforward(ElevatorConstants.ks, ElevatorConstants.kg, ElevatorConstants.kv);
-        leftMotor = new TalonFX(ElevatorConstants.leftMotorId, "rhino");
-        rightMotor = new TalonFX(ElevatorConstants.rightMotorId, "rhino");
 
         var currentConfigs = new MotorOutputConfigs();
 
@@ -114,6 +112,8 @@ public class Elevator extends SubsystemBase{
         controller.setTolerance(ElevatorConstants.elevatorTol);
 
         manualControl = false;
+
+        setVoltage(Voltage.ofBaseUnits(12, Volts));
 
         Shuffleboard.getTab("PID Controller").add(controller);
     }
@@ -153,7 +153,7 @@ public class Elevator extends SubsystemBase{
     }
 
     private void telemetry(){
-        SmartDashboard.putNumber("Elevator Position", getMeasurement());
+        SmartDashboard.putNumber("Elevator Position", elevatorSim.getPositionMeters());
         SmartDashboard.putNumber("Elevator Velocity", getVelocity());
         SmartDashboard.putNumber("Elevator Speed",leftMotor.get());
         elevatorMech2d.setLength(elevatorSim.getPositionMeters());
@@ -173,9 +173,12 @@ public class Elevator extends SubsystemBase{
     public void simulationPeriodic(){
         leftMotorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
         rightMotorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
-        elevatorSim.setInput((leftMotorSim.getMotorVoltage()+rightMotorSim.getMotorVoltage())/2);
+        double elevatorInput=(leftMotorSim.getMotorVoltage()-rightMotorSim.getMotorVoltage())/2;
+        elevatorSim.setInputVoltage(elevatorInput);
         elevatorSim.update(0.02);
         double pos=elevatorSim.getPositionMeters();
+        leftMotorSim.setRotorVelocity(elevatorSim.getVelocityMetersPerSecond()/ElevatorConstants.metersPerRotation);
+        rightMotorSim.setRotorVelocity(elevatorSim.getVelocityMetersPerSecond()/ElevatorConstants.metersPerRotation);
         leftMotorSim.setRawRotorPosition(pos/ElevatorConstants.metersPerRotation-ElevatorConstants.elevatorOffset);
         rightMotorSim.setRawRotorPosition(pos/ElevatorConstants.metersPerRotation-ElevatorConstants.elevatorOffset);
         RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(elevatorSim.getCurrentDrawAmps()));
