@@ -36,4 +36,5 @@ public class ElevatorConstants {
     public static final double minHeight = 0.0; // in meters
     public static final double maxHeight = 1.3; // in meters
     public static final double startingHeight = 0.0; // in meters
+    public static final double simPeriod = 0.02;
 }

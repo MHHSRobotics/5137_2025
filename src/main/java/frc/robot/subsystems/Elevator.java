@@ -51,7 +51,7 @@ public class Elevator extends SubsystemBase{
 
     private ElevatorFeedforward feedforward;
 
-    private ElevatorSim elevatorSim=new ElevatorSim(DCMotor.getKrakenX60(2), ElevatorConstants.elevatorGearing, ElevatorConstants.carriageMass, ElevatorConstants.drumRadius, ElevatorConstants.minHeight, ElevatorConstants.maxHeight, true,ElevatorConstants.startingHeight);
+    private ElevatorSim elevatorSim=new ElevatorSim(DCMotor.getFalcon500(2), ElevatorConstants.elevatorGearing, ElevatorConstants.carriageMass, ElevatorConstants.drumRadius, ElevatorConstants.minHeight, ElevatorConstants.maxHeight, true,ElevatorConstants.startingHeight);
     private TalonFXSimState leftMotorSim=new TalonFXSimState(leftMotor);
     private TalonFXSimState rightMotorSim=new TalonFXSimState(rightMotor);
     
@@ -156,7 +156,7 @@ public class Elevator extends SubsystemBase{
         SmartDashboard.putNumber("Elevator Position", elevatorSim.getPositionMeters());
         SmartDashboard.putNumber("Elevator Velocity", getVelocity());
         SmartDashboard.putNumber("Elevator Speed",leftMotor.get());
-        elevatorMech2d.setLength(elevatorSim.getPositionMeters()*30);
+        elevatorMech2d.setLength(elevatorSim.getPositionMeters()*50/ElevatorConstants.maxHeight);
         SmartDashboard.putData("Elevator", mech2d);
     }
 
@@ -176,7 +176,7 @@ public class Elevator extends SubsystemBase{
         rightMotorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
         double elevatorInput=(leftMotorSim.getMotorVoltage()-rightMotorSim.getMotorVoltage())/2;
         elevatorSim.setInputVoltage(elevatorInput);
-        elevatorSim.update(0.02);
+        elevatorSim.update(ElevatorConstants.simPeriod);
         double pos=elevatorSim.getPositionMeters();
         leftMotorSim.setRotorVelocity(elevatorSim.getVelocityMetersPerSecond()/ElevatorConstants.metersPerRotation);
         rightMotorSim.setRotorVelocity(elevatorSim.getVelocityMetersPerSecond()/ElevatorConstants.metersPerRotation);
