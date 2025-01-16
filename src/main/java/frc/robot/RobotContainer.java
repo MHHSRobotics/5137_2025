@@ -21,7 +21,7 @@ public class RobotContainer {
 
   private void configureBindings() {
     //elevator.setManualControl(true);
-    //elevator.setDefaultCommand(elevatorCommands.setSpeed(()->-operator.getLeftY()));
+    elevator.setDefaultCommand(elevatorCommands.setGoal(()->1-operator.getLeftY()));
     EventLoop event=new EventLoop();
     event.bind(()->elevatorCommands.moveToL4());
     operator.triangle(event);

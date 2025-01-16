@@ -14,7 +14,7 @@ public class ElevatorConstants {
     public static final double kv = 0.1;
 
     // PID constants
-    public static final double kP = 1;
+    public static final double kP = 30;
     public static final double kI = 0;
     public static final double kD = 1;
 
