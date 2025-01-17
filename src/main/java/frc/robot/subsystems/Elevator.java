@@ -52,8 +52,8 @@ public class Elevator extends SubsystemBase{
     private ElevatorFeedforward feedforward;
 
     private ElevatorSim elevatorSim=new ElevatorSim(DCMotor.getFalcon500(2), ElevatorConstants.elevatorGearing, ElevatorConstants.carriageMass, ElevatorConstants.drumRadius, ElevatorConstants.minHeight, ElevatorConstants.maxHeight, true,ElevatorConstants.startingHeight);
-    private TalonFXSimState leftMotorSim=new TalonFXSimState(leftMotor);
-    private TalonFXSimState rightMotorSim=new TalonFXSimState(rightMotor);
+    private TalonFXSimState leftMotorSim=leftMotor.getSimState();
+    private TalonFXSimState rightMotorSim=rightMotor.getSimState();
     
     private double goal = 0;
 
