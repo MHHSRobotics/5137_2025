@@ -23,10 +23,6 @@ public class ElevatorCommands {
         return new InstantCommand(()->elevator.setGoal(goal.getAsDouble()),elevator);
     }
 
-    public Command setManualControl(BooleanSupplier manualControl){
-        return new InstantCommand(()->elevator.setManualControl(manualControl.getAsBoolean()),elevator);
-    }
-
     public Command moveToL1(){
         System.out.println("x");
         return new InstantCommand(()->elevator.setGoal(ElevatorConstants.L1goal),elevator);

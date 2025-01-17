@@ -57,15 +57,6 @@ public class Elevator extends SubsystemBase{
     
     private double goal = 0;
 
-    private boolean manualControl;
-
-    // Mutable holder for unit-safe voltage values, persisted to avoid reallocation.
-    private final MutVoltage appliedVoltage = Volts.mutable(0);
-    // Mutable holder for unit-safe linear distance values, persisted to avoid reallocation.
-    private final MutDistance pos = Meters.mutable(0);
-    // Mutable holder for unit-safe linear velocity values, persisted to avoid reallocation.
-    private final MutLinearVelocity velocity = MetersPerSecond.mutable(0);
-
     // Create a new SysId routine for characterizing the shooter.
     public final SysIdRoutine sysIdRoutine = 
         new SysIdRoutine(
@@ -79,12 +70,9 @@ public class Elevator extends SubsystemBase{
                 log -> {
                     // Record a frame for the shooter motor.
                     log.motor("elevator")
-                        .voltage(
-                            appliedVoltage.mut_replace(
-                                leftMotor.get() * RobotController.getBatteryVoltage(), Volts))
-                        .linearPosition(pos.mut_replace(getMeasurement(), Meters))
-                        .linearVelocity(
-                            velocity.mut_replace(getVelocity(), MetersPerSecond));
+                        .voltage(Volts.of(leftMotor.get() * RobotController.getBatteryVoltage()))
+                        .linearPosition(Meters.of(getMeasurement()))
+                        .linearVelocity(MetersPerSecond.of(getVelocity()));
                 },
                 // Tell SysId to make generated commands require this subsystem, suffix test state in
                 // WPILog with this subsystem's name ("shooter")
@@ -93,9 +81,7 @@ public class Elevator extends SubsystemBase{
     // Create a Mechanism2d visualization of the elevator
     private final Mechanism2d mech2d = new Mechanism2d(20, 50);
     private final MechanismRoot2d mech2dRoot = mech2d.getRoot("Elevator Root", 10, 0);
-    private final MechanismLigament2d elevatorMech2d =
-        mech2dRoot.append(
-            new MechanismLigament2d("Elevator", 0, 90));
+    private final MechanismLigament2d elevatorMech2d = mech2dRoot.append(new MechanismLigament2d("Elevator", 0, 90));
 
     public Elevator(){
         controller = new PIDController(ElevatorConstants.kP,ElevatorConstants.kI,ElevatorConstants.kD);
@@ -111,11 +97,7 @@ public class Elevator extends SubsystemBase{
 
         controller.setTolerance(ElevatorConstants.elevatorTol);
 
-        manualControl = false;
-
-        setVoltage(Voltage.ofBaseUnits(12, Volts));
-
-        Shuffleboard.getTab("PID Controller").add(controller);
+        Shuffleboard.getTab("Elevator Controller").add(controller);
     }
 
     public double getGoal(){
@@ -129,10 +111,6 @@ public class Elevator extends SubsystemBase{
     public void setSpeed(double speed){
         leftMotor.setControl(request.withOutput(speed));
         rightMotor.setControl(request.withOutput(speed));
-    }
-
-    public void setManualControl(boolean manualControl){
-        this.manualControl = manualControl;
     }
 
     public double getMeasurement(){
@@ -163,11 +141,9 @@ public class Elevator extends SubsystemBase{
     @Override
     public void periodic(){
         telemetry();
-        if(!manualControl){
-            double extra = feedforward.calculate(0.0);
-            double voltage = controller.calculate(getMeasurement(), getGoal())+extra;
-            setVoltage(Volts.of(voltage));
-        }
+        double extra = feedforward.calculate(0.0);
+        double voltage = controller.calculate(getMeasurement(), goal)+extra;
+        setVoltage(Volts.of(voltage));
     }
 
     @Override
