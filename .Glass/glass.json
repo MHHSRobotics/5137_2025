@@ -1,6 +1,9 @@
 {
   "NetworkTables": {
     "transitory": {
+      "LiveWindow": {
+        "open": true
+      },
       "Shuffleboard": {
         "PID Controller": {
           "PIDController[1]": {
@@ -19,6 +22,7 @@
     },
     "types": {
       "/FMSInfo": "FMSInfo",
+      "/Shuffleboard/Elevator Controller/PIDController[1]": "PIDController",
       "/Shuffleboard/PID Controller/PIDController[1]": "PIDController",
       "/SmartDashboard/Elevator": "Mechanism2d"
     },
