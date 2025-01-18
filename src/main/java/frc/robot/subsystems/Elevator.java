@@ -36,8 +36,6 @@ public class Elevator extends SubsystemBase{
     private TalonFX leftMotor = new TalonFX(ElevatorConstants.leftMotorId, "rhino");
     private TalonFX rightMotor = new TalonFX(ElevatorConstants.rightMotorId, "rhino");
 
-    private final DutyCycleOut request = new DutyCycleOut(0.0);
-
     private PIDController controller;
 
     private ElevatorFeedforward feedforward;
@@ -100,16 +98,24 @@ public class Elevator extends SubsystemBase{
     }
 
     public void setSpeed(double speed){
-        leftMotor.setControl(request.withOutput(speed));
-        rightMotor.setControl(request.withOutput(speed));
+        leftMotor.set(speed);
+        rightMotor.set(speed);
+    }
+
+    private double getMeasurement(TalonFX motor){
+        return (motor.getPosition().getValueAsDouble()-ElevatorConstants.elevatorOffset)*ElevatorConstants.metersPerRotation;
     }
 
     public double getMeasurement(){
-        return (leftMotor.getPosition().getValueAsDouble()+ElevatorConstants.elevatorOffset)*ElevatorConstants.metersPerRotation;
+        return (getMeasurement(leftMotor)+getMeasurement(rightMotor))/2;
+    }
+
+    private double getVelocity(TalonFX motor){
+        return motor.getVelocity().getValueAsDouble()*ElevatorConstants.metersPerRotation;
     }
 
     public double getVelocity(){
-        return leftMotor.getVelocity().getValueAsDouble()*ElevatorConstants.metersPerRotation;
+        return (getVelocity(leftMotor)+getVelocity(rightMotor))/2;
     }
 
     public boolean atSetpoint(){
@@ -124,7 +130,7 @@ public class Elevator extends SubsystemBase{
     private void telemetry(){
         SmartDashboard.putNumber("Elevator Position", elevatorSim.getPositionMeters());
         SmartDashboard.putNumber("Elevator Velocity", getVelocity());
-        SmartDashboard.putNumber("Elevator Speed",leftMotor.get());
+        SmartDashboard.putNumber("Elevator Speed",(leftMotor.get()-rightMotor.get())/2);
         elevatorMech2d.setLength(elevatorSim.getPositionMeters()*50/ElevatorConstants.maxHeight);
         SmartDashboard.putData("Elevator", mech2d);
     }
@@ -146,9 +152,9 @@ public class Elevator extends SubsystemBase{
         elevatorSim.update(ElevatorConstants.simPeriod);
         double pos=elevatorSim.getPositionMeters();
         leftMotorSim.setRotorVelocity(elevatorSim.getVelocityMetersPerSecond()/ElevatorConstants.metersPerRotation);
-        rightMotorSim.setRotorVelocity(elevatorSim.getVelocityMetersPerSecond()/ElevatorConstants.metersPerRotation);
-        leftMotorSim.setRawRotorPosition(pos/ElevatorConstants.metersPerRotation-ElevatorConstants.elevatorOffset);
-        rightMotorSim.setRawRotorPosition(pos/ElevatorConstants.metersPerRotation-ElevatorConstants.elevatorOffset);
+        rightMotorSim.setRotorVelocity(-elevatorSim.getVelocityMetersPerSecond()/ElevatorConstants.metersPerRotation);
+        leftMotorSim.setRawRotorPosition(pos/ElevatorConstants.metersPerRotation+ElevatorConstants.elevatorOffset);
+        rightMotorSim.setRawRotorPosition(-pos/ElevatorConstants.metersPerRotation-ElevatorConstants.elevatorOffset);
         RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(elevatorSim.getCurrentDrawAmps()));
     }
 }
