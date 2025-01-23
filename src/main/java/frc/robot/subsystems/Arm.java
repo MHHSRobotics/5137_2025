@@ -8,11 +8,15 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.units.measure.Velocity;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.DutyCycleEncoder;
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
+import edu.wpi.first.wpilibj.simulation.EncoderSim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
@@ -35,7 +39,7 @@ public class Arm extends SubsystemBase{
     private PIDController armPID;
     private double goal = 0;
     private ArmFeedforward feedFor;
-    
+    private Encoder armEncoder = new Encoder(ArmConstants.encoderIda, ArmConstants.encoderIdb);
     private SingleJointedArmSim armSim = new SingleJointedArmSim(DCMotor.getKrakenX60(1), ArmConstants.gearRatio, ArmConstants.jkg, ArmConstants.armLength, ArmConstants.min, ArmConstants.max, true, ArmConstants.min);
 
     public final SysIdRoutine sysIdRoutine =
@@ -56,7 +60,7 @@ public class Arm extends SubsystemBase{
     private final MechanismLigament2d armMech2d = mech2dRoot.append(new MechanismLigament2d("Arm", 20, 90));
     
     private TalonFXSimState armMotorSim = armMotor.getSimState();
-        
+    private EncoderSim armEncoderSim = new EncoderSim(armEncoder);
     public Arm() {
         motorOutput = new MotorOutputConfigs();
         armPID = new PIDController(ArmConstants.kP, ArmConstants.kI, ArmConstants.kP);
@@ -104,6 +108,13 @@ public class Arm extends SubsystemBase{
         armPID.calculate(goal);
     } 
 
+    public void reachGoal(double goal) {
+        armPID.setSetpoint(goal);
+        double output = armPID.calculate(armEncoder.getDistance());
+        double feedForwardOutput = feedFor.calculate(armPID.getSetpoint(), armSim.getVelocityRadPerSec());
+        armMotor.setVoltage(output + feedForwardOutput);
+    
+}
     public void telemetry() {
         SmartDashboard.putNumber("Arm pose", armSim.getAngleRads());
         SmartDashboard.putNumber("Arm Velocity", armSim.getVelocityRadPerSec());
@@ -116,9 +127,9 @@ public class Arm extends SubsystemBase{
     }
 
     @Override
-    public void periodic(){
-        telemetry();
-        double extra = feedFor.calculate(goal, 0);
+        public void periodic(){
+            telemetry();
+            double extra = feedFor.calculate(goal, 0);
         double voltage = armPID.calculate(getPose(), goal)+extra;
         setVoltage(Volts.of(voltage));
     }
@@ -133,6 +144,7 @@ public class Arm extends SubsystemBase{
         armMotorSim.setRotorVelocity(armSim.getVelocityRadPerSec()/(Math.PI*2)*ArmConstants.gearRatio);
         armMotorSim.setRawRotorPosition((angle*ArmConstants.gearRatio)-ArmConstants.armOffset);
         RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(armSim.getCurrentDrawAmps()));
+        
 
     }
 }

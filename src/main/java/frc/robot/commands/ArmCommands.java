@@ -23,18 +23,30 @@ public class ArmCommands {
     }
 
     public InstantCommand moveToL1() {
-        return new InstantCommand(() -> arm.setGoal(ArmConstants.goal1), arm);
+        return new InstantCommand(() -> arm.reachGoal(ArmConstants.goal1), arm);
     }
 
     public InstantCommand moveToL2() {
-        return new InstantCommand(() -> arm.setGoal(ArmConstants.goal2), arm);
+        return new InstantCommand(() -> arm.reachGoal(ArmConstants.goal2), arm);
     }
 
     public InstantCommand moveToL3() {
-        return new InstantCommand(() -> arm.setGoal(ArmConstants.goal3), arm);
+        return new InstantCommand(() -> arm.reachGoal(ArmConstants.goal3), arm);
     }
 
     public InstantCommand moveToL4() {
-        return new InstantCommand(() -> arm.setGoal(ArmConstants.goal4), arm);
+        return new InstantCommand(() -> arm.reachGoal(ArmConstants.goal4), arm);
+    }
+
+    public InstantCommand moveToSource() {
+        return new InstantCommand(() -> arm.reachGoal(ArmConstants.sourceGoal), arm);
+    }
+    
+    public InstantCommand moveToGround() {
+        return new InstantCommand(() -> arm.reachGoal(ArmConstants.groundGoal), arm);
+    }
+
+    public InstantCommand moveToInside() {
+        return new InstantCommand(() -> arm.reachGoal(ArmConstants.startingPose), arm);
     }
 }
