@@ -112,9 +112,10 @@ public class Arm extends SubsystemBase{
         armPID.setSetpoint(goal);
         double output = armPID.calculate(armEncoder.getDistance());
         double feedForwardOutput = feedFor.calculate(armPID.getSetpoint(), armSim.getVelocityRadPerSec());
-        armMotor.setVoltage(output + feedForwardOutput);
-    
+        armSim.setInputVoltage(output + feedForwardOutput);
+        armSim.update(0.02);
 }
+
     public void telemetry() {
         SmartDashboard.putNumber("Arm pose", armSim.getAngleRads());
         SmartDashboard.putNumber("Arm Velocity", armSim.getVelocityRadPerSec());
@@ -129,7 +130,7 @@ public class Arm extends SubsystemBase{
     @Override
         public void periodic(){
             telemetry();
-            double extra = feedFor.calculate(goal, 0);
+        double extra = feedFor.calculate(goal, 0);
         double voltage = armPID.calculate(getPose(), goal)+extra;
         setVoltage(Volts.of(voltage));
     }

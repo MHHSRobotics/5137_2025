@@ -6,9 +6,9 @@ public class ArmConstants {
     public static final int motorId  = 20;
     public static final int encoderIda = 6; //idk
     public static final int encoderIdb = 7; //idk
-    public static double kP = 0; // enter
+    public static double kP = 30; // enter
     public static double kI = 0; // enter
-    public static double kD = 0; // enter
+    public static double kD = 1; // enter
     public static double ks = 0;
     public static double kg = 0;
     public static double kv = 0;

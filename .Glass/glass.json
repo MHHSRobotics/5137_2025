@@ -19,9 +19,48 @@
     },
     "types": {
       "/FMSInfo": "FMSInfo",
+      "/Pose": "Field2d",
+      "/Shuffleboard/Arm Controller/PIDController[5]": "PIDController",
+      "/Shuffleboard/Elevator Controller/PIDController[4]": "PIDController",
+      "/SmartDashboard/Alerts": "Alerts",
+      "/SmartDashboard/Arm": "Mechanism2d",
+      "/SmartDashboard/Auto Builder": "String Chooser",
+      "/SmartDashboard/Cage Choice": "String Chooser",
+      "/SmartDashboard/Elevator": "Mechanism2d",
+      "/SmartDashboard/Field": "Field2d",
+      "/SmartDashboard/Level Choice 1": "String Chooser",
+      "/SmartDashboard/Level Choice 2": "String Chooser",
+      "/SmartDashboard/Level Choice 3": "String Chooser",
+      "/SmartDashboard/Level Choice 4": "String Chooser",
+      "/SmartDashboard/Level Choice 5": "String Chooser",
+      "/SmartDashboard/Module 0": "Mechanism2d",
+      "/SmartDashboard/Module 1": "Mechanism2d",
+      "/SmartDashboard/Module 2": "Mechanism2d",
+      "/SmartDashboard/Module 3": "Mechanism2d",
+      "/SmartDashboard/Pickup Choice 1": "String Chooser",
+      "/SmartDashboard/Pickup Choice 2": "String Chooser",
+      "/SmartDashboard/Pickup Choice 3": "String Chooser",
+      "/SmartDashboard/Pickup Choice 4": "String Chooser",
+      "/SmartDashboard/Pickup Choice 5": "String Chooser",
+      "/SmartDashboard/Reef Choice 1": "String Chooser",
+      "/SmartDashboard/Reef Choice 2": "String Chooser",
+      "/SmartDashboard/Reef Choice 3": "String Chooser",
+      "/SmartDashboard/Reef Choice 4": "String Chooser",
+      "/SmartDashboard/Reef Choice 5": "String Chooser",
+      "/SmartDashboard/VisionSystemSim-main/Sim Field": "Field2d",
       "/SmartDashboard/Wrist": "Mechanism2d"
     },
     "windows": {
+      "/SmartDashboard/Arm": {
+        "window": {
+          "visible": true
+        }
+      },
+      "/SmartDashboard/Elevator": {
+        "window": {
+          "visible": true
+        }
+      },
       "/SmartDashboard/Wrist": {
         "window": {
           "visible": true
