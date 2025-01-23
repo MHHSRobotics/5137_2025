@@ -1,6 +1,6 @@
 package frc.robot.constants;
 
-public class Hang_Constants {
+public class HangConstants {
     public static final int COMPRESSOR_PORT = 0; // Port for the compressor on the Pneumatics Hub
     public static final int SOLENOID_1_CHANNEL = 1; // Channel for Solenoid 1
     public static final int SOLENOID_2_CHANNEL = 2; // Channel for Solenoid 2
