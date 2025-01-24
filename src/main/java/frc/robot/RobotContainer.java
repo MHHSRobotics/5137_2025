@@ -125,18 +125,19 @@ public class RobotContainer {
 		groundIntake = () ->
 		new SequentialCommandGroup (
 			new ParallelCommandGroup(
-				elevatorCommands.moveToL1(),
-				armCommands.moveToL1()
+				elevatorCommands.moveToGroundIntake(),
+				armCommands.moveToGround()
 			)
 		);
 
 		sourceIntake = () ->
 		new SequentialCommandGroup (
 			new ParallelCommandGroup(
-				elevatorCommands.moveToL3(),
-				armCommands.moveToL3()
+				elevatorCommands.moveToIntake(),
+				armCommands.moveToSource()
 			)
 		);
+
 	}
 
 	private void configureBindings() {
@@ -162,6 +163,8 @@ public class RobotContainer {
 
 		driver.options().onTrue(swerveCommands.resetGyro());
 
+		
+
 		/*
 		driver.povUp().onTrue(new InstantCommand(() -> swerve.setRoutine(swerve.m_sysIdRoutineTranslation)));
 		driver.povLeft().onTrue(new InstantCommand(() -> swerve.setRoutine(swerve.m_sysIdRoutineSteer)));
@@ -176,9 +179,9 @@ public class RobotContainer {
 
 		// Operator Bindings
 
-		elevator.setDefaultCommand(elevatorCommands.setGoal(()->1-operator.getLeftY()));
+		//elevator.setDefaultCommand(elevatorCommands.setGoal(()->1-operator.getLeftY()));
 
-		arm.setDefaultCommand(armCommands.setSpeed(() -> operator.getRightX()));
+		//arm.setDefaultCommand(armCommands.setSpeed(() -> operator.getRightX()));
 
 		operator.triangle()
 			.onTrue(scoreL4.get());

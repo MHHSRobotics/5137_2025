@@ -10,7 +10,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Velocity;
 import edu.wpi.first.units.measure.Voltage;
-import edu.wpi.first.wpilibj.DutyCycleEncoder;
+
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
@@ -56,11 +56,11 @@ public class Arm extends SubsystemBase{
                 this));
 
     private final Mechanism2d mech2d = new Mechanism2d(20, 50);
-    private final MechanismRoot2d mech2dRoot = mech2d.getRoot("Arm Root", 10, 0);
+    private final MechanismRoot2d mech2dRoot = mech2d.getRoot("Arm Root", 10, 25);
     private final MechanismLigament2d armMech2d = mech2dRoot.append(new MechanismLigament2d("Arm", 20, 90));
     
     private TalonFXSimState armMotorSim = armMotor.getSimState();
-    private EncoderSim armEncoderSim = new EncoderSim(armEncoder);
+  
     public Arm() {
         motorOutput = new MotorOutputConfigs();
         armPID = new PIDController(ArmConstants.kP, ArmConstants.kI, ArmConstants.kP);
@@ -68,16 +68,7 @@ public class Arm extends SubsystemBase{
 
         armPID.setTolerance(ArmConstants.tolerance);
         Shuffleboard.getTab("Arm Controller").add(armPID);
-    }
-
-    public void setArmUp() {
-        motorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        armMotor.getConfigurator().apply(motorOutput);
-    }
-
-    public void setArmDown() {
-        motorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        armMotor.getConfigurator().apply(motorOutput);
+        SmartDashboard.putData("Arm Sim", mech2d);
     }
 
     public void setSpeed(double speed) {
@@ -104,17 +95,6 @@ public class Arm extends SubsystemBase{
         return armMotor.getVelocity().getValueAsDouble()/ArmConstants.gearRatio;
     }
 
-    public void moveToLevel(double goal) {
-        armPID.calculate(goal);
-    } 
-
-    public void reachGoal(double goal) {
-        armPID.setSetpoint(goal);
-        double output = armPID.calculate(armEncoder.getDistance());
-        double feedForwardOutput = feedFor.calculate(armPID.getSetpoint(), armSim.getVelocityRadPerSec());
-        armSim.setInputVoltage(output + feedForwardOutput);
-        armSim.update(0.02);
-}
 
     public void telemetry() {
         SmartDashboard.putNumber("Arm pose", armSim.getAngleRads());
@@ -122,17 +102,21 @@ public class Arm extends SubsystemBase{
         SmartDashboard.putNumber("Arm Speed", armMotor.get());
         armMech2d.setAngle(getPose()*360);
         SmartDashboard.putData("Arm", mech2d);
-        if (RobotBase.isSimulation()) {
-            armMotor.setPosition(armMotor.getPosition().getValueAsDouble() + armMotor.get()/50);
-        }
+     
     }
+
+    public void updateTelemetry() {
+        
+        armMech2d.setLength(ArmConstants.armLength);
+      }
 
     @Override
         public void periodic(){
-            telemetry();
-        double extra = feedFor.calculate(goal, 0);
+        telemetry();
+        double extra = feedFor.calculate(getPose(), 0.0);
         double voltage = armPID.calculate(getPose(), goal)+extra;
         setVoltage(Volts.of(voltage));
+        
     }
 
     @Override

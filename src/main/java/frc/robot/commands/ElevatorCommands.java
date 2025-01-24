@@ -23,7 +23,6 @@ public class ElevatorCommands {
     }
 
     public Command moveToL1(){
-        System.out.println("x");
         return new InstantCommand(()->elevator.setGoal(ElevatorConstants.L1goal),elevator);
     }
     

@@ -22,12 +22,12 @@ public class ElevatorConstants {
     public static final double elevatorTol = 0.1;
 
     // Elevator goals
-    public static final double L1goal = 0.3;
+    public static final double L1goal = 0.5;
     public static final double L2goal = 0.5;
     public static final double L3goal = 0.8;
     public static final double L4goal = 1.5;
     public static final double intakeGoal = 1.0;
-    public static final double groundIntakeGoal = 0.25;
+    public static final double groundIntakeGoal = 0.5;
 
     // Simulation constants
     public static final double elevatorGearing = 20.0; // gear ratio
