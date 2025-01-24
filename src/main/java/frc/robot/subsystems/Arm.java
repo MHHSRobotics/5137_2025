@@ -35,7 +35,6 @@ import static edu.wpi.first.units.Units.Volts;
 public class Arm extends SubsystemBase{
     
     private TalonFX armMotor = new TalonFX(ArmConstants.motorId, "rhino");
-    private MotorOutputConfigs motorOutput;
     private PIDController armPID;
     private double goal = 0;
     private ArmFeedforward feedFor;
@@ -62,7 +61,6 @@ public class Arm extends SubsystemBase{
     private TalonFXSimState armMotorSim = armMotor.getSimState();
   
     public Arm() {
-        motorOutput = new MotorOutputConfigs();
         armPID = new PIDController(ArmConstants.kP, ArmConstants.kI, ArmConstants.kP);
         feedFor = new ArmFeedforward(ArmConstants.ks, ArmConstants.kg, ArmConstants.kv);
 
@@ -124,7 +122,7 @@ public class Arm extends SubsystemBase{
         armMotorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
         double armInput = armMotorSim.getMotorVoltage();
         armSim.setInputVoltage(armInput);
-        armSim.update(0.02);
+        armSim.update(0.020);
         double angle = armSim.getAngleRads()/(Math.PI*2);
         armMotorSim.setRotorVelocity(armSim.getVelocityRadPerSec()/(Math.PI*2)*ArmConstants.gearRatio);
         armMotorSim.setRawRotorPosition((angle*ArmConstants.gearRatio)-ArmConstants.armOffset);
