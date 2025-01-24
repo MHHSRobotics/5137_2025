@@ -196,13 +196,13 @@ public class RobotContainer {
 			.onTrue(wristCommands.wristForward())
 			.onFalse(wristCommands.wristReverse());
 
-		operator.L2()
-			.onTrue(intakeCommands.intakeReverse())
-			.onFalse(intakeCommands.stop());
+		operator.L1()
+			.onTrue(intakeCommands.intakeReverse());
+			//.onFalse(intakeCommands.stop());
 
-		operator.R2()
-			.onTrue(intakeCommands.intakeForward())
-			.onFalse(intakeCommands.stop());
+		operator.L2()
+			.onTrue(intakeCommands.intakeForward());
+			//.onFalse(intakeCommands.stop());
     
 		operator.touchpad()
 		.onTrue(hangCommand);
