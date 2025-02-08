@@ -181,6 +181,8 @@ public class Arm extends SubsystemBase {
         }catch(Exception e){
             log.append("Periodic error: " + RobotUtils.getError(e));
         }
+
+        System.out.println("Goal: " + Math.toDegrees(getGoal()) + " | Measurement: " + Math.toDegrees(getMeasurement()));
     }
 
     /**

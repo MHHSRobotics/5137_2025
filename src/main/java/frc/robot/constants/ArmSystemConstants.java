@@ -39,20 +39,20 @@ public final class ArmSystemConstants {
 
 
         ArmSystem.ArmSystemState sourceState = new ArmSystem.ArmSystemState(
-            Units.degreesToRadians(45),  // From ArmConstants.sourceGoal
+            Units.degreesToRadians(55),  // From ArmConstants.sourceGoal
             0.76,                         // From ElevatorConstants.sourceGoal
             wristStraight    // From WristConstants.pos2 (straight)
         );
 
 
         ArmSystem.ArmSystemState algaeLowState = new ArmSystem.ArmSystemState(
-            Units.degreesToRadians(30),   // From ArmConstants.algaeGoal
+            Units.degreesToRadians(120),   // From ArmConstants.algaeGoal
             0.35,                         // From ElevatorConstants.algaeGoal
             wristStraight    // From WristConstants.pos2 (straight)
         );
 
         ArmSystem.ArmSystemState algaeHighState = new ArmSystem.ArmSystemState(
-            Units.degreesToRadians(120),   // From ArmConstants.algaeGoal
+            Units.degreesToRadians(105),   // From ArmConstants.algaeGoal
             0.35,                         // From ElevatorConstants.algaeGoal
             wristStraight    // From WristConstants.pos2 (straight)
         );
@@ -86,7 +86,7 @@ public final class ArmSystemConstants {
         );
 
         ArmSystem.ArmSystemState processor = new ArmSystem.ArmSystemState(
-            Units.degreesToRadians(75),
+            Units.degreesToRadians(15),
             1.26,
             wristStraight
         );

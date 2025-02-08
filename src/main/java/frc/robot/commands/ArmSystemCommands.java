@@ -21,10 +21,8 @@ public class ArmSystemCommands {
      */
     public Command moveTo(String stateName) {
         return new ParallelRaceGroup(new FunctionalCommand(
+            () -> {armSystem.moveTo(stateName);},
             () -> {},
-            () -> {
-                armSystem.moveTo(stateName);
-            },
             (e) -> {},
             () -> armSystem.atSetpoint(),
             armSystem

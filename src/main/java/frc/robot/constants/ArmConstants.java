@@ -15,15 +15,15 @@ public class ArmConstants {
     public static final MotorTransform transform = new MotorTransform((2*Math.PI)/gearRatio, armOffset);
     
     // PID constants
-    public static final double kP = 1;
+    public static final double kP = 5;
     public static final double kI = 0;
-    public static final double kD = 1;
+    public static final double kD = 0.1;
 
     // Feedforward constants
     public static final double kS = 0.0;
-    public static final double kG = 0.0;
-    public static final double kV = 0.0;
-    public static final double kA = 0.0;
+    public static final double kG = 1.83;
+    public static final double kV = 0.62;
+    public static final double kA = 0.09;
 
     // Arm tolerance
     public static final double armTolerance = 0.1;

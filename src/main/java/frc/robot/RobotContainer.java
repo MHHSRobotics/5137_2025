@@ -158,6 +158,14 @@ public class RobotContainer {
 		driver.circle().and(driver.R2()).onTrue(multiCommands.scoreCoral(2));
 		driver.cross().and(driver.R2()).onTrue(multiCommands.scoreCoral(1));
 
+		// Default Arm System
+		driver.triangle().negate()
+		.and(driver.square().and(driver.R2()).negate())
+		.and(driver.circle().negate())
+		.and(driver.cross().and(driver.R2()).negate())
+		.and(driver.L2().negate())
+		.onTrue(armSystemCommands.moveTo("default"));
+
 		// Bind options button to reset gyro
 		driver.options().onTrue(swerveCommands.resetGyro());
 
