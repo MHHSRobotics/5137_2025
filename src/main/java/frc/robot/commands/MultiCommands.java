@@ -18,7 +18,6 @@ public class MultiCommands {
     private ArmSystemCommands armSystemCommands;
     private SwerveCommands swerveCommands;
     private IntakeCommands intakeCommands;
-    @SuppressWarnings("unused")
     private HangCommand hangCommand;
     private Reef reef;
 
@@ -42,17 +41,15 @@ public class MultiCommands {
             return new InstantCommand(); // Do nothing if the pose is null
         } else {
             String goalName = (pose.getY() > 1.75 && pose.getY() < 6.3) ? "groundIntake" : "source";
-            return new SequentialCommandGroup(new ParallelCommandGroup(swerveCommands.driveToPoseStatic(()->pose),armSystemCommands.moveTo(()->goalName)), intakeCommands.intakeUntilSwitched());
+            return new SequentialCommandGroup(new ParallelCommandGroup(swerveCommands.driveToPoseStatic(()->pose),armSystemCommands.moveTo(goalName)), intakeCommands.intakeUntilSwitched());
         }
     }
-
-    
 
     public Command placeCoral(Supplier<Integer> level,Supplier<Integer> branch) {
         return new SequentialCommandGroup(
             new ParallelCommandGroup(
                 swerveCommands.driveToBranch(branch),
-                armSystemCommands.moveToGoal(level)
+                armSystemCommands.moveToGoal(level.get())
             ),
             intakeCommands.outtake()
         );
@@ -66,12 +63,12 @@ public class MultiCommands {
         Command moveTo;
         if (reef.isAlgaeLow(branch)) {
             moveTo = new ParallelCommandGroup(
-                armSystemCommands.moveTo(()->"algaeLow")
+                armSystemCommands.moveTo("algaeLow")
                 //,swerveCommands.driveToPose(()->pose)
                 );
         } else {
             moveTo = new ParallelCommandGroup(
-                armSystemCommands.moveTo(()->"algaeHigh")
+                armSystemCommands.moveTo("algaeHigh")
                 //,swerveCommands.driveToPose(()->pose)
                 );
         }
@@ -79,16 +76,48 @@ public class MultiCommands {
         return new SequentialCommandGroup(
             moveTo, 
             intakeCommands.intakeUntilSwitched(),
-            swerveCommands.functionalDrive(()->0.8, ()->0, ()->0, ()->false));
+            swerveCommands.functionalDrive(()->-0.8, ()->0, ()->0, ()->false));
     }
 
-    public Command placeAlgae() {
+    public Command scoreCoral(int level) {
+        return new SequentialCommandGroup(
+            new ParallelCommandGroup(
+                armSystemCommands.moveToGoal(level)
+            ),
+            intakeCommands.outtake()
+        );
+    }
+
+    public Command sourceIntake() {
+        return new ParallelCommandGroup(
+            swerveCommands.driveToStation(),
+            armSystemCommands.moveTo("source"),
+            intakeCommands.intakeUntilSwitched()
+        );
+    }
+
+    public Command groundIntake() {
+        return new ParallelCommandGroup(
+            swerveCommands.driveToCoral(),
+            armSystemCommands.moveTo("groundIntake"),
+            intakeCommands.intakeUntilSwitched()
+        );
+    }
+
+    public Command scoreProcessor() {
         return new SequentialCommandGroup(
             new ParallelCommandGroup(
                 swerveCommands.driveToProcessor(),
-                armSystemCommands.moveTo(() -> "processor")
+                armSystemCommands.moveTo("processor")
             ),
             intakeCommands.outtake()
+        );
+    }
+
+    public Command hang(Supplier<Pose2d> pose) {
+        return new SequentialCommandGroup(
+            swerveCommands.driveToPoseStaticFixed(pose),
+            hangCommand
         );
     }
 

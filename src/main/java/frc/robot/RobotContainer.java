@@ -31,7 +31,6 @@ import frc.robot.commands.*;
 public class RobotContainer {
 	// Controllers for driver and operator
 	private CommandPS5Controller driver;
-	private CommandPS5Controller operator;
 
 	// Subsystems
 	private Vision vision;
@@ -78,9 +77,8 @@ public class RobotContainer {
 		StringLogEntry swerveLog = new StringLogEntry(dataLog, "swerve");
 
 		try{
-			// Initialize controllers
+			// Initialize controller
 			driver = new CommandPS5Controller(0);
-			operator = new CommandPS5Controller(1);
 
 			// Initialize Reef and ReefScoring components
 			reef = new Reef();
@@ -137,17 +135,28 @@ public class RobotContainer {
 		);
 
 		// Bind cross button to lock swerve
-		driver.cross().whileTrue(swerveCommands.lock());
+		driver.L3().whileTrue(swerveCommands.lock());
 
-		// Bind buttons to drive to specific locations
-		driver.triangle().onTrue(swerveCommands.driveToStation());
-		driver.square().onTrue(swerveCommands.driveToPoseStaticFixed(()->cageChoice.getCage()));
-		driver.circle().onTrue(swerveCommands.driveToProcessor());
+		// Drive to reef positions
+		driver.L1().onTrue(swerveCommands.driveToReefLeft());
+		driver.R1().onTrue(swerveCommands.driveToReefRight());
 
-		// Bind D-pad buttons to drive to specific reef positions
-		driver.povLeft().onTrue(swerveCommands.driveToReefLeft());
-		driver.povUp().onTrue(swerveCommands.driveToReefCenter());
-		driver.povRight().onTrue(swerveCommands.driveToReefRight());
+		// Ground Intake
+		driver.L2().and(driver.R2().negate()).onTrue(multiCommands.groundIntake());
+
+		// Source, Cage, and Processor
+		driver.triangle().and(driver.R2().negate()).onTrue(multiCommands.sourceIntake());
+		driver.square().and(driver.R2().negate()).onTrue(multiCommands.hang(()->cageChoice.getCage()));
+		driver.circle().and(driver.R2().negate()).onTrue(multiCommands.scoreProcessor());
+
+		// Algae Removal
+		//driver.L2().and(driver.R2()).onTrue(multiCommands.getAlgae(0));
+
+		// Scoring Buttons (Right trigger must be pressed down)
+		driver.triangle().and(driver.R2()).onTrue(multiCommands.scoreCoral(4));
+		driver.square().and(driver.R2()).onTrue(multiCommands.scoreCoral(3));
+		driver.circle().and(driver.R2()).onTrue(multiCommands.scoreCoral(2));
+		driver.cross().and(driver.R2()).onTrue(multiCommands.scoreCoral(1));
 
 		// Bind options button to reset gyro
 		driver.options().onTrue(swerveCommands.resetGyro());
@@ -167,32 +176,10 @@ public class RobotContainer {
 		driver.touchpad().onTrue(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
 
 		// For testing: Set default commands for elevator and arm with joystick inputs
-		arm.setDefaultCommand(armCommands.changeGoal(() -> operator.getLeftY() / 50));
-		wrist.setDefaultCommand(wristCommands.changeGoal(() -> operator.getLeftX() / 50));
-
-		//operator.axisLessThan(0,0).onTrue(multiCommands.placeCoral(0));
-
-		// Operator Bindings
-
-		// Bind buttons to move to specific goals
-		operator.triangle().onTrue(armSystemCommands.moveToGoal(()->4));
-		operator.circle().onTrue(armSystemCommands.moveToGoal(()->3));
-		operator.square().onTrue(armSystemCommands.moveToGoal(()->2));
-		operator.cross().onTrue(armSystemCommands.moveToGoal(()->1));
-
-
-		// Bind L2 button to outtake and stop intake
-		operator.L2()
-			.onTrue(intakeCommands.outtake())
-			.onFalse(intakeCommands.stop());
-
-		// Bind R2 button to intake until switched and stop intake
-		operator.R2()
-			.onTrue(intakeCommands.intakeUntilSwitched())
-			.onFalse(intakeCommands.stop());
-
-		// Bind touchpad to execute hang command
-		operator.touchpad().onTrue(hangCommand);
+		driver.povLeft().whileTrue(armCommands.changeGoal(() -> -0.02));
+		driver.povRight().whileTrue(armCommands.changeGoal(() -> 0.02));
+		driver.povUp().whileTrue(elevatorCommands.changeGoal(() -> 0.02));
+		driver.povDown().whileTrue(elevatorCommands.changeGoal(() -> -0.02));
 	}
 
 	/**

@@ -1,7 +1,5 @@
 package frc.robot.commands;
 
-import java.util.function.Supplier;
-
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
@@ -21,11 +19,11 @@ public class ArmSystemCommands {
      * Command to move the arm system to a named position.
      * @param stateName The name of the state to move to (e.g. "groundIntake", "default", "source", "algae", "L1", "L2", etc.)
      */
-    public Command moveTo(Supplier<String> stateName) {
+    public Command moveTo(String stateName) {
         return new ParallelRaceGroup(new FunctionalCommand(
             () -> {},
             () -> {
-                armSystem.moveTo(stateName.get());
+                armSystem.moveTo(stateName);
             },
             (e) -> {},
             () -> armSystem.atSetpoint(),
@@ -38,7 +36,7 @@ public class ArmSystemCommands {
      * Command to move the arm system to a specific goal level.
      * @param level The level number (1-4)
      */
-    public Command moveToGoal(Supplier<Integer> level) {
-        return moveTo(() -> "L" + level.get());
+    public Command moveToGoal(Integer level) {
+        return moveTo("L" + level);
     }
 }

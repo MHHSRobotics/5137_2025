@@ -120,7 +120,7 @@ public class AutoStep {
             return new InstantCommand();
         }else if(level==0){
             return new ParallelCommandGroup(
-                multiCommands.getArmSystemCommands().moveTo(()->"algae"),
+                multiCommands.getArmSystemCommands().moveTo("algae"),
                 multiCommands.getSwerveCommands().driveToAlgae(()->branchChooser.getSelected())
             );
         }else{

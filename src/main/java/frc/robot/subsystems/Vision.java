@@ -165,9 +165,11 @@ public class Vision extends SubsystemBase {
     public List<DetectedObject> getGroundCoral(double expirationTime){
         ArrayList<DetectedObject> relevantObjects=new ArrayList<>();
         double currentTime = Utils.getCurrentTimeSeconds();
-        for (DetectedObject object : objects) {
-            if(currentTime-object.getDetectionTime()<expirationTime){
-                relevantObjects.add(object);
+        if (objects != null) {
+            for (DetectedObject object : objects) {
+                if(currentTime-object.getDetectionTime()<expirationTime){
+                    relevantObjects.add(object);
+                }
             }
         }
         return relevantObjects;

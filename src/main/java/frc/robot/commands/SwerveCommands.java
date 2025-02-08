@@ -164,16 +164,17 @@ public class SwerveCommands {
         return new InstantCommand(() -> swerve.resetGyro(), swerve);
     }
 
-    public Command driveToCoral(){
-        return driveToPoseDynamic(()->{
-            List<DetectedObject> objects=swerve.getGroundCoral();
-            Pose2d[] poses=new Pose2d[objects.size()];
-            for(int i=0;i<poses.length;i++){
-                poses[i]=objects.get(i).getPose().toPose2d();
-            }
-            return swerve.getClosest(poses);
-        });
-    }
+    public Command driveToCoral()   {
+        List<DetectedObject> objects=swerve.getGroundCoral();
+        Pose2d[] poses=new Pose2d[objects.size()];
+        for(int i=0;i<poses.length;i++){
+            poses[i]=objects.get(i).getPose().toPose2d();
+        }
+        if (swerve.getClosest(poses) != null) {
+            return driveToPoseDynamic(() -> swerve.getClosest(poses));
+        }
+        return new WaitCommand(0.0);
+        }
 
     public Command driveToBranch(Supplier<Integer> branch){
         return driveToPoseStaticFixed(()->GeneralConstants.allReef[branch.get()]);
