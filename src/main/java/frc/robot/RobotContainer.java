@@ -83,7 +83,9 @@ public class RobotContainer {
 			driver.touchpad().onTrue(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
 			
 			initReef();
-			initGamepieces();
+			if (Robot.isSimulation()) {
+				initGamepieces();
+			}
 			
 			// Initialize subsystems
 			initVision();
