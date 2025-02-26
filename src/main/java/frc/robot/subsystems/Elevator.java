@@ -249,6 +249,7 @@ public class Elevator extends SubsystemBase {
      * Periodic method called every loop iteration.
      * Updates the elevator's position using PID and feedforward control.
      */
+    
     @Override
     public void periodic() {
         try {
@@ -268,6 +269,7 @@ public class Elevator extends SubsystemBase {
             DataLogManager.log("Periodic error: " + RobotUtils.getError(e));
         }
     }
+        
 
     /**
      * Simulation periodic method called every loop iteration in simulation.

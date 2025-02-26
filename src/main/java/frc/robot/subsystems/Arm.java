@@ -295,6 +295,7 @@ public class Arm extends SubsystemBase {
      * 5. Limits voltage rate of change
      * 6. Applies final voltage command to motor
      */
+
     @Override
     public void periodic() {
         try {
@@ -330,6 +331,7 @@ public class Arm extends SubsystemBase {
             DataLogManager.log("Periodic error: " + RobotUtils.getError(e));
         }
     }
+
 
     /**
      * Simulation periodic method called every loop iteration in simulation.

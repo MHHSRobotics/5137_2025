@@ -340,6 +340,7 @@ public class Wrist extends SubsystemBase {
      * Updates the wrist's position using PID and feedforward control,
      * taking into account the main arm's position for proper gravity compensation.
      */
+    
     @Override
     public void periodic() {
         try {
@@ -370,7 +371,7 @@ public class Wrist extends SubsystemBase {
             DataLogManager.log("Periodic error: " + RobotUtils.getError(e));
         }
     }
-
+        
     /**
      * Simulation periodic method called every loop iteration in simulation.
      * Updates the simulated wrist physics using the MotorSystem and ArmMechanismSim.

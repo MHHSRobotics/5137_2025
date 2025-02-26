@@ -39,6 +39,7 @@ public class Intake extends SubsystemBase {
         intakeMotor.log("intake/motor");
     }
 
+    
     @Override
     public void periodic() {
         try{
@@ -47,4 +48,5 @@ public class Intake extends SubsystemBase {
             DataLogManager.log("Periodic error: "+RobotUtils.getError(e));
         }
     }
+        
 }

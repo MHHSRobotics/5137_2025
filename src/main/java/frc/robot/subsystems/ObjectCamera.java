@@ -74,6 +74,7 @@ public class ObjectCamera extends SubsystemBase {
      * The periodic method is called periodically by the WPILib scheduler. It updates the list
      * of newly detected targets by reading unprocessed results from the camera.
      */
+    
     @Override
     public void periodic() {
         try{
@@ -88,4 +89,5 @@ public class ObjectCamera extends SubsystemBase {
             log.append("Periodic error: "+RobotUtils.getError(e));
         }
     }
+        
 }

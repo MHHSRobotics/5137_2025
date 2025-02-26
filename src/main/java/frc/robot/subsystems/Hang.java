@@ -40,6 +40,7 @@ public class Hang extends SubsystemBase {
         hangMotor.log("hang/motor");
     }
 
+    
     @Override
     public void periodic() {
         try{
@@ -48,4 +49,5 @@ public class Hang extends SubsystemBase {
             DataLogManager.log("Periodic error: "+RobotUtils.getError(e));
         }
     }
+        
 }

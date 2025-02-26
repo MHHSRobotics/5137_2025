@@ -104,6 +104,7 @@ public class AprilTagCamera extends SubsystemBase {
      * new camera results, updates the estimated robot pose using the PhotonPoseEstimator,
      * and stores the estimated poses in a list for later retrieval.
      */
+
     @Override
     public void periodic() {
         try{
@@ -125,4 +126,5 @@ public class AprilTagCamera extends SubsystemBase {
         }
         
     }
+
 }

@@ -35,6 +35,7 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -128,7 +129,7 @@ public class Swerve extends SubsystemBase {
 
         // Start simulation thread if in simulation
         if (Robot.isSimulation()) {
-            startSimThread();
+            //startSimThread();
         }
 
         // Initialize telemetry and field visualization
@@ -258,14 +259,17 @@ public class Swerve extends SubsystemBase {
         if(target!=targetPose){
             targetPose=target;
             if(targetPose!=null){
-                startAuto(AutoBuilder.pathfindToPose(targetPose, SwerveConstants.constraints));
+                //startAuto(AutoBuilder.pathfindToPose(targetPose, SwerveConstants.constraints));
+                PathPlannerPath path = new PathPlannerPath(
+                    PathPlannerPath.waypointsFromPoses(RobotUtils.invertToAlliance(getPose()),RobotUtils.invertToAlliance(target)), 
+                    SwerveConstants.constraints,
+                    null, 
+                    new GoalEndState(0.0, RobotUtils.invertToAlliance(target).getRotation()), 
+                    false
+                );
+                startAuto(AutoBuilder.pathfindThenFollowPath(path, SwerveConstants.constraints));
             }
         }
-    }
-
-    public void followPath(Pose2d target) {
-        PathPlannerPath path = new PathPlannerPath(List.of(new Waypoint(new Translation2d(), getPose().getTranslation(), new Translation2d()), new Waypoint(new Translation2d(), target.getTranslation(), new Translation2d())), SwerveConstants.constraints, new IdealStartingState(0.0, getPose().getRotation()), new GoalEndState(0.0, target.getRotation()), false);
-        startAuto(AutoBuilder.pathfindThenFollowPath(path, SwerveConstants.constraints));
     }
 
     public boolean atTarget(){
@@ -288,6 +292,7 @@ public class Swerve extends SubsystemBase {
      * Periodic method called every robot loop cycle.
      * Updates vision measurements, processes new objects, and updates field visualization.
      */
+    
     @Override
     public void periodic() {
         try{
@@ -311,6 +316,7 @@ public class Swerve extends SubsystemBase {
             DataLogManager.log("Periodic error: "+RobotUtils.getError(e));
         }
     }
+        
 
     private void telemetry(SwerveDriveState state){
         SmartDashboard.putNumber("driveState/odometryPeriod", state.OdometryPeriod);
