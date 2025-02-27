@@ -28,6 +28,9 @@ public class ArmConstants {
 
     // Arm tolerance
     public static final double armTolerance = Units.degreesToRadians(1);
+
+    // Hang Position
+    public static final double hangPosition = Units.degreesToRadians(-30);
     
     // Simulation constants
     public static final double minAngle = Units.degreesToRadians(-135);

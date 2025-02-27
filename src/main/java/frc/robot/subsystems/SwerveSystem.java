@@ -28,16 +28,21 @@ public class SwerveSystem extends SubsystemBase {
         public final Double elevatorPosition;
         public final Double wristPosition;
         public final Pose2d botPosition;
+        public final String name;
 
-        public SwerveSystemState(Double armPosition, Double elevatorPosition, Double wristPosition, Pose2d botPosition) {
+        public SwerveSystemState(Double armPosition, Double elevatorPosition, Double wristPosition, Pose2d botPosition, String name) {
             this.armPosition = armPosition;
             this.elevatorPosition = elevatorPosition;
             this.wristPosition = wristPosition;
             this.botPosition = botPosition;
-        }
+            this.name = name;
+            if (name != null) {
+                System.out.println(name);
+            }
+            }
 
         public SwerveSystemState withPose(Pose2d pose){
-            return new SwerveSystemState(armPosition, elevatorPosition, wristPosition, pose);
+            return new SwerveSystemState(armPosition, elevatorPosition, wristPosition, pose, name);
         }
     }
 
@@ -112,7 +117,8 @@ public class SwerveSystem extends SubsystemBase {
             arm==null?null:arm.getMeasurement(), 
             elevator==null?null:elevator.getMeasurement(), 
             wrist==null?null:wrist.getMeasurement(), 
-            swerve==null?null:swerve.getPose()
+            swerve==null?null:swerve.getPose(),
+            null
         );
     }
 
@@ -121,7 +127,8 @@ public class SwerveSystem extends SubsystemBase {
             arm==null?null:arm.getGoal(), 
             elevator==null?null:elevator.getGoal(), 
             wrist==null?null:wrist.getGoal(), 
-            swerve==null?null:swerve.getTargetPose()
+            swerve==null?null:swerve.getTargetPose(),
+            null
         );
     }
 
@@ -193,7 +200,7 @@ public class SwerveSystem extends SubsystemBase {
         }
         if(swerve!=null && state.botPosition != null){
             // Uncomment at your own risk
-            swerve.setTargetPose(state.botPosition);
+            swerve.followPath(state.name);
         }
     }
 

@@ -70,6 +70,10 @@ public class SwerveSystemCommands {
         return moveToState(()->SwerveSystemConstants.getProcessor());
     }
 
+    public Command moveToBarge(){
+        return moveToState(()->SwerveSystemConstants.getBargeState());
+    }
+
     public Command moveToDefault(){
         return moveToState(()->SwerveSystemConstants.getDefaultState());
     }

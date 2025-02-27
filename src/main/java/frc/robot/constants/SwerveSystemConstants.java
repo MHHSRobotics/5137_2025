@@ -14,7 +14,7 @@ public final class SwerveSystemConstants {
     
     // Weight for how much to consider rotation vs translation when finding closest state
     // Higher values mean rotation differences matter more
-    public static final double rotationWeight = 1.0; // meters per radian
+    public static final double rotationWeight = 0.0; // meters per radian
     // 0.32 arm source
     // 0.48 arm L3
     // elevator L2 0.15
@@ -27,14 +27,24 @@ public final class SwerveSystemConstants {
         -2.0,  // From ArmConstants.groundIntakeGoal
         0.41,                       // From ElevatorConstants.groundIntakeGoal
         -1.39,                  // From WristConstants.pos1 (down)
-        null                        // Robot position determined at runtime
+        null,                        // Robot position determined at runtime
+        null
     );   
 
     private static final SwerveSystem.SwerveSystemState baseDefaultState = new SwerveSystem.SwerveSystemState(
         Units.degreesToRadians(0),  // From ArmConstants.defaultGoal (vertical)
         0.05,                         // From ElevatorConstants.defaultGoal
         wristUp,                   // From WristConstants.pos1 (down)
-        null                         // Robot position determined at runtime
+        null,                         // Robot position determined at runtime
+        null
+    );
+
+    private static final SwerveSystem.SwerveSystemState bargeState = new SwerveSystem.SwerveSystemState(
+        Units.degreesToRadians(0),  // From ArmConstants.defaultGoal (vertical)
+        1.11,                         // From ElevatorConstants.defaultGoal
+        wristDown,                   // From WristConstants.pos1 (down)
+        null,                         // Robot position determined at runtime
+        null
     );
 
     // Offset for the arm pivot in AdvantageScope simulation
@@ -50,12 +60,17 @@ public final class SwerveSystemConstants {
         return baseDefaultState;
     }
 
+    public static SwerveSystem.SwerveSystemState getBargeState() {
+        return bargeState;
+    }
+
     public static SwerveSystem.SwerveSystemState getProcessor() {
         return new SwerveSystem.SwerveSystemState(
             Units.degreesToRadians(-95),  // 75 - 90 = -15 degrees
             0.65,
             Units.degreesToRadians(-45),
-            RobotPositions.processor.alliancePos()
+            RobotPositions.processor.alliancePos(),
+            null
         );
     }
 
@@ -66,7 +81,9 @@ public final class SwerveSystemConstants {
                 -0.43,  // 45 - 90 = -45 degrees
                 0.17,                        // From ElevatorConstants.sourceGoal
                 Units.degreesToRadians(-113.6),              // From WristConstants.pos2 (straight)
-                RobotPositions.stations[i].alliancePos()
+                RobotPositions.stations[i].alliancePos(),
+                //"Source "+(char)('A'+i)
+                null
             );
         }
         return states;
@@ -79,7 +96,8 @@ public final class SwerveSystemConstants {
                 Units.degreesToRadians(-55),  // 30 - 90 = -60, 120 - 90 = 30
                 Reef.isAlgaeLow(i) ? 0.43 : 0.9,
                 Units.degreesToRadians(-115),                             // From WristConstants.minAngle
-                RobotPositions.centerReef[i].alliancePos()
+                RobotPositions.centerReef[i].alliancePos(),
+                null
             );
         }
         return states;
@@ -112,7 +130,9 @@ public final class SwerveSystemConstants {
                     armAngles[level],
                     elevatorHeights[level],
                     wristAngles[level],
-                    RobotPositions.branchReef[pos].alliancePos()
+                    RobotPositions.branchReef[pos].alliancePos(),
+                    //"Reef "+(char)('A'+pos)
+                    null
                 );
             }
         }

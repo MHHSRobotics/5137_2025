@@ -10,9 +10,11 @@ import frc.robot.other.SwerveFactory;
 import static edu.wpi.first.units.Units.*;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.json.simple.parser.ParseException;
 import org.photonvision.EstimatedRobotPose;
 
 import com.ctre.phoenix6.Utils;
@@ -27,10 +29,12 @@ import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.IdealStartingState;
+import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.Waypoint;
 import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
+import com.pathplanner.lib.util.FileVersionException;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 
@@ -129,7 +133,7 @@ public class Swerve extends SubsystemBase {
 
         // Start simulation thread if in simulation
         if (Robot.isSimulation()) {
-            //startSimThread();
+            startSimThread();
         }
 
         // Initialize telemetry and field visualization
@@ -256,12 +260,12 @@ public class Swerve extends SubsystemBase {
     }
 
     public void setTargetPose(Pose2d target){
-        if(target!=targetPose){
+        /*if(target!=targetPose){
             targetPose=target;
             if(targetPose!=null){
                 //startAuto(AutoBuilder.pathfindToPose(targetPose, SwerveConstants.constraints));
                 PathPlannerPath path = new PathPlannerPath(
-                    PathPlannerPath.waypointsFromPoses(RobotUtils.invertToAlliance(getPose()),RobotUtils.invertToAlliance(target)), 
+                    PathPlannerPath.waypointsFromPoses(RobotUtils.invertToAlliance(target),RobotUtils.invertToAlliance(target)), 
                     SwerveConstants.constraints,
                     null, 
                     new GoalEndState(0.0, RobotUtils.invertToAlliance(target).getRotation()), 
@@ -269,6 +273,15 @@ public class Swerve extends SubsystemBase {
                 );
                 startAuto(AutoBuilder.pathfindThenFollowPath(path, SwerveConstants.constraints));
             }
+        }*/
+    }
+
+    public void followPath(String name) {
+        try {
+            PathPlannerPath path = PathPlannerPath.fromPathFile(name);
+            startAuto(AutoBuilder.pathfindThenFollowPath(path, SwerveConstants.constraints));
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

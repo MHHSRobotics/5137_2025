@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.function.Supplier;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -146,7 +147,7 @@ public class RobotContainer {
 			() -> true)
 		);
 
-		driver.cross().and(driver.R2().negate()).whileTrue(swerveCommands.lock());
+		driver.L3().whileTrue(swerveCommands.lock());
 		driver.options().onTrue(swerveCommands.resetGyro());
 	}
 
@@ -187,14 +188,19 @@ public class RobotContainer {
 		operator.R2().or(driver.R1()).or(driver.L2().and(driver.R2()))
 			.onTrue(intakeCommands.setSpeed(()->-IntakeConstants.intakeSpeed))
 			.onFalse(intakeCommands.stop());
+		
+		NamedCommands.registerCommand("Intake", intakeCommands.setSpeed(()->IntakeConstants.intakeSpeed));
+		NamedCommands.registerCommand("Outtake", intakeCommands.setSpeed(()->-IntakeConstants.intakeSpeed));
 	}
 
 	private void initHang() {
 		hang = new Hang();
 		hangCommands = new HangCommands(hang);
-		hang.setDefaultCommand(hangCommands.setSpeed(()->{
-			return MathUtil.applyDeadband(operator.getLeftX(),0.1)*HangConstants.hangSpeed;
-		}));
+		
+		operator.povUp().or(driver.povUp()).whileTrue(hangCommands.setSpeed(() -> HangConstants.hangSpeed));
+		operator.povDown().or(driver.povDown()).whileTrue(hangCommands.setSpeed(() -> -HangConstants.hangSpeed));
+		operator.povLeft().or(driver.povLeft()).whileTrue(hangCommands.setSpeed(() -> -0.2));
+		operator.povRight().or(driver.povRight()).onTrue(armCommands.setGoal(() -> Units.degreesToRadians(ArmConstants.hangPosition)));
 	}
 
 	private void initLED() {
@@ -206,11 +212,14 @@ public class RobotContainer {
 		swerveSystemCommands = new SwerveSystemCommands(swerveSystem);
 
 		driver.square().and(driver.R2().negate()).onTrue(swerveSystemCommands.moveToProcessor());
+		driver.cross().and(driver.R2().negate()).onTrue(swerveSystemCommands.moveToBarge());
 
 		driver.triangle().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(3));
 		driver.square().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(2));
 		driver.circle().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(1));
 		driver.cross().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(0));
+
+		NamedCommands.registerCommand("L4", swerveSystemCommands.moveToLevel(3));
 
 		//driver.axisLessThan(0,-0.1).onTrue(swerveSystemCommands.moveToLevel(3));
 
@@ -228,13 +237,24 @@ public class RobotContainer {
 		multiCommands = new MultiCommands(swerveSystemCommands, swerveCommands, intakeCommands, hangCommands);
 
 		driver.triangle().and(driver.R2().negate()).onTrue(multiCommands.getCoralFromSource());
-		driver.circle().and(driver.R2().negate()).onTrue(multiCommands.getAlgae());
+		driver.circle().and(driver.R2().negate())
+		.onTrue(multiCommands.getAlgae())
+		.onFalse(new SequentialCommandGroup(
+			new ParallelCommandGroup(
+				intakeCommands.pulseIntake(),
+				wristCommands.setGoal(() -> Units.degreesToRadians(-90))
+			)
+		));
 
 		driver.triangle().negate()
 		.and(driver.square().negate())
 		.and(driver.circle().negate())
 		.and(driver.cross().negate())
-		.onTrue(multiCommands.moveToDefault());
+		.onTrue(new SequentialCommandGroup(
+			new WaitCommand(0.1),
+			multiCommands.moveToDefault()));
+
+		NamedCommands.registerCommand("Default", multiCommands.moveToDefault());
 
 		driver.L1()
 		.toggleOnTrue(intakeCommands.pulseIntake())
@@ -270,9 +290,10 @@ public class RobotContainer {
 	 * @return The autonomous command
 	 */
 	public Command getAutonomousCommand() {
-		if (autoFactory != null) {
+		/*if (autoFactory != null) {
 			return autoFactory.getAuto();
-		}
-		return AutoBuilder.buildAuto("Forward");
+		}*/
+		swerve.resetGyro();
+		return AutoBuilder.buildAuto("Test Auto");
 	}
 }

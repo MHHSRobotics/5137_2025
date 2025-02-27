@@ -29,8 +29,8 @@ public class HangCommands {
         return new FunctionalCommand(
             () -> {},
             () -> hang.setSpeed(speed.getAsDouble()),
-            (Boolean onEnd) -> {},
-            () -> {return false;},
+            (Boolean onEnd) -> hang.stop(),
+            () -> false,
             hang);
     }
 
