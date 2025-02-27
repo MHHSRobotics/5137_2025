@@ -1,6 +1,7 @@
 package frc.robot.other;
 
 import frc.robot.constants.SwerveConstants;
+import frc.robot.motorSystem.EnhancedTalonFX;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -27,7 +28,7 @@ public class SwerveFactory {
 
     private double maxSpeed; // Maximum speed of the robot in meters per second
     private double maxAngularSpeed; // Maximum angular speed of the robot in radians per second
-    private SwerveDrivetrain<TalonFX, TalonFX, CANcoder> drivetrain; // The swerve drivetrain object
+    private SwerveDrivetrain<EnhancedTalonFX, EnhancedTalonFX, CANcoder> drivetrain; // The swerve drivetrain object
 
     /**
      * Constructor for SwerveFactory. Initializes the swerve drivetrain using the provided JSON configuration file.
@@ -96,8 +97,8 @@ public class SwerveFactory {
             JSONObject backRight = (JSONObject) modules.get("back_right");
 
             // Create the swerve drivetrain using the configured constants
-            drivetrain = new SwerveDrivetrain<TalonFX, TalonFX, CANcoder>(
-                TalonFX::new, TalonFX::new, CANcoder::new, // Motor and encoder constructors
+            drivetrain = new SwerveDrivetrain<EnhancedTalonFX, EnhancedTalonFX, CANcoder>(
+                EnhancedTalonFX::new, EnhancedTalonFX::new, CANcoder::new, // Motor and encoder constructors
 
                 new SwerveDrivetrainConstants()
                     .withCANBusName("rhino") // Set CAN bus name
@@ -145,7 +146,7 @@ public class SwerveFactory {
      *
      * @return The configured SwerveDrivetrain object.
      */
-    public SwerveDrivetrain<TalonFX, TalonFX, CANcoder> create() {
+    public SwerveDrivetrain<EnhancedTalonFX, EnhancedTalonFX, CANcoder> create() {
         return drivetrain;
     }
 

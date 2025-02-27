@@ -15,7 +15,7 @@ import org.photonvision.targeting.PhotonPipelineResult;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.util.datalog.StringLogEntry;
+import edu.wpi.first.wpilibj.DataLogManager;
 import frc.robot.Robot;
 import frc.robot.other.RobotUtils;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -35,7 +35,7 @@ public class AprilTagCamera extends SubsystemBase {
     // List to store estimated robot poses
     private List<EstimatedRobotPose> estimatedPoses;
 
-    private StringLogEntry log;
+    private String name;
 
     /**
      * Constructs an {@code AprilTagCamera} subsystem.
@@ -44,15 +44,15 @@ public class AprilTagCamera extends SubsystemBase {
      * @param robotToCamera  The transformation from the robot's center to the camera's position.
      * @param fieldLayout    The layout of AprilTags on the field, used for pose estimation.
      */
-    public AprilTagCamera(String name, Transform3d robotToCamera, AprilTagFieldLayout fieldLayout, StringLogEntry log) {
+    public AprilTagCamera(String name, Transform3d robotToCamera, AprilTagFieldLayout fieldLayout) {
         this.robotToCamera = robotToCamera;
         // Initialize the PhotonCamera with the given name
         cam = new PhotonCamera(name);
+        this.name=name;
         // Initialize the PhotonPoseEstimator with the field layout, pose strategy, and robot-to-camera transform
         estimator = new PhotonPoseEstimator(fieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, robotToCamera);
         // Initialize the list to store estimated poses
         estimatedPoses = new ArrayList<>();
-        this.log=log;
     }
 
     /**
@@ -104,24 +104,27 @@ public class AprilTagCamera extends SubsystemBase {
      * new camera results, updates the estimated robot pose using the PhotonPoseEstimator,
      * and stores the estimated poses in a list for later retrieval.
      */
+
     @Override
     public void periodic() {
         try{
             // Get all unread results from the camera
             var results = cam.getAllUnreadResults();
+            
             // Iterate through each result
             for (PhotonPipelineResult res : results) {
                 // Update the estimated pose using the current result
                 var estimatedPose = estimator.update(res);
                 // If the estimated pose is present, add it to the list
                 if (estimatedPose.isPresent()) {
-                    log.append("New estimated pose: "+estimatedPose.get());
+                    //DataLogManager.log("New estimated pose from "+name+": "+estimatedPose.get());
                     estimatedPoses.add(estimatedPose.get());
                 }
             }
         }catch(Exception e){
-            log.append("Periodic error: "+RobotUtils.getError(e));
+            DataLogManager.log("Periodic error from camera "+name+": "+RobotUtils.getError(e));
         }
         
     }
+
 }

@@ -13,11 +13,9 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.util.datalog.DataLog;
-import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.constants.GeneralConstants;
+import frc.robot.constants.FieldGeometry;
 import frc.robot.constants.VisionConstants;
 import frc.robot.elastic.Reef;
 import frc.robot.other.DetectedObject;
@@ -38,26 +36,24 @@ public class Vision extends SubsystemBase {
 
     private Reef reef; // Reference to the Reef object for coral placement tracking
 
-    private StringLogEntry log;
-
     /**
      * Constructor for the Vision subsystem.
      *
      * @param reef The Reef object used for tracking coral placements.
      */
-    public Vision(Reef reef,StringLogEntry log) {
+    public Vision(Reef reef) {
         // Load the AprilTag field layout from the default field
         fieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
-        DataLog dataLog = DataLogManager.getLog();
         // Initialize AprilTag cameras with their respective positions and the field layout
-        AprilTagCamera frontCamera = new AprilTagCamera("frontCamera", VisionConstants.robotToFrontCamera, fieldLayout, new StringLogEntry(dataLog, "frontCamera"));
-        AprilTagCamera leftCamera = new AprilTagCamera("leftCamera", VisionConstants.robotToLeftCamera, fieldLayout, new StringLogEntry(dataLog, "leftCamera"));
-        aprilTagCameras = new AprilTagCamera[]{frontCamera, leftCamera};
+        //AprilTagCamera blatCamera = new AprilTagCamera("BackLeft_AT", VisionConstants.robotToBLATCamera, fieldLayout);
+        AprilTagCamera bratCamera = new AprilTagCamera("BackRight_AT", VisionConstants.robotToBRATCamera, fieldLayout);
+        AprilTagCamera flatCamera = new AprilTagCamera("FrontLeft_AT", VisionConstants.robotToFLATCamera, fieldLayout);
+        aprilTagCameras = new AprilTagCamera[]{/*blatCamera, */bratCamera, flatCamera};
 
         // Initialize object cameras with their respective positions
-        ObjectCamera frontObjectCamera = new ObjectCamera("frontObjectCamera", VisionConstants.robotToFrontObjectCamera, new StringLogEntry(dataLog, "frontObjectCamera"));
-        objectCameras = new ObjectCamera[]{frontObjectCamera};
+        //ObjectCamera frontObjectCamera = new ObjectCamera("frontObjectCamera", VisionConstants.robotToFrontObjectCamera, new StringLogEntry(dataLog, "frontObjectCamera"));
+        objectCameras = new ObjectCamera[]{};
 
         // Initialize the vision system simulation and add AprilTags to it
         visionSim = new VisionSystemSim("main");
@@ -69,7 +65,6 @@ public class Vision extends SubsystemBase {
         }
 
         this.reef = reef;
-        this.log=log;
     }
 
     /**
@@ -134,9 +129,9 @@ public class Vision extends SubsystemBase {
         double closestDist = VisionConstants.objectMarginOfError;
         int closestBranch = -1;
         int closestLevel = -1;
-        for (int branch = 0; branch < GeneralConstants.coralPositions.length; branch++) {
-            for (int level = 0; level < GeneralConstants.coralPositions[branch].length; level++) {
-                Translation3d pos = GeneralConstants.coralPositions[branch][level];
+        for (int branch = 0; branch < FieldGeometry.coralPositions.length; branch++) {
+            for (int level = 0; level < FieldGeometry.coralPositions[branch].length; level++) {
+                Translation3d pos = FieldGeometry.coralPositions[branch][level].alliancePos().getTranslation();
                 double dist = target3d.minus(pos).getNorm();
                 if (dist < closestDist) {
                     closestDist = dist;
@@ -148,7 +143,7 @@ public class Vision extends SubsystemBase {
         if (closestBranch == -1) {
             return null;
         } else {
-            log.append("Detected coral on level "+(closestLevel+2)+" branch "+closestBranch);
+            DataLogManager.log("Detected coral on level "+(closestLevel+2)+" branch "+closestBranch);
             return Pair.of(closestLevel, closestBranch);
         }
     }

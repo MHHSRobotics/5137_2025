@@ -1,6 +1,8 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
@@ -8,14 +10,20 @@ public class Robot extends TimedRobot {
 	private Command autonomousCommand;
 
 	private final RobotContainer robotContainer;
-
+	
+	private Timer timer = new Timer();
 	public Robot() {
 		robotContainer = new RobotContainer();
+		timer.start();
 	}
 
 	@Override
 	public void robotPeriodic() {
 		CommandScheduler.getInstance().run();
+		Runtime r=Runtime.getRuntime();
+		SmartDashboard.putNumber("mem/total",r.totalMemory());
+		SmartDashboard.putNumber("mem/free",r.freeMemory());
+		SmartDashboard.putNumber("mem/max",r.maxMemory());
 	}
 
 	@Override

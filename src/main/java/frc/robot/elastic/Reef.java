@@ -5,7 +5,7 @@ import org.json.simple.JSONObject;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.networktables.NTSendable;
 import edu.wpi.first.networktables.NTSendableBuilder;
-import frc.robot.constants.GeneralConstants;
+import frc.robot.constants.FieldGeometry;
 
 public class Reef implements NTSendable{
 
@@ -40,8 +40,8 @@ public class Reef implements NTSendable{
         algaePlaced[side]=set;
     }
 
-    public boolean isAlgaeLow(int side) {
-        return side%2 == 1;
+    public static boolean isAlgaeLow(int side) {
+        return side%2 == 0;
     }
 
     public boolean isCoralBlocked(int level,int branch){
@@ -65,9 +65,9 @@ public class Reef implements NTSendable{
         double minDist=Double.MAX_VALUE;
         Pair<Integer,Integer> minVal=null;
         for(int l=0;l<=2;l++){
-            for(int b=0;b<GeneralConstants.sides*2;b++){
+            for(int b=0;b<FieldGeometry.reefSides*2;b++){
                 if(isCoralOpen(level, branch)){
-                    int modDist=Math.min(Math.floorMod(branch-b,GeneralConstants.sides*2),Math.floorMod(b-branch,GeneralConstants.sides*2));
+                    int modDist=Math.min(Math.floorMod(branch-b,FieldGeometry.reefSides*2),Math.floorMod(b-branch,FieldGeometry.reefSides*2));
                     double dist=Math.abs(l-level)+modDist;
                     if(dist<minDist){
                         minDist=dist;
