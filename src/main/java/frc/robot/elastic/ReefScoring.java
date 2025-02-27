@@ -4,7 +4,7 @@ import org.json.simple.JSONObject;
 
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import frc.robot.constants.GeneralConstants;
+import frc.robot.constants.FieldGeometry;
 
 public class ReefScoring implements Sendable{
     private Reef reef;
@@ -14,7 +14,7 @@ public class ReefScoring implements Sendable{
     
     public int getCount(int level){
         int count=0;
-        for(int j=0; j<GeneralConstants.sides*2; j++){
+        for(int j=0; j<FieldGeometry.reefSides*2; j++){
             if(reef.isCoralPlaced(level,j) && !reef.isCoralBlocked(level,j)){
                 count++;
             }

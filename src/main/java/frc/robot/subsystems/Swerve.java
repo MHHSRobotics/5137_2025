@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import frc.robot.Robot;
 import frc.robot.constants.SwerveConstants;
+import frc.robot.motorSystem.EnhancedTalonFX;
 import frc.robot.other.DetectedObject;
 import frc.robot.other.RobotUtils;
 import frc.robot.other.SwerveFactory;
@@ -9,38 +10,45 @@ import frc.robot.other.SwerveFactory;
 import static edu.wpi.first.units.Units.*;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
+import org.json.simple.parser.ParseException;
 import org.photonvision.EstimatedRobotPose;
 
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.hardware.CANcoder;
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.IdealStartingState;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.Waypoint;
 import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
+import com.pathplanner.lib.util.FileVersionException;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructPublisher;
-import edu.wpi.first.util.datalog.StringLogEntry;
+import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.util.Color;
-import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -53,7 +61,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
  */
 public class Swerve extends SubsystemBase {
 
-    private SwerveDrivetrain<TalonFX, TalonFX, CANcoder> swerve; // Swerve drivetrain instance
+    private SwerveDrivetrain<EnhancedTalonFX, EnhancedTalonFX, CANcoder> swerve; // Swerve drivetrain instance
     private Vision vision; // Vision subsystem for pose estimation and object detection
 
     private double maxSpeed; // Maximum translational speed of the robot
@@ -67,47 +75,19 @@ public class Swerve extends SubsystemBase {
     private SwerveRequest.ApplyRobotSpeeds setChassisSpeeds; // Request to set chassis speeds directly
     private SwerveRequest.SwerveDriveBrake lock; // Request to lock the swerve modules in place
 
-    private StringLogEntry log;
-
     // Target pose
-    private Pose2d targetPose;
+    private Pose2d targetPose=new Pose2d();
 
-    /* Mechanisms to represent the swerve module states */
-    private final Mechanism2d[] moduleMechanisms = new Mechanism2d[] {
-        new Mechanism2d(1, 1),
-        new Mechanism2d(1, 1),
-        new Mechanism2d(1, 1),
-        new Mechanism2d(1, 1),
-    };
-    /* A direction and length changing ligament for speed representation */
-    private final MechanismLigament2d[] moduleSpeeds = new MechanismLigament2d[] {
-        moduleMechanisms[0].getRoot("RootSpeed", 0.5, 0.5).append(new MechanismLigament2d("Speed", 0.5, 0)),
-        moduleMechanisms[1].getRoot("RootSpeed", 0.5, 0.5).append(new MechanismLigament2d("Speed", 0.5, 0)),
-        moduleMechanisms[2].getRoot("RootSpeed", 0.5, 0.5).append(new MechanismLigament2d("Speed", 0.5, 0)),
-        moduleMechanisms[3].getRoot("RootSpeed", 0.5, 0.5).append(new MechanismLigament2d("Speed", 0.5, 0)),
-    };
-    /* A direction changing and length constant ligament for module direction */
-    private final MechanismLigament2d[] moduleDirections = new MechanismLigament2d[] {
-        moduleMechanisms[0].getRoot("RootDirection", 0.5, 0.5)
-            .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
-        moduleMechanisms[1].getRoot("RootDirection", 0.5, 0.5)
-            .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
-        moduleMechanisms[2].getRoot("RootDirection", 0.5, 0.5)
-            .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
-        moduleMechanisms[3].getRoot("RootDirection", 0.5, 0.5)
-            .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
-    };
+    private StructArrayPublisher<Pose2d> estPosePublisher = NetworkTableInstance.getDefault().getStructArrayTopic("SmartDashboard/estimatedPoses",Pose2d.struct).publish();
 
-    private StructPublisher<Pose2d> currentPosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/driveState/pose", Pose2d.struct).publish();
-    private StructPublisher<Pose2d> targetPosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/driveState/targetPose", Pose2d.struct).publish();
-
+    private Command currentAuto;
     /**
      * Constructor for the Swerve subsystem.
      *
      * @param file    The configuration file for the swerve drivetrain.
      * @param vision  The vision subsystem for pose estimation.
      */
-    public Swerve(File file, Vision vision,StringLogEntry log) {
+    public Swerve(File file, Vision vision) {
         SwerveFactory factory = new SwerveFactory(file);
         swerve = factory.create(); // Create the swerve drivetrain using the factory
         this.vision = vision;
@@ -151,8 +131,6 @@ public class Swerve extends SubsystemBase {
                 this
         );
 
-        
-
         // Start simulation thread if in simulation
         if (Robot.isSimulation()) {
             startSimThread();
@@ -164,16 +142,9 @@ public class Swerve extends SubsystemBase {
         field = new Field2d();
         SmartDashboard.putData("field", field);
 
-        for(int i=0;i<moduleMechanisms.length;i++){
-            SmartDashboard.putData("module" + i, moduleMechanisms[i]);
-        }
-
-        this.log=log;
-
         // Warmup pathfinding
         Pathfinding.setPathfinder(new LocalADStar());
         PathfindingCommand.warmupCommand().schedule();
-        
     }
 
     /**
@@ -221,6 +192,19 @@ public class Swerve extends SubsystemBase {
         return swerve.getState().Speeds;
     }
 
+    private void cancelAuto(){
+        if(currentAuto!=null){
+            currentAuto.cancel();
+            currentAuto=null;
+        }
+    }
+
+    private void startAuto(Command auto){
+        cancelAuto();
+        auto=new ParallelRaceGroup(auto,new WaitCommand(SwerveConstants.moveTimeout));
+        auto.schedule();
+        currentAuto=auto;
+    }
     /**
      * Drives the robot with a percentage of maximum speed.
      *
@@ -249,20 +233,6 @@ public class Swerve extends SubsystemBase {
     }
 
     /**
-     * Gets the closest pose from a list of poses.
-     *
-     * @param poses The list of poses to compare.
-     * @return The closest pose to the current robot pose.
-     */
-    public Pose2d getClosestFixed(Pose2d[] poses) {
-        return RobotUtils.getClosestPoseToPose(RobotUtils.invertPoseToAlliance(this.getPose()), poses);
-    }
-
-    public Pose2d getClosest(Pose2d[] poses) {
-        return RobotUtils.getClosestPoseToPose(this.getPose(), poses);
-    }
-
-    /**
      * Resets the gyro and reseeds the field-centric drive.
      */
     public void resetGyro() {
@@ -278,7 +248,11 @@ public class Swerve extends SubsystemBase {
     }
 
     public List<DetectedObject> getGroundCoral(){
-        return vision.getGroundCoral(SwerveConstants.coralExpirationTime);
+        if(vision!=null){
+            return vision.getGroundCoral(SwerveConstants.coralExpirationTime);
+        }else{
+            return new ArrayList<DetectedObject>();
+        }
     }
 
     public Pose2d getTargetPose(){
@@ -286,18 +260,35 @@ public class Swerve extends SubsystemBase {
     }
 
     public void setTargetPose(Pose2d target){
-        if(target!=targetPose){
+        /*if(target!=targetPose){
             targetPose=target;
-            Command auto = AutoBuilder.pathfindToPose(targetPose, SwerveConstants.constraints);
-            new ParallelRaceGroup(auto,new WaitCommand(SwerveConstants.moveTimeout)).schedule();
+            if(targetPose!=null){
+                //startAuto(AutoBuilder.pathfindToPose(targetPose, SwerveConstants.constraints));
+                PathPlannerPath path = new PathPlannerPath(
+                    PathPlannerPath.waypointsFromPoses(RobotUtils.invertToAlliance(target),RobotUtils.invertToAlliance(target)), 
+                    SwerveConstants.constraints,
+                    null, 
+                    new GoalEndState(0.0, RobotUtils.invertToAlliance(target).getRotation()), 
+                    false
+                );
+                startAuto(AutoBuilder.pathfindThenFollowPath(path, SwerveConstants.constraints));
+            }
+        }*/
+    }
+
+    public void followPath(String name) {
+        try {
+            PathPlannerPath path = PathPlannerPath.fromPathFile(name);
+            startAuto(AutoBuilder.pathfindThenFollowPath(path, SwerveConstants.constraints));
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
-    public void setTargetPoseFixed(Pose2d target){
-        setTargetPose(RobotUtils.invertPoseToAlliance(target));
-    }
-
     public boolean atTarget(){
+        if(targetPose==null){
+            return true;
+        }
         Pose2d currentPose=getPose();
         double dist=currentPose.getTranslation().getDistance(targetPose.getTranslation());
         if(dist>SwerveConstants.transTol){
@@ -314,43 +305,39 @@ public class Swerve extends SubsystemBase {
      * Periodic method called every robot loop cycle.
      * Updates vision measurements, processes new objects, and updates field visualization.
      */
+    
     @Override
     public void periodic() {
         try{
-            List<EstimatedRobotPose> newPoses = vision.getNewPoses();
-            for (EstimatedRobotPose newPose : newPoses) {
-                swerve.addVisionMeasurement(newPose.estimatedPose.toPose2d(), newPose.timestampSeconds);
-            }
-
-            vision.processNewObjects(this.getPose());
-            field.setRobotPose(this.getPose());
-            if(Robot.isSimulation()){
-                vision.updateSim(this.getPose());
+            if(vision!=null){
+                List<EstimatedRobotPose> newPoses = vision.getNewPoses();
+                Pose2d[] estPoses=new Pose2d[newPoses.size()];
+                for(int i=0;i<newPoses.size();i++){
+                    estPoses[i]=newPoses.get(i).estimatedPose.toPose2d();
+                }
+                estPosePublisher.set(estPoses);
+                for (EstimatedRobotPose newPose : newPoses) {
+                    swerve.addVisionMeasurement(newPose.estimatedPose.toPose2d(), Utils.fpgaToCurrentTime(newPose.timestampSeconds));
+                }
+                vision.processNewObjects(this.getPose());
+                field.setRobotPose(this.getPose());
+                if(Robot.isSimulation()){
+                    vision.updateSim(this.getPose());
+                }
             }
         }catch(Exception e){
-            log.append("Periodic error: "+RobotUtils.getError(e));
+            DataLogManager.log("Periodic error: "+RobotUtils.getError(e));
         }
     }
+        
 
     private void telemetry(SwerveDriveState state){
         SmartDashboard.putNumber("driveState/odometryPeriod", state.OdometryPeriod);
-
-        currentPosePublisher.set(state.Pose);
-
         for (int i = 0; i < 4; ++i) {
-            SmartDashboard.putNumberArray("driveState/moduleStates/"+i, new double[]{state.ModuleStates[i].speedMetersPerSecond,state.ModuleStates[i].angle.getRadians()});
-            SmartDashboard.putNumberArray("driveState/moduleTargets/"+i, new double[]{state.ModuleTargets[i].speedMetersPerSecond,state.ModuleStates[i].angle.getRadians()});
-        }
-
-        /* Telemeterize the module states to a Mechanism2d */
-        for (int i = 0; i < moduleMechanisms.length; ++i) {
-            moduleSpeeds[i].setAngle(state.ModuleStates[i].angle);
-            moduleDirections[i].setAngle(state.ModuleStates[i].angle);
-            moduleSpeeds[i].setLength(state.ModuleStates[i].speedMetersPerSecond / (2 * maxSpeed));
-        }
-
-        if(targetPose!=null){
-            targetPosePublisher.set(targetPose);
+            SmartDashboard.putNumberArray("driveState/module"+i+"/state", new double[]{state.ModuleStates[i].speedMetersPerSecond,state.ModuleStates[i].angle.getRadians()});
+            SmartDashboard.putNumberArray("driveState/module"+i+"/target", new double[]{state.ModuleTargets[i].speedMetersPerSecond,state.ModuleStates[i].angle.getRadians()});
+            swerve.getModule(i).getDriveMotor().log("driveState/module"+i+"/driveMotor");
+            swerve.getModule(i).getSteerMotor().log("driveState/module"+i+"/steerMotor");
         }
     }
 

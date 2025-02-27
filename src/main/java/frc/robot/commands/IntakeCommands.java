@@ -1,10 +1,10 @@
 package frc.robot.commands;
 
+import java.util.function.DoubleSupplier;
+
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
+import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.Intake;
@@ -33,8 +33,22 @@ public class IntakeCommands {
      * @return A command that, when executed, stops the intake motor.
      */
     public Command stop() {
-        return new InstantCommand(() -> intake.stop());
+        Command command = new InstantCommand(() -> intake.stop());
+        command.addRequirements(intake);
+        return command;
     }
+
+    /**
+     * Creates a command that stops the intake.
+     *
+     * @return A command that, when executed, stops the intake motor.
+     */
+    public Command setSpeed(DoubleSupplier speed) {
+        Command command = new InstantCommand(() -> intake.setSpeed(speed.getAsDouble()));
+        command.addRequirements(intake);
+        return command;
+    }
+
 
     /**
      * Creates a command that runs the intake at a specified speed until a switch is triggered.
@@ -42,14 +56,33 @@ public class IntakeCommands {
      *
      * @return A command that runs the intake until the switch is triggered.
      */
-    public Command intakeUntilSwitched() {
-        return new ParallelRaceGroup(new FunctionalCommand(
-            () -> intake.setSpeed(IntakeConstants.intakeSpeed), // Initialize the intake speed
-            () -> {},                                           // No action during execution
-            (e) -> {},                                          // No action on end
-            () -> intake.isSwitched(),                          // Condition to end the command
-            intake                                              // Subsystem requirement
-        ),new WaitCommand(IntakeConstants.intakeTimeout));
+    public Command intake() {
+        Command command = new SequentialCommandGroup(
+            new InstantCommand(() -> intake.setSpeed(IntakeConstants.intakeSpeed)), // Start the intake
+            new WaitCommand(IntakeConstants.intakeTime),                                                   // Wait for 1 second
+            stop()                                                                // Stop the intake
+        );
+        command.addRequirements(intake);
+        return command;
+    }
+
+    /**
+     * Creates a command that will pulse the intake.
+     * The command will pulse the intake until overriden.
+     *
+     * @return A command that runs the intake until the switch is triggered.
+     */
+    public Command pulseIntake() {
+        Command command = new RepeatCommand(
+            new SequentialCommandGroup(
+                setSpeed(() -> IntakeConstants.intakeSpeed),
+                new WaitCommand(0.1),
+                stop(),
+                new WaitCommand(0.4)
+            )                                                          // Stop the intake
+        );
+        command.addRequirements(intake);
+        return command;
     }
 
     /**
@@ -59,10 +92,12 @@ public class IntakeCommands {
      * @return A command that outtakes for 1 second and then stops.
      */
     public Command outtake() {
-        return new SequentialCommandGroup(
-            Commands.runOnce(() -> intake.setSpeed(IntakeConstants.intakeSpeed)), // Start the intake
+        Command command = new SequentialCommandGroup(
+            new InstantCommand(() -> intake.setSpeed(-IntakeConstants.intakeSpeed)), // Start the intake
             new WaitCommand(IntakeConstants.outtakeTime),                                                   // Wait for 1 second
             stop()                                                                // Stop the intake
         );
+        command.addRequirements(intake);
+        return command;
     }
 }

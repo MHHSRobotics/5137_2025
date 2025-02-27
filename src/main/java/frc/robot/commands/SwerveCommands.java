@@ -1,20 +1,16 @@
 package frc.robot.commands;
 
-import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
-import java.util.function.Supplier;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
+import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.constants.GeneralConstants;
 import frc.robot.constants.SwerveConstants;
-import frc.robot.other.DetectedObject;
 import frc.robot.subsystems.Swerve;
 
 /**
@@ -44,106 +40,24 @@ public class SwerveCommands {
      * @return A command that drives the swerve subsystem.
      */
     public Command drive(DoubleSupplier dx, DoubleSupplier dy, DoubleSupplier dtheta, BooleanSupplier fieldOriented) {
-        return new InstantCommand(
+        return new FunctionalCommand(
+            () -> {},
             () -> swerve.setPercentDrive(dx.getAsDouble(), dy.getAsDouble(), dtheta.getAsDouble(), fieldOriented.getAsBoolean()),
+            (Boolean onEnd) -> {},
+            () -> {return false;},
             swerve
         );
-
     }
 
-    public Command functionalDrive(DoubleSupplier dx, DoubleSupplier dy, DoubleSupplier dtheta, BooleanSupplier fieldOriented) {
+    public Command overrideDrive(DoubleSupplier dx, DoubleSupplier dy, DoubleSupplier dtheta, BooleanSupplier fieldOriented, double time) {
         return new ParallelRaceGroup(
-            new FunctionalCommand(
-                ()->{},
-                () ->swerve.setPercentDrive(dx.getAsDouble(),dy.getAsDouble(),dtheta.getAsDouble(),fieldOriented.getAsBoolean()),
-                (cat)->{},
-                ()-> {return false;},
-                swerve),
-            new WaitCommand(0.5));
-        //return new RepeatCommand(new InstantCommand(()->swerve.setPercentDrive(dx.getAsDouble(),dy.getAsDouble(),dtheta.getAsDouble(),fieldOriented.getAsBoolean())));
+            new RepeatCommand(drive(dx,dy,dtheta,fieldOriented)),
+            new WaitCommand(time)
+        );
     }
 
-    /**
-     * Creates a command to drive the swerve subsystem to a specific pose.
-     *
-     * @param pose The supplier for the target pose.
-     * @return A command that drives the swerve subsystem to the specified pose.
-     */
-    public Command driveToPoseDynamic(Supplier<Pose2d> pose){
-        return new ParallelRaceGroup(new FunctionalCommand(
-            () -> {},
-            () -> {
-                swerve.setTargetPose(pose.get());
-            },
-            (e) -> {},
-            () -> swerve.atTarget(),
-            swerve
-        ),new WaitCommand(SwerveConstants.moveTimeout));
-    }
-
-    public Command driveToPoseStatic(Supplier<Pose2d> pose){
-        return new ParallelRaceGroup(new FunctionalCommand(
-            () -> {swerve.setTargetPose(pose.get());},
-            () -> {},
-            (e) -> {},
-            () -> swerve.atTarget(),
-            swerve
-        ),new WaitCommand(SwerveConstants.moveTimeout));
-    }
-
-    public Command driveToPoseStaticFixed(Supplier<Pose2d> pose){
-        return new ParallelRaceGroup(new FunctionalCommand(
-            () -> {swerve.setTargetPoseFixed(pose.get());},
-            () -> {},
-            (e) -> {},
-            () -> swerve.atTarget(),
-            swerve
-        ),new WaitCommand(SwerveConstants.moveTimeout));
-    }
-
-    /**
-     * Creates a command to drive the swerve subsystem to the closest station.
-     *
-     * @return A command that drives the swerve subsystem to the closest station.
-     */
-    public Command driveToStation() {
-        return driveToPoseStaticFixed(() -> swerve.getClosestFixed(GeneralConstants.stations));
-    }
-
-    /**
-     * Creates a command to drive the swerve subsystem to the closest left reef.
-     *
-     * @return A command that drives the swerve subsystem to the closest left reef.
-     */
-    public Command driveToReefLeft() {
-        return driveToPoseStaticFixed(() -> swerve.getClosestFixed(GeneralConstants.leftReef));
-    }
-
-    /**
-     * Creates a command to drive the swerve subsystem to the closest center reef.
-     *
-     * @return A command that drives the swerve subsystem to the closest center reef.
-     */
-    public Command driveToReefCenter() {
-        return driveToPoseStaticFixed(() -> swerve.getClosestFixed(GeneralConstants.centerReef));
-    }
-
-    /**
-     * Creates a command to drive the swerve subsystem to the closest right reef.
-     *
-     * @return A command that drives the swerve subsystem to the closest right reef.
-     */
-    public Command driveToReefRight() {
-        return driveToPoseStaticFixed(() -> swerve.getClosestFixed(GeneralConstants.rightReef));
-    }
-
-    /**
-     * Creates a command to drive the swerve subsystem to the processor.
-     *
-     * @return A command that drives the swerve subsystem to the processor.
-     */
-    public Command driveToProcessor() {
-        return driveToPoseStaticFixed(() -> GeneralConstants.processor);
+    public Command driveBack(){
+        return overrideDrive(()->-SwerveConstants.driveBackPower, ()->0, ()->0, ()->false, SwerveConstants.driveBackTime);
     }
 
     /**
@@ -162,25 +76,6 @@ public class SwerveCommands {
      */
     public Command resetGyro() {
         return new InstantCommand(() -> swerve.resetGyro(), swerve);
-    }
-
-    public Command driveToCoral(){
-        return driveToPoseDynamic(()->{
-            List<DetectedObject> objects=swerve.getGroundCoral();
-            Pose2d[] poses=new Pose2d[objects.size()];
-            for(int i=0;i<poses.length;i++){
-                poses[i]=objects.get(i).getPose().toPose2d();
-            }
-            return swerve.getClosest(poses);
-        });
-    }
-
-    public Command driveToBranch(Supplier<Integer> branch){
-        return driveToPoseStaticFixed(()->GeneralConstants.allReef[branch.get()]);
-    }
-
-    public Command driveToAlgae(Supplier<Integer> side){
-        return driveToPoseStaticFixed(()->GeneralConstants.centerReef[side.get()]);
     }
 
     /**
