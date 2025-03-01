@@ -33,6 +33,25 @@ public class SwerveSystemCommands {
         );
     }
 
+    /**
+     * Creates a command that moves to a specific state, sets swerve and elevator first then arm and wrist
+     * 
+     * @param state The state to move to
+     * @param targetPose Optional target pose for states with null positions
+     * @param delay Delay between swerve and elevator movement and arm and wirst movement
+     */
+    public Command moveToStateDelayed(Supplier<SwerveSystem.SwerveSystemState> state) {
+        SwerveSystemState m_state = state.get();
+        if (m_state != null) {
+            return new SequentialCommandGroup(
+                moveToState(() -> new SwerveSystemState(null, m_state.elevatorPosition, null, m_state.botPosition, null)),
+                moveToState(() -> new SwerveSystemState(m_state.armPosition, null, m_state.wristPosition, null, null))
+            );
+        } else {
+            return new WaitCommand(0.0);
+        }
+    }
+
     public Command waitUntilFinished(){
         return new ParallelRaceGroup(
             new WaitUntilCommand(()->swerveSystem.atSetpoint()),
@@ -86,6 +105,10 @@ public class SwerveSystemCommands {
             }),
             moveToState(()->levelState)
         );
+    }
+
+    public Command moveToLevelDelayed(int level){
+        return moveToStateDelayed(()->swerveSystem.getClosestState(SwerveSystemConstants.getScoringStates()[level]));
     }
 
     public Command coralIntake(){

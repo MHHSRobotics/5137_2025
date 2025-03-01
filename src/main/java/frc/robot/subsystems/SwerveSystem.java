@@ -189,18 +189,18 @@ public class SwerveSystem extends SubsystemBase {
      * @param targetPose The target robot pose to use if state's position is null
      */
     public void setTargetState(SwerveSystemState state) {
-        if(arm!=null){
+        if(arm!=null && state.armPosition != null){
             arm.setGoal(state.armPosition);
         }
-        if(elevator!=null){
+        if(elevator!=null && state.elevatorPosition != null){
             elevator.setGoal(state.elevatorPosition);
         }
-        if(wrist!=null){
+        if(wrist!=null && state.wristPosition != null){
             wrist.setGoal(state.wristPosition);
         }
         if(swerve!=null && state.botPosition != null){
             // Uncomment at your own risk
-            swerve.followPath(state.name);
+            //swerve.followPath(state.name);
         }
     }
 

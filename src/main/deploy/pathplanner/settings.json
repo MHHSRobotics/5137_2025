@@ -5,7 +5,10 @@
   "pathFolders": [
     "Auto Align"
   ],
-  "autoFolders": [],
+  "autoFolders": [
+    "Active",
+    "Inactive"
+  ],
   "defaultMaxVel": 5.0,
   "defaultMaxAccel": 11.7,
   "defaultMaxAngVel": 270.0,

@@ -14,6 +14,7 @@ import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
@@ -68,6 +69,8 @@ public class RobotContainer {
 	private AutoFactory autoFactory;
 	private Gamepieces gamepieces;
 
+	private SendableChooser<String> autoChoice;
+
 	/**
 	 * Constructor for RobotContainer.
 	 * Initializes all subsystems, commands, and binds controls.
@@ -102,6 +105,11 @@ public class RobotContainer {
 			initSwerveSystem();
 			initMultiCommands();
 			//initAdditionalComponents();
+
+			autoChoice = new SendableChooser<String>();
+			autoChoice.setDefaultOption("Single Center", "Single Center");
+			AutoBuilder.getAllAutoNames().forEach((name) -> autoChoice.addOption(name, name));
+			SmartDashboard.putData("Auto Choice", autoChoice);
 
 			// Configure SysId bindings for elevator
 			//configureSysIdBindings(elevatorCommands);
@@ -197,10 +205,7 @@ public class RobotContainer {
 		hang = new Hang();
 		hangCommands = new HangCommands(hang);
 		
-		operator.povUp().or(driver.povUp()).whileTrue(hangCommands.setSpeed(() -> HangConstants.hangSpeed));
-		operator.povDown().or(driver.povDown()).whileTrue(hangCommands.setSpeed(() -> -HangConstants.hangSpeed));
-		operator.povLeft().or(driver.povLeft()).whileTrue(hangCommands.setSpeed(() -> -0.2));
-		operator.povRight().or(driver.povRight()).onTrue(armCommands.setGoal(() -> Units.degreesToRadians(ArmConstants.hangPosition)));
+		driver.povUp().whileTrue(hangCommands.setSpeed(() -> -driver.getRightY()*HangConstants.hangSpeed));
 	}
 
 	private void initLED() {
@@ -214,12 +219,12 @@ public class RobotContainer {
 		driver.square().and(driver.R2().negate()).onTrue(swerveSystemCommands.moveToProcessor());
 		driver.cross().and(driver.R2().negate()).onTrue(swerveSystemCommands.moveToBarge());
 
-		driver.triangle().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(3));
+		driver.triangle().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevelDelayed(3));
 		driver.square().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(2));
 		driver.circle().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(1));
 		driver.cross().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(0));
 
-		NamedCommands.registerCommand("L4", swerveSystemCommands.moveToLevel(3));
+		NamedCommands.registerCommand("L4", swerveSystemCommands.moveToLevelDelayed(3));
 
 		//driver.axisLessThan(0,-0.1).onTrue(swerveSystemCommands.moveToLevel(3));
 
@@ -238,27 +243,23 @@ public class RobotContainer {
 
 		driver.triangle().and(driver.R2().negate()).onTrue(multiCommands.getCoralFromSource());
 		driver.circle().and(driver.R2().negate())
-		.onTrue(multiCommands.getAlgae())
-		.onFalse(new SequentialCommandGroup(
-			new ParallelCommandGroup(
-				intakeCommands.pulseIntake(),
-				wristCommands.setGoal(() -> Units.degreesToRadians(-90))
-			)
-		));
+		.onTrue(multiCommands.getAlgae());
 
 		driver.triangle().negate()
 		.and(driver.square().negate())
 		.and(driver.circle().negate())
 		.and(driver.cross().negate())
-		.onTrue(new SequentialCommandGroup(
-			new WaitCommand(0.1),
-			multiCommands.moveToDefault()));
+		.onTrue(multiCommands.moveToDefault());
+
+		driver.povDown()
+		.onTrue(multiCommands.moveToDefault());
 
 		NamedCommands.registerCommand("Default", multiCommands.moveToDefault());
+		NamedCommands.registerCommand("SourceCoral", multiCommands.getCoralFromSource());
 
 		driver.L1()
 		.toggleOnTrue(intakeCommands.pulseIntake())
-		.onTrue(wristCommands.setGoal(() -> Units.degreesToRadians(-90)));
+		.onTrue(wristCommands.setGoal(() -> Units.degreesToRadians(-45)));
 	}
 
 	private void initAdditionalComponents() {
@@ -294,6 +295,6 @@ public class RobotContainer {
 			return autoFactory.getAuto();
 		}*/
 		swerve.resetGyro();
-		return AutoBuilder.buildAuto("Test Auto");
+		return AutoBuilder.buildAuto(autoChoice.getSelected());
 	}
 }

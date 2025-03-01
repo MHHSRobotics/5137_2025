@@ -42,7 +42,7 @@ public final class SwerveSystemConstants {
     private static final SwerveSystem.SwerveSystemState bargeState = new SwerveSystem.SwerveSystemState(
         Units.degreesToRadians(0),  // From ArmConstants.defaultGoal (vertical)
         1.11,                         // From ElevatorConstants.defaultGoal
-        wristDown,                   // From WristConstants.pos1 (down)
+        Units.degreesToRadians(-45),                   // From WristConstants.pos1 (down)
         null,                         // Robot position determined at runtime
         null
     );
@@ -79,7 +79,7 @@ public final class SwerveSystemConstants {
         for (int i = 0; i < states.length; i++) {
             states[i] = new SwerveSystem.SwerveSystemState(
                 -0.43,  // 45 - 90 = -45 degrees
-                0.17,                        // From ElevatorConstants.sourceGoal
+                0.23,                        // From ElevatorConstants.sourceGoal
                 Units.degreesToRadians(-113.6),              // From WristConstants.pos2 (straight)
                 RobotPositions.stations[i].alliancePos(),
                 //"Source "+(char)('A'+i)
@@ -121,7 +121,7 @@ public final class SwerveSystemConstants {
             0.1,   // L1 (135 - 90)
             0.1,   // L2 (135 - 90)
             0.1,   // L3 (135 - 90)
-            0.1    // L4 (120 - 90)
+            0.15    // L4 (120 - 90)
         };
 
         for (int level = 0; level < states.length; level++) {
