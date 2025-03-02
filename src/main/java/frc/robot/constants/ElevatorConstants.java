@@ -33,7 +33,7 @@ public class ElevatorConstants {
     public static final double carriageMass = 13.0; // in kg
     public static final double drumRadius = 0.022; // in meters
     public static final double minHeight = 0; // in meters
-    public static final double maxHeight = 1.11; // in meters
+    public static final double maxHeight = 1.12; // in meters
     public static final DCMotor motorSim = DCMotor.getFalcon500Foc(2);
 
     // Motion Profile constants

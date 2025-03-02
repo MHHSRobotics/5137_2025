@@ -121,7 +121,7 @@ public final class SwerveSystemConstants {
             0.1,   // L1 (135 - 90)
             0.1,   // L2 (135 - 90)
             0.1,   // L3 (135 - 90)
-            0.15    // L4 (120 - 90)
+            0.12    // L4 (120 - 90)
         };
 
         for (int level = 0; level < states.length; level++) {
