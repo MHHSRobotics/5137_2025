@@ -94,16 +94,16 @@ public class RobotContainer {
 			// Initialize subsystems
 			initVision();
 			initSwerve();
-			initElevator();
-			initArm();
-			initWrist();
+			//initElevator();
+			//initArm();
+			//initWrist();
 			initIntake();
 			initHang();
 			//initLED();
 			
 			// Initialize combined systems and commands
-			initSwerveSystem();
-			initMultiCommands();
+			//initSwerveSystem();
+			//initMultiCommands();
 			//initAdditionalComponents();
 
 			autoChoice = new SendableChooser<String>();
