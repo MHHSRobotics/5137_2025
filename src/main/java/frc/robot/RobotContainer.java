@@ -77,15 +77,7 @@ public class RobotContainer {
 	 */
 	public RobotContainer() {
 		// Start data logging
-		try{
-			DataLogManager.start("C:\\FRC2025\\logs");
-		}catch(Exception e){
-			try{
-				DataLogManager.start("C:/FRC2025/logs");
-			}catch(Exception e2){
-				DataLogManager.start();
-			}
-		}
+		DataLogManager.start();
 		
 		DriverStation.startDataLog(DataLogManager.getLog());
 
@@ -103,16 +95,16 @@ public class RobotContainer {
 			// Initialize subsystems
 			initVision();
 			initSwerve();
-			//initElevator();
-			//initArm();
-			//initWrist();
+			initElevator();
+			initArm();
+			initWrist();
 			initIntake();
 			initHang();
 			//initLED();
 			
 			// Initialize combined systems and commands
-			//initSwerveSystem();
-			//initMultiCommands();
+			initSwerveSystem();
+			initMultiCommands();
 			//initAdditionalComponents();
 
 			autoChoice = new SendableChooser<String>();
@@ -198,11 +190,11 @@ public class RobotContainer {
 		intakeCommands = new IntakeCommands(intake);
 
 		// Configure intake bindings
-		operator.L2().or(driver.L2().and(driver.R2().negate()))
+		operator.L2().or(driver.L2().and(driver.R2().negate())).or(driver.R1().and(driver.R2()))
 			.onTrue(intakeCommands.setSpeed(()->IntakeConstants.intakeSpeed))
 			.onFalse(intakeCommands.stop());
 
-		operator.R2().or(driver.R1()).or(driver.L2().and(driver.R2()))
+		operator.R2().or(driver.L2().and(driver.R2())).or(driver.R1().and(driver.R2().negate()))
 			.onTrue(intakeCommands.setSpeed(()->-IntakeConstants.intakeSpeed))
 			.onFalse(intakeCommands.stop());
 		
