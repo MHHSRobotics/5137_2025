@@ -77,7 +77,16 @@ public class RobotContainer {
 	 */
 	public RobotContainer() {
 		// Start data logging
-		DataLogManager.start();
+		try{
+			DataLogManager.start("C:\\FRC2025\\logs");
+		}catch(Exception e){
+			try{
+				DataLogManager.start("C:/FRC2025/logs");
+			}catch(Exception e2){
+				DataLogManager.start();
+			}
+		}
+		
 		DriverStation.startDataLog(DataLogManager.getLog());
 
 		try {
