@@ -3,21 +3,22 @@ package frc.robot.commands;
 import java.util.function.Supplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.constants.SwerveSystemConstants;
 import frc.robot.subsystems.SwerveSystem;
 import frc.robot.subsystems.SwerveSystem.SwerveSystemState;
 
 public class SwerveSystemCommands {
     private SwerveSystem swerveSystem;
+    private Timer timer;
 
     public SwerveSystemCommands(SwerveSystem swerveSystem) {
         this.swerveSystem = swerveSystem;
+        this.timer = new Timer();
     }
 
     /**
@@ -26,24 +27,58 @@ public class SwerveSystemCommands {
      * @param state The state to move to
      */
     public Command moveToState(Supplier<SwerveSystem.SwerveSystemState> state) {
-        return new SequentialCommandGroup(
-            new InstantCommand(()->swerveSystem.setTargetState(state.get())),
-            waitUntilFinished()
+        return new FunctionalCommand(
+            () -> {
+                timer.restart();
+                swerveSystem.setTargetState(state.get());
+            },
+            () -> {},
+            (Boolean x) -> {},
+            () -> isFinished(),
+            swerveSystem
+        );
+    }
+
+        /**
+     * Creates a command that moves to a specific state
+     * 
+     * @param state The state to move to
+     * @param timeout Time until command stops running if it doesn't reach setpoint
+     */
+    public Command moveToState(Supplier<SwerveSystem.SwerveSystemState> state, double timeout) {
+        return new FunctionalCommand(
+            () -> {
+                timer.restart();
+                swerveSystem.setTargetState(state.get());
+            },
+            () -> {},
+            (Boolean x) -> {},
+            () -> isFinished(timeout),
+            swerveSystem
         );
     }
 
     public Command moveToStateSequenced(Supplier<SwerveSystem.SwerveSystemState> state, Supplier<SwerveSystem.SwerveSystemState> preState) {
-        return new SequentialCommandGroup(
-            moveToState(() -> preState.get().withPose(state.get().botPosition)),
-            moveToState(() -> state.get())
-        );
+        if (preState.get() != SwerveSystemState.NULL) {
+            return new SequentialCommandGroup(
+                moveToState(() -> preState.get().withPose(state.get().botPosition), 5),
+                moveToState(() -> state.get().stageOne()),
+                moveToState(() -> state.get().stageTwo())
+            );
+        } else {
+            return new SequentialCommandGroup(
+                moveToState(() -> preState.get().withPose(state.get().botPosition), 5),
+                moveToState(() -> state.get())
+            );
+        }
     }
 
-    public Command waitUntilFinished(){
-        return new ParallelRaceGroup(
-            new WaitUntilCommand(()->swerveSystem.atSetpoint()),
-            new WaitCommand(SwerveSystemConstants.timeout)
-        );
+    public boolean isFinished(){
+        return (swerveSystem.atSetpoint() || timer.hasElapsed(SwerveSystemConstants.timeout)) && timer.hasElapsed(0.1);
+    }
+
+    public boolean isFinished(double timeout){
+        return (swerveSystem.atSetpoint() || timer.hasElapsed(timeout)) && timer.hasElapsed(0.1);
     }
 
     private SwerveSystemState sourceState;

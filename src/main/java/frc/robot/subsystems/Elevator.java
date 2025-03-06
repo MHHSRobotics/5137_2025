@@ -199,7 +199,7 @@ public class Elevator extends SubsystemBase {
      *         false otherwise.
      */
     public boolean atSetpoint() {
-        return controller.atSetpoint();
+        return controller.getPositionError()<ElevatorConstants.elevatorTolerance;
     }
 
     /**

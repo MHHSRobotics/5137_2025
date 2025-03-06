@@ -58,6 +58,7 @@ public class Swerve extends SubsystemBase {
     private double maxAngularSpeed; // Maximum rotational speed of the robot
 
     private Field2d field; // Field visualization for SmartDashboard
+    private Field2d targetField;
 
     // Swerve control requests
     private SwerveRequest.FieldCentric fieldOrientedDrive; // Field-oriented driving request
@@ -130,7 +131,9 @@ public class Swerve extends SubsystemBase {
         swerve.registerTelemetry(this::telemetry);
 
         field = new Field2d();
+        targetField = new Field2d();
         SmartDashboard.putData("field", field);
+        SmartDashboard.putData("targetField", targetField);
 
         // Warmup pathfinding
         Pathfinding.setPathfinder(new LocalADStar());
@@ -299,6 +302,7 @@ public class Swerve extends SubsystemBase {
                 }
                 vision.processNewObjects(this.getPose());
                 field.setRobotPose(this.getPose());
+                targetField.setRobotPose(this.getTargetPose());
                 if(Robot.isSimulation()){
                     vision.updateSim(this.getPose());
                 }

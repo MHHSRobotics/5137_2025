@@ -49,6 +49,14 @@ public class SwerveSystem extends SubsystemBase {
         public SwerveSystemState noRobotPose(){
             return withPose(null);
         }
+
+        public SwerveSystemState stageOne() {
+            return new SwerveSystemState(null, elevatorPosition, null, null);
+        }
+
+        public SwerveSystemState stageTwo() {
+            return new SwerveSystemState(armPosition, null, wristPosition, null);
+        }
     }
 
     // Subsystems
@@ -240,7 +248,7 @@ public class SwerveSystem extends SubsystemBase {
     public boolean atSetpoint() {
         return (arm==null || arm.atSetpoint()) &&
             (elevator==null || elevator.atSetpoint()) &&
-            (wrist==null || wrist.atSetpoint()) /*&&
+            (wrist==null || wrist.atSetpoint())/* &&
             (swerve==null || swerve.atTarget())*/;
     }
 }

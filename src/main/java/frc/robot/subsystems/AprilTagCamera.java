@@ -117,8 +117,10 @@ public class AprilTagCamera extends SubsystemBase {
                 var estimatedPose = estimator.update(res);
                 // If the estimated pose is present, add it to the list
                 if (estimatedPose.isPresent()) {
-                    //DataLogManager.log("New estimated pose from "+name+": "+estimatedPose.get());
-                    estimatedPoses.add(estimatedPose.get());
+                    var target = res.getBestTarget();
+                    if (target.getPoseAmbiguity() < 0.2) {
+                        estimatedPoses.add(estimatedPose.get());
+                    }
                 }
             }
         }catch(Exception e){

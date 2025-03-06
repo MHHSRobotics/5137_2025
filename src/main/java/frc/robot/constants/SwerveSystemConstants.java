@@ -10,7 +10,7 @@ import frc.robot.elastic.Reef;
  * This class centralizes all the goal positions for the entire arm system.
  */
 public final class SwerveSystemConstants {
-    public static final double timeout = 5; // seconds
+    public static final double timeout = 1; // seconds
     
     // Weight for how much to consider rotation vs translation when finding closest state
     // Higher values mean rotation differences matter more
@@ -44,9 +44,9 @@ public final class SwerveSystemConstants {
     );
 
     private static final SwerveSystem.SwerveSystemState preScoringState = new SwerveSystem.SwerveSystemState(
-        Units.degreesToRadians(-10),
+        Units.degreesToRadians(0),
         null,
-        Units.degreesToRadians(10),
+        Units.degreesToRadians(0),
         null
     );
 
@@ -112,19 +112,19 @@ public final class SwerveSystemConstants {
             0.66,   // L1 (135 - 90)
             0.34,   // L2 (135 - 90)
             0.34,   // L3 (135 - 90)
-            0.4    // L4 (120 - 90)
+            0.36    // L4 (120 - 90)
         };
         double[] elevatorHeights = {
             0.01,  // L1
-            0.06,  // L2
-            0.46,  // L3
+            0.04,  // L2
+            0.44,  // L3
             1.11   // L4
         };
         double[] wristAngles = {
-            0.1,   // L1 (135 - 90)
-            0.1,   // L2 (135 - 90)
-            0.1,   // L3 (135 - 90)
-            0.12    // L4 (120 - 90)
+            0.15,   // L1 (135 - 90)
+            0.18,   // L2 (135 - 90)
+            0.18,   // L3 (135 - 90)
+            0.2    // L4 (120 - 90)
         };
 
         for (int level = 0; level < states.length; level++) {

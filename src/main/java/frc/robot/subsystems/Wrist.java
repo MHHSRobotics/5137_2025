@@ -275,7 +275,7 @@ public class Wrist extends SubsystemBase {
      *         false otherwise.
      */
     public boolean atSetpoint() {
-        return controller.atSetpoint();
+        return getError()<WristConstants.wristTolerance;
     }
 
     /**

@@ -68,6 +68,13 @@ public class MultiCommands {
         );
     }
 
+    public Command placeCoral(int level) {
+        return new SequentialCommandGroup(
+            swerveSystemCommands.moveToLevel(level),
+            new ParallelCommandGroup(intakeCommands.outtake(),swerveSystemCommands.simCoralOuttake())
+        );
+    }
+
     public Command getAlgae(Supplier<Integer> side) {
         return new SequentialCommandGroup(
             swerveSystemCommands.moveToAlgae(side),
