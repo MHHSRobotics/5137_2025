@@ -27,7 +27,7 @@ public class ArmConstants {
     //public static final Constraints pidConstraints=new Constraints(Units.degreesToRadians(180),Units.degreesToRadians(360));
 
     // Arm tolerance
-    public static final double armTolerance = Units.degreesToRadians(1);
+    public static final double armTolerance = Units.degreesToRadians(2);
 
     // Hang Position
     public static final double hangPosition = Units.degreesToRadians(-30);

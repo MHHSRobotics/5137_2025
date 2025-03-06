@@ -10,11 +10,9 @@ import frc.robot.other.SwerveFactory;
 import static edu.wpi.first.units.Units.*;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.json.simple.parser.ParseException;
 import org.photonvision.EstimatedRobotPose;
 
 import com.ctre.phoenix6.Utils;
@@ -22,25 +20,17 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.path.GoalEndState;
-import com.pathplanner.lib.path.IdealStartingState;
-import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
-import com.pathplanner.lib.path.Waypoint;
 import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
-import com.pathplanner.lib.util.FileVersionException;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
@@ -202,6 +192,7 @@ public class Swerve extends SubsystemBase {
     private void startAuto(Command auto){
         cancelAuto();
         auto=new ParallelRaceGroup(auto,new WaitCommand(SwerveConstants.moveTimeout));
+        auto.addRequirements(this);
         auto.schedule();
         currentAuto=auto;
     }
@@ -260,20 +251,7 @@ public class Swerve extends SubsystemBase {
     }
 
     public void setTargetPose(Pose2d target){
-        /*if(target!=targetPose){
-            targetPose=target;
-            if(targetPose!=null){
-                //startAuto(AutoBuilder.pathfindToPose(targetPose, SwerveConstants.constraints));
-                PathPlannerPath path = new PathPlannerPath(
-                    PathPlannerPath.waypointsFromPoses(RobotUtils.invertToAlliance(target),RobotUtils.invertToAlliance(target)), 
-                    SwerveConstants.constraints,
-                    null, 
-                    new GoalEndState(0.0, RobotUtils.invertToAlliance(target).getRotation()), 
-                    false
-                );
-                startAuto(AutoBuilder.pathfindThenFollowPath(path, SwerveConstants.constraints));
-            }
-        }*/
+        startAuto(AutoBuilder.pathfindToPose(target, SwerveConstants.constraints, 0.0));
     }
 
     public void followPath(String name) {

@@ -10,7 +10,7 @@ import frc.robot.elastic.Reef;
  * This class centralizes all the goal positions for the entire arm system.
  */
 public final class SwerveSystemConstants {
-    public static final double timeout = 1; // seconds
+    public static final double timeout = 5; // seconds
     
     // Weight for how much to consider rotation vs translation when finding closest state
     // Higher values mean rotation differences matter more
@@ -27,23 +27,27 @@ public final class SwerveSystemConstants {
         -2.0,  // From ArmConstants.groundIntakeGoal
         0.41,                       // From ElevatorConstants.groundIntakeGoal
         -1.39,                  // From WristConstants.pos1 (down)
-        null,                        // Robot position determined at runtime
-        null
+        null                        // Robot position determined at runtime
     );   
 
     private static final SwerveSystem.SwerveSystemState baseDefaultState = new SwerveSystem.SwerveSystemState(
         Units.degreesToRadians(0),  // From ArmConstants.defaultGoal (vertical)
         0.05,                         // From ElevatorConstants.defaultGoal
         wristUp,                   // From WristConstants.pos1 (down)
-        null,                         // Robot position determined at runtime
-        null
+        null                         // Robot position determined at runtime
     );
 
     private static final SwerveSystem.SwerveSystemState bargeState = new SwerveSystem.SwerveSystemState(
-        Units.degreesToRadians(0),  // From ArmConstants.defaultGoal (vertical)
-        1.11,                         // From ElevatorConstants.defaultGoal
-        Units.degreesToRadians(-45),                   // From WristConstants.pos1 (down)
-        null,                         // Robot position determined at runtime
+        Units.degreesToRadians(0),
+        1.11,
+        Units.degreesToRadians(-45),
+        null
+    );
+
+    private static final SwerveSystem.SwerveSystemState preScoringState = new SwerveSystem.SwerveSystemState(
+        Units.degreesToRadians(-10),
+        null,
+        Units.degreesToRadians(10),
         null
     );
 
@@ -69,8 +73,7 @@ public final class SwerveSystemConstants {
             Units.degreesToRadians(-95),  // 75 - 90 = -15 degrees
             0.65,
             Units.degreesToRadians(-45),
-            RobotPositions.processor.alliancePos(),
-            null
+            RobotPositions.processor.alliancePos()
         );
     }
 
@@ -81,9 +84,7 @@ public final class SwerveSystemConstants {
                 -0.43,  // 45 - 90 = -45 degrees
                 0.23,                        // From ElevatorConstants.sourceGoal
                 Units.degreesToRadians(-113.6),              // From WristConstants.pos2 (straight)
-                RobotPositions.stations[i].alliancePos(),
-                //"Source "+(char)('A'+i)
-                null
+                RobotPositions.stations[i].alliancePos()
             );
         }
         return states;
@@ -96,11 +97,14 @@ public final class SwerveSystemConstants {
                 Units.degreesToRadians(-55),  // 30 - 90 = -60, 120 - 90 = 30
                 Reef.isAlgaeLow(i) ? 0.43 : 0.9,
                 Units.degreesToRadians(-115),                             // From WristConstants.minAngle
-                RobotPositions.centerReef[i].alliancePos(),
-                null
+                RobotPositions.centerReef[i].alliancePos()
             );
         }
         return states;
+    }
+
+    public static SwerveSystem.SwerveSystemState getPrescoringState() {
+        return preScoringState;
     }
 
     public static SwerveSystem.SwerveSystemState[][] getScoringStates() {
@@ -130,9 +134,7 @@ public final class SwerveSystemConstants {
                     armAngles[level],
                     elevatorHeights[level],
                     wristAngles[level],
-                    RobotPositions.branchReef[pos].alliancePos(),
-                    //"Reef "+(char)('A'+pos)
-                    null
+                    RobotPositions.branchReef[pos].alliancePos()
                 );
             }
         }
