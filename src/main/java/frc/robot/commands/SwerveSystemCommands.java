@@ -111,7 +111,7 @@ public class SwerveSystemCommands {
         return moveToState(()->SwerveSystemConstants.getDefaultState());
     }
 
-    public Command moveToLevel(int level, double delay){
+    public Command moveToLevel(int level){
         return moveToStateSequenced(()->swerveSystem.getClosestState(SwerveSystemConstants.getScoringStates()[level]), SwerveSystemConstants.getPrescoringState().armPosition, SwerveSystemConstants.getPrescoringState().wristPosition);
     }
 

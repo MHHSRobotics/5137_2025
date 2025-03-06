@@ -220,12 +220,12 @@ public class RobotContainer {
 		driver.square().and(driver.R2().negate()).onTrue(swerveSystemCommands.moveToProcessor());
 		driver.cross().and(driver.R2().negate()).onTrue(swerveSystemCommands.moveToBarge());
 
-		driver.triangle().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(3, 1.0));
+		driver.triangle().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(3));
 		driver.square().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(2));
 		driver.circle().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(1));
 		driver.cross().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(0));
 
-		NamedCommands.registerCommand("L4", swerveSystemCommands.moveToLevel(3, 1.0, 0.01));
+		NamedCommands.registerCommand("L4", swerveSystemCommands.moveToLevel(3));
 
 		//driver.axisLessThan(0,-0.1).onTrue(swerveSystemCommands.moveToLevel(3));
 
