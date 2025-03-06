@@ -20,7 +20,6 @@ public final class SwerveSystemConstants {
     // elevator L2 0.15
 
     private static final double wristUp = Units.degreesToRadians(90);
-    private static final double wristDown = Units.degreesToRadians(-90);      // 0 - 90 = -90 (horizontal)
 
     // Basic states without specific robot positions
     private static final SwerveSystem.SwerveSystemState baseGroundIntake = new SwerveSystem.SwerveSystemState(

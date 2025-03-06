@@ -29,6 +29,8 @@ public class SwerveSystem extends SubsystemBase {
         public final Double wristPosition;
         public final Pose2d botPosition;
 
+        public static final SwerveSystemState NULL=new SwerveSystemState(null,null,null,null);
+
         public SwerveSystemState(Double armPosition, Double elevatorPosition, Double wristPosition, Pose2d botPosition) {
             this.armPosition = armPosition;
             this.elevatorPosition = elevatorPosition;
@@ -38,6 +40,14 @@ public class SwerveSystem extends SubsystemBase {
 
         public SwerveSystemState withPose(Pose2d pose){
             return new SwerveSystemState(armPosition, elevatorPosition, wristPosition, pose);
+        }
+
+        public SwerveSystemState robotPoseOnly(){
+            return new SwerveSystemState(null, null, null, botPosition);
+        }
+
+        public SwerveSystemState noRobotPose(){
+            return withPose(null);
         }
     }
 

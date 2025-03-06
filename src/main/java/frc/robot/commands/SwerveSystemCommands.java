@@ -32,38 +32,11 @@ public class SwerveSystemCommands {
         );
     }
 
-    /**
-     * Creates a command that moves to a specific state, sets swerve first then elevator arm and wrist
-     * 
-     * @param state The state to move to
-     */
-    public Command moveToStateSequenced(Supplier<SwerveSystem.SwerveSystemState> state) {
-        SwerveSystemState m_state = state.get();
-        if (m_state != null) {
-            return new SequentialCommandGroup(
-                moveToState(() -> new SwerveSystemState(null, null, null, m_state.botPosition)),
-                moveToState(() -> new SwerveSystemState(m_state.armPosition, m_state.elevatorPosition, m_state.wristPosition, null))
-            );
-        } else {
-            return new WaitCommand(0.0);
-        }
-    }
-
-    /**
-     * Creates a command that moves to a specific state, sets swerve first and pre arm and wrist positions, then elevator arm and wrist
-     * 
-     * @param state The state to move to
-     */
-    public Command moveToStateSequenced(Supplier<SwerveSystem.SwerveSystemState> state, double armPosition, double wristPosition) {
-        SwerveSystemState m_state = state.get();
-        if (m_state != null) {
-            return new SequentialCommandGroup(
-                moveToState(() -> new SwerveSystemState(armPosition, null, wristPosition, m_state.botPosition)),
-                moveToState(() -> new SwerveSystemState(m_state.armPosition, m_state.elevatorPosition, m_state.wristPosition, null))
-            );
-        } else {
-            return new WaitCommand(0.0);
-        }
+    public Command moveToStateSequenced(Supplier<SwerveSystem.SwerveSystemState> state, Supplier<SwerveSystem.SwerveSystemState> preState) {
+        return new SequentialCommandGroup(
+            moveToState(() -> preState.get().withPose(state.get().botPosition)),
+            moveToState(() -> state.get())
+        );
     }
 
     public Command waitUntilFinished(){
@@ -92,7 +65,7 @@ public class SwerveSystemCommands {
     }
 
     public Command moveToAlgae() {
-        return moveToStateSequenced(()->swerveSystem.getClosestState(SwerveSystemConstants.getAlgaeStates()));
+        return moveToStateSequenced(()->swerveSystem.getClosestState(SwerveSystemConstants.getAlgaeStates()),()->SwerveSystemState.NULL);
     }
 
     public Command moveToBranch(Supplier<Integer> level,Supplier<Integer> branch){
@@ -100,7 +73,7 @@ public class SwerveSystemCommands {
     }
 
     public Command moveToProcessor(){
-        return moveToStateSequenced(()->SwerveSystemConstants.getProcessor());
+        return moveToStateSequenced(()->SwerveSystemConstants.getProcessor(),()->SwerveSystemState.NULL);
     }
 
     public Command moveToBarge(){
@@ -112,7 +85,7 @@ public class SwerveSystemCommands {
     }
 
     public Command moveToLevel(int level){
-        return moveToStateSequenced(()->swerveSystem.getClosestState(SwerveSystemConstants.getScoringStates()[level]), SwerveSystemConstants.getPrescoringState().armPosition, SwerveSystemConstants.getPrescoringState().wristPosition);
+        return moveToStateSequenced(()->swerveSystem.getClosestState(SwerveSystemConstants.getScoringStates()[level]), ()->SwerveSystemConstants.getPrescoringState());
     }
 
     public Command coralIntake(){
