@@ -49,14 +49,14 @@ public class MultiCommands {
     public Command getCoralFromSource() {
         return new SequentialCommandGroup(
             swerveSystemCommands.moveToSource(),
-            new ParallelCommandGroup(intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),swerveSystemCommands.coralIntake())
+            new ParallelCommandGroup(intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),swerveSystemCommands.simCoralIntake())
         );
     }
 
     public Command getCoralFromGround(Supplier<Pose2d> pose) {
         return new SequentialCommandGroup(
             swerveSystemCommands.moveToGround(pose),
-            new ParallelCommandGroup(intakeCommands.intake(),swerveSystemCommands.coralIntake())
+            new ParallelCommandGroup(intakeCommands.intake(),swerveSystemCommands.simCoralIntake())
         );
     }
 
@@ -64,14 +64,14 @@ public class MultiCommands {
         return new SequentialCommandGroup(
             swerveSystemCommands.moveToBranch(level,branch),
             new WaitCommand(0.5),
-            new ParallelCommandGroup(intakeCommands.outtake(),swerveSystemCommands.outtakeCoral())
+            new ParallelCommandGroup(intakeCommands.outtake(),swerveSystemCommands.simCoralOuttake())
         );
     }
 
     public Command getAlgae(Supplier<Integer> side) {
         return new SequentialCommandGroup(
             swerveSystemCommands.moveToAlgae(side),
-            new ParallelCommandGroup(intakeCommands.intake(),swerveSystemCommands.algaeIntake())
+            new ParallelCommandGroup(intakeCommands.intake(),swerveSystemCommands.simAlgaeIntake())
             //,swerveCommands.driveBack()
         );
     }
@@ -79,7 +79,7 @@ public class MultiCommands {
     public Command getAlgae() {
         return new SequentialCommandGroup(
             swerveSystemCommands.moveToAlgae(),
-            new ParallelCommandGroup(intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),swerveSystemCommands.algaeIntake())
+            new ParallelCommandGroup(intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),swerveSystemCommands.simAlgaeIntake())
             //,swerveCommands.driveBack()
         );
     }
@@ -87,7 +87,7 @@ public class MultiCommands {
     public Command placeAlgae() {
         return new SequentialCommandGroup(
             swerveSystemCommands.moveToProcessor(),
-            new ParallelCommandGroup(intakeCommands.outtake(),swerveSystemCommands.outtakeAlgae())
+            new ParallelCommandGroup(intakeCommands.outtake(),swerveSystemCommands.simAlgaeOuttake())
         );
     }
 }

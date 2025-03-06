@@ -139,26 +139,26 @@ public class SwerveSystem extends SubsystemBase {
         return currentWristPose;
     }
 
-    public void coralIntake(){
+    public void simCoralIntake(){
         if(gamepieces!=null){
             currentPiece=gamepieces.getClosestCoral(getCurrentWristPose());
         }
     }
 
-    public void algaeIntake(){
+    public void simAlgaeIntake(){
         if(gamepieces!=null){
             currentPiece=gamepieces.getClosestAlgae(getCurrentWristPose());
         }
     }
 
-    public void outtakeCoral(){
+    public void simCoralOuttake(){
         if(currentPiece!=null){
             currentPiece.setGoalOnBot(currentWristPose.plus(new Transform3d(-GamepieceConstants.coralDrop, 0, 0, new Rotation3d())));
             currentPiece=null;
         }
     }
 
-    public void outtakeAlgae(){
+    public void simAlgaeOuttake(){
         if(currentPiece!=null){
             currentPiece.setGoalOnBot(currentWristPose.plus(new Transform3d(-GamepieceConstants.algaeDrop, 0, 0, new Rotation3d())));
             currentPiece=null;

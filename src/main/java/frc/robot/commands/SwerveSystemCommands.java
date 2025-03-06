@@ -88,19 +88,19 @@ public class SwerveSystemCommands {
         return moveToStateSequenced(()->swerveSystem.getClosestState(SwerveSystemConstants.getScoringStates()[level]), ()->SwerveSystemConstants.getPrescoringState());
     }
 
-    public Command coralIntake(){
-        return new InstantCommand(()->swerveSystem.coralIntake());
+    public Command simCoralIntake(){
+        return new InstantCommand(()->swerveSystem.simCoralIntake());
     }
 
-    public Command algaeIntake(){
-        return new InstantCommand(()->swerveSystem.algaeIntake());
+    public Command simAlgaeIntake(){
+        return new InstantCommand(()->swerveSystem.simAlgaeIntake());
     }
 
-    public Command outtakeCoral(){
-        return new InstantCommand(()->swerveSystem.outtakeCoral());
+    public Command simCoralOuttake(){
+        return new InstantCommand(()->swerveSystem.simCoralOuttake());
     }
 
-    public Command outtakeAlgae(){
-        return new InstantCommand(()->swerveSystem.outtakeAlgae());
+    public Command simAlgaeOuttake(){
+        return new InstantCommand(()->swerveSystem.simAlgaeOuttake());
     }
 }
