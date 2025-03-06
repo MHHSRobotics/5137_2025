@@ -240,7 +240,7 @@ public class SwerveSystem extends SubsystemBase {
     public boolean atSetpoint() {
         return (arm==null || arm.atSetpoint()) &&
             (elevator==null || elevator.atSetpoint()) &&
-            (wrist==null || wrist.atSetpoint()) &&
-            (swerve==null || swerve.atTarget());
+            (wrist==null || wrist.atSetpoint()) /*&&
+            (swerve==null || swerve.atTarget())*/;
     }
 }
