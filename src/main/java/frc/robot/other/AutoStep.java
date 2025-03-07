@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.commands.MultiCommands;
 import frc.robot.constants.FieldGeometry;
 import frc.robot.constants.RobotPositions;
+import frc.robot.constants.RobotPositions.RobotPosition;
 
 /**
  * The `AutoStep` class is responsible for creating and managing three {@link SendableChooser}s
@@ -23,7 +24,7 @@ public class AutoStep {
     // Choosers for selecting level, reef position, and pickup position
     private SendableChooser<Integer> levelChooser;
     private SendableChooser<Integer> branchChooser;
-    private SendableChooser<Pose2d> pickupChooser;
+    private SendableChooser<RobotPosition> pickupChooser;
 
     /**
      * Constructor for the AutoStep class.
@@ -73,14 +74,14 @@ public class AutoStep {
         SmartDashboard.putData("branchChoices/" + id, branchChooser);
 
         // Initialize the pickup chooser with default and additional options
-        pickupChooser = new SendableChooser<Pose2d>();
-        pickupChooser.setDefaultOption("RightStation Right", RobotPositions.stations[0].alliancePos());
-        pickupChooser.addOption("RightStation Left", RobotPositions.stations[1].alliancePos());
-        pickupChooser.addOption("LeftStation Right", RobotPositions.stations[2].alliancePos());
-        pickupChooser.addOption("LeftStation Left", RobotPositions.stations[3].alliancePos());
-        pickupChooser.addOption("Left Ground", RobotPositions.pickups[0].alliancePos());
-        pickupChooser.addOption("Center Ground", RobotPositions.pickups[1].alliancePos());
-        pickupChooser.addOption("Right Ground", RobotPositions.pickups[2].alliancePos());
+        pickupChooser = new SendableChooser<RobotPosition>();
+        pickupChooser.setDefaultOption("RightStation Right", RobotPositions.stations[0]);
+        pickupChooser.addOption("RightStation Left", RobotPositions.stations[1]);
+        pickupChooser.addOption("LeftStation Right", RobotPositions.stations[2]);
+        pickupChooser.addOption("LeftStation Left", RobotPositions.stations[3]);
+        pickupChooser.addOption("Left Ground", RobotPositions.pickups[0]);
+        pickupChooser.addOption("Center Ground", RobotPositions.pickups[1]);
+        pickupChooser.addOption("Right Ground", RobotPositions.pickups[2]);
         SmartDashboard.putData("pickupChoices/" + id, pickupChooser);
     }
 
@@ -97,12 +98,12 @@ public class AutoStep {
         SmartDashboard.putData("branchChoices/" + id, branchChooser);
 
         // Initialize the pickup chooser (no options added for algae poses)
-        pickupChooser = new SendableChooser<Pose2d>();
+        pickupChooser = new SendableChooser<RobotPosition>();
         SmartDashboard.putData("pickupChoices/" + id, pickupChooser);
     }
 
     private void switchToNoAuto(){
-        pickupChooser = new SendableChooser<Pose2d>();
+        pickupChooser = new SendableChooser<RobotPosition>();
         SmartDashboard.putData("pickupChoices/" + id, pickupChooser);
 
         branchChooser = new SendableChooser<Integer>();
@@ -110,22 +111,21 @@ public class AutoStep {
     }
 
     /**
-     * Generates a command sequence based on the selected options from the choosers.
+     * Gets the command to be executed for this auto step.
      *
      * @return A {@link Command} representing the sequence of actions to be executed.
      */
     public Command getCommand() {
-        int level=levelChooser.getSelected();
-        if(level==-1){
+        int level = levelChooser.getSelected();
+        if (level == -1) {
             return new InstantCommand();
-        }else if(level==0){
-            return multiCommands.getAlgae(()->branchChooser.getSelected());
-        }else{
+        } else if (level == 0) {
+            return multiCommands.getAlgae(() -> branchChooser.getSelected());
+        } else {
             return new SequentialCommandGroup(
-                multiCommands.getCoralFromGround(()->pickupChooser.getSelected()),
-                multiCommands.placeCoral(()->levelChooser.getSelected(), ()->branchChooser.getSelected())
+                multiCommands.getCoralFromGround(() -> pickupChooser.getSelected().alliancePos()),
+                multiCommands.placeCoral(() -> levelChooser.getSelected(), () -> branchChooser.getSelected())
             );
         }
-        
     }
 }

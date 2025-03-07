@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 
 import frc.robot.elastic.*;
 import frc.robot.gamepieces.Gamepieces;
@@ -26,6 +27,8 @@ import frc.robot.other.RobotUtils;
 import frc.robot.subsystems.*;
 import frc.robot.commands.*;
 import frc.robot.constants.*;
+import frc.robot.visualization.RobotPublisher;
+import frc.robot.commands.RobotPublisherCommands;
 
 @SuppressWarnings("unused")
 public class RobotContainer {
@@ -38,8 +41,6 @@ public class RobotContainer {
 	private Vision vision;
 	private Swerve swerve;
 	private SwerveCommands swerveCommands;
-	private SwerveSystem swerveSystem;
-	private SwerveSystemCommands swerveSystemCommands;
 
 	private Elevator elevator;
 	private ElevatorCommands elevatorCommands;
@@ -66,6 +67,9 @@ public class RobotContainer {
 	private CageChoice cageChoice;
 	private AutoFactory autoFactory;
 	private Gamepieces gamepieces;
+
+	private RobotPublisher robotPublisher;
+	private RobotPublisherCommands robotPublisherCommands;
 
 	/**
 	 * Constructor for RobotContainer.
@@ -95,12 +99,12 @@ public class RobotContainer {
 			initWrist();
 			initIntake();
 			initHang();
-			//initLED();
+			initLED();
+			initRobotPublisher();
 			
 			// Initialize combined systems and commands
-			initSwerveSystem();
 			initMultiCommands();
-			//initAdditionalComponents();
+			initAdditionalComponents();
 
 			// Configure SysId bindings for elevator
 			//configureSysIdBindings(elevatorCommands);
@@ -201,34 +205,29 @@ public class RobotContainer {
 		led = new LED();
 	}
 
-	private void initSwerveSystem() {
-		swerveSystem = new SwerveSystem(arm, elevator, wrist, swerve, gamepieces);
-		swerveSystemCommands = new SwerveSystemCommands(swerveSystem);
-
-		driver.square().and(driver.R2().negate()).onTrue(swerveSystemCommands.moveToProcessor());
-
-		driver.triangle().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(3));
-		driver.square().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(2));
-		driver.circle().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(1));
-		driver.cross().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(0));
-
-		//driver.axisLessThan(0,-0.1).onTrue(swerveSystemCommands.moveToLevel(3));
-
-		//driver.L1().onTrue(swerveSystemCommands.moveToState(()->SwerveSystemConstants.getGroundIntake()));
-
-		// operator.povUp().onTrue(swerveSystemCommands.moveToGround(()->new Pose2d()));
-		// operator.povDown().onTrue(swerveSystemCommands.moveToState(()->SwerveSystemConstants.getSourceStates()[0]));
-		// operator.cross().onTrue(swerveSystemCommands.moveToBranch(()->0,()->0));
-		// operator.triangle().onTrue(swerveSystemCommands.moveToBranch(()->1,()->0));
-		// operator.square().onTrue(swerveSystemCommands.moveToBranch(()->2,()->0));
-		// operator.circle().onTrue(swerveSystemCommands.moveToBranch(()->3,()->0));
+	private void initRobotPublisher() {
+		robotPublisher = new RobotPublisher(arm, elevator, wrist, swerve, gamepieces);
+		robotPublisherCommands = new RobotPublisherCommands(robotPublisher);
 	}
 
 	private void initMultiCommands() {
-		multiCommands = new MultiCommands(swerveSystemCommands, swerveCommands, intakeCommands, hangCommands);
+		multiCommands = new MultiCommands(arm, elevator, wrist, swerve, swerveCommands, intakeCommands, hangCommands);
 
 		driver.triangle().and(driver.R2().negate()).onTrue(multiCommands.getCoralFromSource());
 		driver.circle().and(driver.R2().negate()).onTrue(multiCommands.getAlgae());
+
+		// Add operator bindings that were previously in initSwerveSystem
+		operator.R1().onTrue(multiCommands.moveToDefault());
+		operator.L1().onTrue(multiCommands.moveToSource());
+		operator.square().onTrue(multiCommands.moveToProcessor());
+		operator.triangle().onTrue(multiCommands.moveToAlgae());
+		
+		// Gamepiece handling simulation
+		operator.R2().onTrue(robotPublisherCommands.simCoralIntake());
+		operator.L2().onTrue(robotPublisherCommands.simAlgaeIntake());
+		
+		operator.cross().onTrue(robotPublisherCommands.simOuttakeCoral());
+		operator.circle().onTrue(robotPublisherCommands.simOuttakeAlgae());
 
 		driver.triangle().negate()
 		.and(driver.square().negate())

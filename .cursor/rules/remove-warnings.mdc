@@ -1,0 +1,6 @@
+---
+description: Fixing warnings
+globs: 
+alwaysApply: false
+---
+Just fix any warnings. Mostly unused code, imports, or other warnings that are easy to fix. Don't fix any warnings that are not obvious how to fix. Make sure to check the linter output on the file to see what warnings it has.

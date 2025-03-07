@@ -128,7 +128,7 @@ public class Arm extends SubsystemBase {
         );
         
         // Set initial goal position
-        goal = SwerveSystemConstants.getDefaultState().armPosition;
+        goal = SwerveSystemConstants.defaultState.armPosition;
 
         // Initialize simulation components
         armSim = new SingleJointedArmSim(
@@ -139,7 +139,7 @@ public class Arm extends SubsystemBase {
             ArmConstants.minAngle,
             ArmConstants.maxAngle,
             false,
-            SwerveSystemConstants.getDefaultState().armPosition
+            SwerveSystemConstants.defaultState.armPosition
         );
         mechanismSim = new ArmMechanismSim(armSim);
 

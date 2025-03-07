@@ -129,7 +129,7 @@ public class Swerve extends SubsystemBase {
 
         // Start simulation thread if in simulation
         if (Robot.isSimulation()) {
-            //startSimThread();
+            startSimThread();
         }
 
         // Initialize telemetry and field visualization

@@ -110,7 +110,7 @@ public class Elevator extends SubsystemBase {
         );
         
         // Set initial goal position
-        goal = SwerveSystemConstants.getDefaultState().elevatorPosition;
+        goal = SwerveSystemConstants.defaultState.elevatorPosition;
 
         // Initialize simulation components
         elevatorSim = new ElevatorSim(
@@ -121,7 +121,7 @@ public class Elevator extends SubsystemBase {
             ElevatorConstants.minHeight,
             ElevatorConstants.maxHeight,
             true,
-            SwerveSystemConstants.getDefaultState().elevatorPosition
+            SwerveSystemConstants.defaultState.elevatorPosition
         );
         mechanismSim = new ElevatorMechanismSim(elevatorSim);
 
