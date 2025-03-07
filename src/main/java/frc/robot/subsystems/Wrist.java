@@ -141,7 +141,7 @@ public class Wrist extends SubsystemBase {
         );
         
         // Set initial goal position
-        desiredGoal = SwerveSystemConstants.getDefaultState().wristPosition;
+        desiredGoal = SwerveSystemConstants.defaultState.wristPosition;
 
         // Initialize simulation components
         wristSim = new SingleJointedArmSim(
@@ -152,7 +152,7 @@ public class Wrist extends SubsystemBase {
             WristConstants.minAngle,
             WristConstants.maxAngle,
             false,
-            SwerveSystemConstants.getDefaultState().wristPosition
+            SwerveSystemConstants.defaultState.wristPosition
         );
         mechanismSim = new ArmMechanismSim(wristSim);
 

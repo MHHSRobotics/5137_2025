@@ -128,7 +128,7 @@ public class Arm extends SubsystemBase {
         );
         
         // Set initial goal position
-        goal = SwerveSystemConstants.getDefaultState().armPosition;
+        goal = SwerveSystemConstants.defaultState.armPosition;
 
         // Initialize simulation components
         armSim = new SingleJointedArmSim(
@@ -139,7 +139,7 @@ public class Arm extends SubsystemBase {
             ArmConstants.minAngle,
             ArmConstants.maxAngle,
             false,
-            SwerveSystemConstants.getDefaultState().armPosition
+            SwerveSystemConstants.defaultState.armPosition
         );
         mechanismSim = new ArmMechanismSim(armSim);
 
@@ -148,16 +148,15 @@ public class Arm extends SubsystemBase {
             new SysIdRoutine.Config(
                 null,        // Use default ramp rate (1 V/s)
                 Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
-                null        // Use default timeout (10 s)
+                null         // Use default timeout (10 s)
             ),
             new SysIdRoutine.Mechanism(
                 this::setVoltage,
                 log -> {
                     log.motor("arm")
                         .voltage(getVolts())
-                        .angularPosition(Radians.of(getMeasurement()+ArmConstants.feedOffset)) // Offset so that 0 = horizontal
-                        .angularVelocity(RadiansPerSecond.of(getVelocity()))
-                        .angularAcceleration(RadiansPerSecondPerSecond.of(getAcceleration()));
+                        .angularPosition(Radians.of(getMeasurement()))
+                        .angularVelocity(RadiansPerSecond.of(getVelocity()));
                 },
                 this
             )

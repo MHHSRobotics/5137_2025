@@ -66,31 +66,38 @@ public class Elevator extends SubsystemBase {
     /**
      * Constructor for the Elevator subsystem.
      * Initializes all control systems, motors, encoders, and simulation components.
+     * 
+     * Sets up:
+     * - Motors and encoder with appropriate gear ratios
+     * - PID controller with configured gains and constraints
+     * - Feedforward controller for gravity compensation
+     * - Simulation components for testing
+     * - System identification routine for parameter tuning
      */
     public Elevator() {
         // Create motors and encoder
-        EnhancedTalonFX leftMotor = new EnhancedTalonFX(
-            ElevatorConstants.leftMotorId,
-            "rio",
-            ElevatorConstants.drumRadius * 2 * Math.PI / ElevatorConstants.gearRatio,
-            false,
+        EnhancedTalonFX elevatorMotor1 = new EnhancedTalonFX(
+            ElevatorConstants.leftMotorId, 
+            "rio", 
+            ElevatorConstants.drumRadius * 2 * Math.PI / ElevatorConstants.gearRatio, 
+            false, 
             true  // Use brake mode for better position holding
         );
-        EnhancedTalonFX rightMotor = new EnhancedTalonFX(
-            ElevatorConstants.rightMotorId,
-            "rio",
-            ElevatorConstants.drumRadius * 2 * Math.PI / ElevatorConstants.gearRatio,
-            true,
-            true  // Use brake mode for better position holding
+        EnhancedTalonFX elevatorMotor2 = new EnhancedTalonFX(
+            ElevatorConstants.rightMotorId, 
+            "rio", 
+            ElevatorConstants.drumRadius * 2 * Math.PI / ElevatorConstants.gearRatio, 
+            true,  // Invert second motor
+            true   // Use brake mode for better position holding
         );
         EnhancedEncoder elevatorEncoder = new EnhancedEncoder(
-            ElevatorConstants.encoderId,
+            ElevatorConstants.encoderId, 
             ElevatorConstants.drumRadius * 2 * Math.PI / ElevatorConstants.encoderRatio,
             ElevatorConstants.encoderOffset
         );
-
-        // Create motor system with both motors
-        motorSystem = new MotorSystem(List.of(leftMotor, rightMotor), elevatorEncoder);
+        
+        // Create motor system
+        motorSystem = new MotorSystem(List.of(elevatorMotor1, elevatorMotor2), elevatorEncoder);
         
         // Initialize PID controller
         controller = new ProfiledPIDController(
@@ -110,7 +117,7 @@ public class Elevator extends SubsystemBase {
         );
         
         // Set initial goal position
-        goal = SwerveSystemConstants.getDefaultState().elevatorPosition;
+        goal = SwerveSystemConstants.defaultState.elevatorPosition;
 
         // Initialize simulation components
         elevatorSim = new ElevatorSim(
@@ -121,7 +128,7 @@ public class Elevator extends SubsystemBase {
             ElevatorConstants.minHeight,
             ElevatorConstants.maxHeight,
             true,
-            SwerveSystemConstants.getDefaultState().elevatorPosition
+            SwerveSystemConstants.defaultState.elevatorPosition
         );
         mechanismSim = new ElevatorMechanismSim(elevatorSim);
 
@@ -199,7 +206,7 @@ public class Elevator extends SubsystemBase {
      *         false otherwise.
      */
     public boolean atSetpoint() {
-        return controller.getPositionError()<ElevatorConstants.elevatorTolerance;
+        return controller.atSetpoint();
     }
 
     /**

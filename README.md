@@ -4,7 +4,7 @@ This repository contains the robot code for FRC Team 5137 (Iron Kodiaks)'s 2025 
 
 ## Robot Features
 
-- **Swerve Drive System**: Advanced swerve drive implementation for precise movement and control
+- **Swerve Drive System**: Advanced swerve drive implementation with field-oriented control
 - **Vision Processing**: Computer vision capabilities for autonomous operation and target tracking
 - **Manipulator Systems**:
   - Elevator mechanism
@@ -22,11 +22,27 @@ This repository contains the robot code for FRC Team 5137 (Iron Kodiaks)'s 2025 
 - **Control System**: 
   - PS5 Controllers for driver and operator control
   - Advanced command-based programming structure
+  - LQR-based position control for mechanisms
 - **Major Dependencies**:
   - WPILib 2025
   - PathPlanner library
-  - CTRE Phoenix libraries
+  - CTRE Phoenix 6 libraries
   - PhotonVision
+
+## Control Architecture
+
+### Robot Container
+The `RobotContainer` class serves as the main orchestrator, managing:
+- Controller bindings
+- Subsystem initialization
+- Command composition
+- Autonomous routine selection
+
+### Control Systems
+- Advanced state-space control using LQR
+- Vision-based pose estimation
+- Pathfinding and autonomous navigation
+- Telemetry and data logging
 
 ## Development Setup
 
@@ -34,6 +50,8 @@ This repository contains the robot code for FRC Team 5137 (Iron Kodiaks)'s 2025 
 2. Clone this repository
 3. Open the project in VSCode with the WPILib extension
 4. Build using Gradle: `./gradlew build`
+5. Deploy to robot: `./gradlew deploy`
+6. Simulate: `./gradlew simulateJava`
 
 ## Project Structure
 
@@ -44,6 +62,8 @@ This repository contains the robot code for FRC Team 5137 (Iron Kodiaks)'s 2025 
   - `gamepieces/`: Game piece handling logic
   - `elastic/`: Elastic system implementations
   - `other/`: Additional utility classes
+  - `states/`: Robot state definitions
+  - `visualization/`: Visualization and telemetry
 
 ## Contributing
 
