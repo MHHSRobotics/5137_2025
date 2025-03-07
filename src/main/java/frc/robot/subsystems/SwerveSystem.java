@@ -211,7 +211,7 @@ public class SwerveSystem extends SubsystemBase {
         }
         if(swerve!=null && state.botPosition != null){
             // Uncomment at your own risk
-            //swerve.setTargetPose(state.botPosition);
+            swerve.setTargetPose(state.botPosition);
         }
     }
 
@@ -248,7 +248,7 @@ public class SwerveSystem extends SubsystemBase {
     public boolean atSetpoint() {
         return (arm==null || arm.atSetpoint()) &&
             (elevator==null || elevator.atSetpoint()) &&
-            (wrist==null || wrist.atSetpoint())/* &&
-            (swerve==null || swerve.atTarget())*/;
+            (wrist==null || wrist.atSetpoint()) &&
+            (swerve==null || swerve.atTarget());
     }
 }

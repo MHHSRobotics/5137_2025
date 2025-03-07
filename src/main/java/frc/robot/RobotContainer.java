@@ -111,13 +111,6 @@ public class RobotContainer {
 			autoChoice.setDefaultOption("Single Center", "Single Center");
 			AutoBuilder.getAllAutoNames().forEach((name) -> autoChoice.addOption(name, name));
 			SmartDashboard.putData("Auto Choice", autoChoice);
-
-			// Configure SysId bindings for elevator
-			//configureSysIdBindings(elevatorCommands);
-
-			//arm.resetPos();
-			//wrist.resetPos();
-			//elevator.resetPos();
 		} catch (Exception e) {
 			DataLogManager.log("Error while initializing: " + RobotUtils.getError(e));
 		}
@@ -217,8 +210,8 @@ public class RobotContainer {
 		swerveSystem = new SwerveSystem(arm, elevator, wrist, swerve, gamepieces);
 		swerveSystemCommands = new SwerveSystemCommands(swerveSystem);
 
-		driver.square().and(driver.R2().negate()).onTrue(swerveSystemCommands.moveToProcessor());
-		driver.cross().and(driver.R2().negate()).onTrue(swerveSystemCommands.moveToBarge());
+		//driver.square().and(driver.R2().negate()).onTrue(swerveSystemCommands.moveToProcessor());
+		//driver.cross().and(driver.R2().negate()).onTrue(swerveSystemCommands.moveToBarge());
 
 		NamedCommands.registerCommand("L4", swerveSystemCommands.moveToLevel(3));
 
@@ -287,7 +280,9 @@ public class RobotContainer {
 	}
 
 	public void resetGyro() {
-		swerve.resetGyro();
+		if (swerve != null) {
+			swerve.resetGyro();
+		}
 	}
 
 	/**
@@ -300,6 +295,6 @@ public class RobotContainer {
 			return autoFactory.getAuto();
 		}*/
 		resetGyro();
-		return AutoBuilder.buildAuto(autoChoice.getSelected());
+		return new WaitCommand(2.0).andThen(multiCommands.placeCoral(3)).andThen(multiCommands.moveToDefault());
 	}
 }

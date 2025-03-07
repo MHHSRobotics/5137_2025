@@ -41,6 +41,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
+import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -195,7 +196,6 @@ public class Swerve extends SubsystemBase {
     private void startAuto(Command auto){
         cancelAuto();
         auto=new ParallelRaceGroup(auto,new WaitCommand(SwerveConstants.moveTimeout));
-        auto.addRequirements(this);
         auto.schedule();
         currentAuto=auto;
     }
@@ -254,12 +254,16 @@ public class Swerve extends SubsystemBase {
     }
 
     public void setTargetPose(Pose2d target){
+        targetPose = target;
         startAuto(AutoBuilder.pathfindToPose(target, SwerveConstants.constraints, 0.0));
+        //followPath("Reef H");
     }
 
     public void followPath(String name) {
         try {
             PathPlannerPath path = PathPlannerPath.fromPathFile(name);
+            var poses = path.getPathPoses();
+            targetPose = RobotUtils.invertToAlliance(path.getPathPoses().get(poses.size() - 1));
             startAuto(AutoBuilder.pathfindThenFollowPath(path, SwerveConstants.constraints));
         } catch (Exception e) {
             e.printStackTrace();
