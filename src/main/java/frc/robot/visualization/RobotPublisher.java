@@ -8,7 +8,7 @@ import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.ArmConstants;
 import frc.robot.constants.GamepieceConstants;
-import frc.robot.constants.SwerveSystemConstants;
+import frc.robot.constants.SwerveConstants;
 import frc.robot.gamepieces.Gamepiece;
 import frc.robot.gamepieces.Gamepieces;
 import frc.robot.other.RobotUtils;
@@ -122,7 +122,7 @@ public class RobotPublisher extends SubsystemBase {
                 if(state.armPosition != null) {
                     // Calculate arm pivot position (offset from elevator end)
                     double armAngle = state.armPosition;
-                    Pose3d armPose = elevatorPose.plus(new Transform3d(SwerveSystemConstants.armTransOffset, new Rotation3d(0, -armAngle, 0)));
+                    Pose3d armPose = elevatorPose.plus(new Transform3d(SwerveConstants.armTransOffset, new Rotation3d(0, -armAngle, 0)));
     
                     // Publish arm pose
                     armPosePublisher.set(armPose.relativeTo(botPose));

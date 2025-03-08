@@ -7,6 +7,7 @@ import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 
 import com.pathplanner.lib.path.PathConstraints;
 
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 
 public class SwerveConstants {
@@ -37,4 +38,18 @@ public class SwerveConstants {
 
     public static final double driveBackPower = 0.8;
     public static final double driveBackTime = 0.5; // seconds
+    
+    // Constants moved from RobotPositions
+    
+    // Timeout for movement commands
+    public static final double timeout = 3; // seconds
+    
+    // Weight for rotation vs translation when finding closest state
+    public static final double rotationWeight = 1.0; // meters per radian
+
+    // Offset from the center of the robot to the arm pivot
+    public static final Translation3d armTransOffset = new Translation3d(0.11, -0.18, 0.26);
+    
+    // Distance for intake operations
+    public static final double intakeDistance = 1;
 }

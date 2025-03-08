@@ -92,9 +92,7 @@ public class RobotContainer {
 			driver.touchpad().onTrue(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
 			
 			initReef();
-			if (Robot.isSimulation()) {
-				initGamepieces();
-			}
+			
 			
 			// Initialize subsystems
 			initVision();
@@ -105,11 +103,15 @@ public class RobotContainer {
 			initIntake();
 			initHang();
 			initLED();
-			initRobotPublisher();
 			
 			// Initialize combined systems and commands
 			initMultiCommands();
 			initAdditionalComponents();
+
+			if (Robot.isSimulation()) {
+				initGamepieces();
+				initRobotPublisher();
+			}
 
 			autoChoice = new SendableChooser<String>();
 			autoChoice.setDefaultOption("Single Center", "Single Center");
@@ -121,9 +123,9 @@ public class RobotContainer {
 	}
 
 	private void initControllers() {
-		driver = new CommandPS5Controller(0);
-		operator = new CommandPS5Controller(1);
-		//sysIdTest = new CommandPS5Controller(2);
+		driver = new CommandPS5Controller(ControlConstants.driverControllerPort);
+		operator = new CommandPS5Controller(ControlConstants.operatorControllerPort);
+		//sysIdTest = new CommandPS5Controller(ControlConstants.sysIdControllerPort);
 	}
 
 	private void initReef() {
@@ -146,12 +148,12 @@ public class RobotContainer {
 		swerveCommands = new SwerveCommands(swerve);
 
 		// Configure swerve bindings
-		swerve.setDefaultCommand(swerveCommands.drive(
-			() -> -Math.pow(MathUtil.applyDeadband(driver.getLeftY(), 0.05), 1), 
-			() -> -Math.pow(MathUtil.applyDeadband(driver.getLeftX(), 0.05), 1), 
-			() -> -Math.pow(MathUtil.applyDeadband(driver.getRightX(), 0.05), 1),
-			() -> true)
-		);
+		// swerve.setDefaultCommand(swerveCommands.drive(
+		// 	() -> -Math.pow(MathUtil.applyDeadband(driver.getLeftY(), ControlConstants.driveDeadband), ControlConstants.joystickExponent), 
+		// 	() -> -Math.pow(MathUtil.applyDeadband(driver.getLeftX(), ControlConstants.driveDeadband), ControlConstants.joystickExponent), 
+		// 	() -> -Math.pow(MathUtil.applyDeadband(driver.getRightX(), ControlConstants.driveDeadband), ControlConstants.joystickExponent),
+		// 	() -> true)
+		// );
 
 		driver.L3().whileTrue(swerveCommands.lock());
 		driver.options().onTrue(swerveCommands.resetGyro());
@@ -162,7 +164,7 @@ public class RobotContainer {
 		elevatorCommands = new ElevatorCommands(elevator);
 
 		// Configure elevator bindings
-		elevator.setDefaultCommand(elevatorCommands.changeGoal(() -> -MathUtil.applyDeadband(operator.getLeftY(),0.1) / 50));
+		elevator.setDefaultCommand(elevatorCommands.changeGoal(() -> -MathUtil.applyDeadband(operator.getLeftY(), ControlConstants.operatorDeadband) * ControlConstants.elevatorManualRate));
 	}
 
 	private void initArm() {
@@ -170,7 +172,7 @@ public class RobotContainer {
 		armCommands = new ArmCommands(arm);
 
 		// Configure arm bindings
-		arm.setDefaultCommand(armCommands.changeGoal(() -> -MathUtil.applyDeadband(operator.getRightX(), 0.1) / 50));
+		arm.setDefaultCommand(armCommands.changeGoal(() -> -MathUtil.applyDeadband(operator.getRightX(), ControlConstants.operatorDeadband) * ControlConstants.armManualRate));
 	}
 
 	private void initWrist() {
@@ -178,8 +180,8 @@ public class RobotContainer {
 		wristCommands = new WristCommands(wrist);
 
 		// Configure wrist bindings
-		operator.L1().whileTrue(wristCommands.changeGoal(()->0.02));
-		operator.R1().whileTrue(wristCommands.changeGoal(()->-0.02));
+		operator.L1().whileTrue(wristCommands.changeGoal(() -> ControlConstants.wristManualRate));
+		operator.R1().whileTrue(wristCommands.changeGoal(() -> -ControlConstants.wristManualRate));
 	}
 
 	private void initIntake() {
@@ -217,6 +219,7 @@ public class RobotContainer {
 
 	private void initMultiCommands() {
 		multiCommands = new MultiCommands(arm, elevator, wrist, swerve, swerveCommands, intakeCommands, hangCommands);
+		multiCommands.setRobotPublisher(robotPublisher);
 
 		// Register named commands for auto
 		NamedCommands.registerCommand("L4", multiCommands.moveToLevel(3));
@@ -238,12 +241,9 @@ public class RobotContainer {
 		.and(driver.cross().negate())
 		.onTrue(multiCommands.moveToDefault());
 
-		driver.povDown()
-		.onTrue(multiCommands.moveToDefault());
-
 		driver.L1()
 		.toggleOnTrue(intakeCommands.pulseIntake())
-		.onTrue(wristCommands.setGoal(() -> Units.degreesToRadians(-45)));
+		.onTrue(wristCommands.setGoal(() -> ControlConstants.wristIntakePosition));
 		
 		// Operator controls
 		operator.R1().onTrue(multiCommands.moveToDefault());
@@ -252,11 +252,11 @@ public class RobotContainer {
 		operator.triangle().onTrue(multiCommands.moveToAlgae());
 		
 		// Gamepiece handling simulation
-		operator.R2().onTrue(robotPublisherCommands.simCoralIntake());
-		operator.L2().onTrue(robotPublisherCommands.simAlgaeIntake());
+		// operator.R2().onTrue(multiCommands.simCoralIntake());
+		// operator.L2().onTrue(multiCommands.simAlgaeIntake());
 		
-		operator.cross().onTrue(robotPublisherCommands.simOuttakeCoral());
-		operator.circle().onTrue(robotPublisherCommands.simOuttakeAlgae());
+		// operator.cross().onTrue(multiCommands.simCoralOuttake());
+		// operator.circle().onTrue(multiCommands.simAlgaeOuttake());
 	}
 
 	private void initAdditionalComponents() {
@@ -298,6 +298,6 @@ public class RobotContainer {
 			return autoFactory.getAuto();
 		}*/
 		resetGyro();
-		return new WaitCommand(2.0).andThen(multiCommands.placeCoral(3)).andThen(multiCommands.moveToDefault());
+		return new WaitCommand(ControlConstants.autoInitialWaitTime).andThen(multiCommands.placeCoral(3)).andThen(multiCommands.moveToDefault());
 	}
 }

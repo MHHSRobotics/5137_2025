@@ -3,7 +3,9 @@ package frc.robot.commands;
 import java.util.function.Supplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
@@ -11,13 +13,15 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.constants.IntakeConstants;
-import frc.robot.constants.SwerveSystemConstants;
+import frc.robot.constants.RobotPositions;
+import frc.robot.constants.SwerveConstants;
 import frc.robot.other.RobotUtils;
 import frc.robot.states.RobotState;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.Wrist;
+import frc.robot.visualization.RobotPublisher;
 
 /**
  * The MultiCommands class is responsible for creating complex commands that involve multiple subsystems.
@@ -39,7 +43,12 @@ public class MultiCommands {
 
     // State variables for commands
     private RobotState sourceState;
-    private RobotState levelState;
+    
+    // Timer for tracking command execution
+    private final Timer timer = new Timer();
+    
+    // Reference to RobotPublisher for simulation
+    private RobotPublisher robotPublisher;
 
     /**
      * Constructor for MultiCommands.
@@ -54,6 +63,15 @@ public class MultiCommands {
         this.swerveCommands = swerveCommands;
         this.intakeCommands = intakeCommands;
         this.hangCommands = hangCommands;
+    }
+    
+    /**
+     * Sets the RobotPublisher for simulation commands.
+     * 
+     * @param robotPublisher The RobotPublisher instance
+     */
+    public void setRobotPublisher(RobotPublisher robotPublisher) {
+        this.robotPublisher = robotPublisher;
     }
 
     /**
@@ -96,7 +114,7 @@ public class MultiCommands {
      */
     private RobotState getClosestState(RobotState[] states) {
         Pose2d currentPose = swerve == null ? new Pose2d() : swerve.getPose();
-        return RobotUtils.getClosestState(currentPose, states, SwerveSystemConstants.rotationWeight);
+        return RobotUtils.getClosestState(currentPose, states, SwerveConstants.rotationWeight);
     }
 
     /**
@@ -106,10 +124,90 @@ public class MultiCommands {
      * @return A command that moves the robot to the specified state
      */
     public Command moveToState(Supplier<RobotState> state) {
-        return new SequentialCommandGroup(
-            new InstantCommand(() -> setTargetState(state.get())),
-            waitUntilFinished()
+        return new FunctionalCommand(
+            () -> {
+                timer.reset();
+                timer.start();
+                setTargetState(state.get());
+            },
+            () -> {},
+            (interrupted) -> {
+                timer.stop();
+            },
+            () -> isFinished(),
+            arm, elevator, wrist, swerve
         );
+    }
+    
+    /**
+     * Move the robot to a specific state with a timeout.
+     * 
+     * @param state The state to move to
+     * @param timeout The timeout in seconds
+     * @return A command that moves the robot to the specified state
+     */
+    public Command moveToState(Supplier<RobotState> state, double timeout) {
+        return new FunctionalCommand(
+            () -> {
+                timer.reset();
+                timer.start();
+                setTargetState(state.get());
+            },
+            () -> {},
+            (interrupted) -> {
+                timer.stop();
+            },
+            () -> isFinished(timeout),
+            arm, elevator, wrist, swerve
+        );
+    }
+    
+    /**
+     * Move the robot to a specific state in a sequenced manner.
+     * First moves to a pre-state (typically for positioning), then to the final state.
+     * 
+     * @param state The final state to move to
+     * @param preState The pre-state to move to first
+     * @return A command that moves the robot to the specified state in sequence
+     */
+    public Command moveToStateSequenced(Supplier<RobotState> state, Supplier<RobotState> preState) {
+        if (preState.get() != null) {
+            // Create a pre-state with the target position but current arm/elevator/wrist positions
+            RobotState currentState = new RobotState(
+                arm != null ? arm.getMeasurement() : null,
+                elevator != null ? elevator.getMeasurement() : null,
+                wrist != null ? wrist.getMeasurement() : null,
+                state.get().robotPosition
+            );
+            
+            // Move to position first, then to the target state
+            return new SequentialCommandGroup(
+                moveToState(() -> currentState, 5),
+                moveToState(state)
+            );
+        } else {
+            // If no pre-state, just move to the target state
+            return moveToState(state);
+        }
+    }
+
+    /**
+     * Check if the robot has reached its target state or timed out.
+     * 
+     * @return True if the robot has reached its target state or timed out
+     */
+    private boolean isFinished() {
+        return (atSetpoint() || timer.hasElapsed(SwerveConstants.timeout)) && timer.hasElapsed(0.1);
+    }
+    
+    /**
+     * Check if the robot has reached its target state or timed out.
+     * 
+     * @param timeout The timeout in seconds
+     * @return True if the robot has reached its target state or timed out
+     */
+    private boolean isFinished(double timeout) {
+        return (atSetpoint() || timer.hasElapsed(timeout)) && timer.hasElapsed(0.1);
     }
 
     /**
@@ -120,7 +218,7 @@ public class MultiCommands {
     public Command waitUntilFinished() {
         return new ParallelRaceGroup(
             new WaitUntilCommand(this::atSetpoint),
-            new WaitCommand(SwerveSystemConstants.timeout)
+            new WaitCommand(SwerveConstants.timeout)
         );
     }
 
@@ -130,7 +228,7 @@ public class MultiCommands {
     public Command moveToSource() {
         return new SequentialCommandGroup(
             new InstantCommand(() -> {
-                sourceState = getClosestState(SwerveSystemConstants.sourceStates);
+                sourceState = getClosestState(RobotPositions.sourceStates);
             }),
             moveToState(() -> sourceState)
         );
@@ -140,35 +238,41 @@ public class MultiCommands {
      * Command to move to the ground intake position.
      */
     public Command moveToGround(Supplier<Pose2d> pose) {
-        return moveToState(() -> SwerveSystemConstants.groundIntake.withPose(pose.get()));
+        return moveToState(() -> RobotPositions.groundIntake.withPose(pose.get()));
     }
 
     /**
      * Command to move to the algae intake position with specified side.
      */
     public Command moveToAlgae(Supplier<Integer> side) {
-        return moveToState(() -> SwerveSystemConstants.algaeStates[side.get()]);
+        return moveToState(() -> RobotPositions.algaeStates[side.get()]);
     }
 
     /**
      * Command to move to the default algae intake position.
      */
     public Command moveToAlgae() {
-        return moveToState(() -> SwerveSystemConstants.algaeStates[0]);
+        return moveToStateSequenced(
+            () -> getClosestState(RobotPositions.algaeStates),
+            () -> null
+        );
     }
 
     /**
      * Command to move to a specific branch for scoring.
      */
     public Command moveToBranch(Supplier<Integer> level, Supplier<Integer> branch) {
-        return moveToState(() -> SwerveSystemConstants.scoringStates[level.get()][branch.get()]);
+        return moveToState(() -> RobotPositions.scoringStates[level.get()][branch.get()]);
     }
 
     /**
      * Command to move to the processor position.
      */
     public Command moveToProcessor() {
-        return moveToState(() -> SwerveSystemConstants.processor);
+        return moveToStateSequenced(
+            () -> RobotPositions.processorState,
+            () -> null
+        );
     }
 
     /**
@@ -176,7 +280,7 @@ public class MultiCommands {
      */
     public Command moveToDefault() {
         return new ParallelCommandGroup(
-            moveToState(() -> SwerveSystemConstants.defaultState),
+            moveToState(() -> RobotPositions.defaultState),
             intakeCommands.stop()
         );
     }
@@ -185,12 +289,54 @@ public class MultiCommands {
      * Command to move to a specific level for scoring.
      */
     public Command moveToLevel(int level) {
-        return new SequentialCommandGroup(
-            new InstantCommand(() -> {
-                levelState = SwerveSystemConstants.scoringStates[level][0];
-            }),
-            moveToState(() -> levelState)
+        return moveToStateSequenced(
+            () -> getClosestState(RobotPositions.scoringStates[level]),
+            () -> null
         );
+    }
+
+    /**
+     * Command to simulate coral intake for visualization.
+     */
+    public Command simCoralIntake() {
+        return new InstantCommand(() -> {
+            if (robotPublisher != null) {
+                robotPublisher.simCoralIntake();
+            }
+        });
+    }
+
+    /**
+     * Command to simulate algae intake for visualization.
+     */
+    public Command simAlgaeIntake() {
+        return new InstantCommand(() -> {
+            if (robotPublisher != null) {
+                robotPublisher.simAlgaeIntake();
+            }
+        });
+    }
+
+    /**
+     * Command to simulate coral outtake for visualization.
+     */
+    public Command simCoralOuttake() {
+        return new InstantCommand(() -> {
+            if (robotPublisher != null) {
+                robotPublisher.simOuttakeCoral();
+            }
+        });
+    }
+
+    /**
+     * Command to simulate algae outtake for visualization.
+     */
+    public Command simAlgaeOuttake() {
+        return new InstantCommand(() -> {
+            if (robotPublisher != null) {
+                robotPublisher.simOuttakeAlgae();
+            }
+        });
     }
 
     /**
@@ -199,7 +345,10 @@ public class MultiCommands {
     public Command getCoralFromSource() {
         return new SequentialCommandGroup(
             moveToSource(),
-            new ParallelCommandGroup(intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed))
+            new ParallelCommandGroup(
+                intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),
+                simCoralIntake()
+            )
         );
     }
 
@@ -209,7 +358,10 @@ public class MultiCommands {
     public Command getCoralFromGround(Supplier<Pose2d> pose) {
         return new SequentialCommandGroup(
             moveToGround(pose),
-            new ParallelCommandGroup(intakeCommands.intake())
+            new ParallelCommandGroup(
+                intakeCommands.intake(),
+                simCoralIntake()
+            )
         );
     }
 
@@ -220,7 +372,10 @@ public class MultiCommands {
         return new SequentialCommandGroup(
             moveToBranch(level, branch),
             new WaitCommand(0.5),
-            new ParallelCommandGroup(intakeCommands.outtake())
+            new ParallelCommandGroup(
+                intakeCommands.outtake(),
+                simCoralOuttake()
+            )
         );
     }
 
@@ -230,7 +385,10 @@ public class MultiCommands {
     public Command placeCoral(int level) {
         return new SequentialCommandGroup(
             moveToLevel(level),
-            new ParallelCommandGroup(intakeCommands.outtake())
+            new ParallelCommandGroup(
+                intakeCommands.outtake(),
+                simCoralOuttake()
+            )
         );
     }
 
@@ -240,7 +398,10 @@ public class MultiCommands {
     public Command getAlgae(Supplier<Integer> side) {
         return new SequentialCommandGroup(
             moveToAlgae(side),
-            new ParallelCommandGroup(intakeCommands.intake())
+            new ParallelCommandGroup(
+                intakeCommands.intake(),
+                simAlgaeIntake()
+            )
             //,swerveCommands.driveBack()
         );
     }
@@ -251,7 +412,10 @@ public class MultiCommands {
     public Command getAlgae() {
         return new SequentialCommandGroup(
             moveToAlgae(),
-            new ParallelCommandGroup(intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed))
+            new ParallelCommandGroup(
+                intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),
+                simAlgaeIntake()
+            )
             //,swerveCommands.driveBack()
         );
     }
@@ -262,7 +426,10 @@ public class MultiCommands {
     public Command placeAlgae() {
         return new SequentialCommandGroup(
             moveToProcessor(),
-            new ParallelCommandGroup(intakeCommands.outtake())
+            new ParallelCommandGroup(
+                intakeCommands.outtake(),
+                simAlgaeOuttake()
+            )
         );
     }
 }
