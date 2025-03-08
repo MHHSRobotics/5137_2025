@@ -8,6 +8,7 @@ public class ElevatorConstants {
     // Motor IDs
     public static final int leftMotorId = Robot.isSimulation()?20:0;
     public static final int rightMotorId = Robot.isSimulation()?21:1;
+    public static final double gearRatio = 7.5; // gear ratio
 
     // Encoder ID
     public static final int encoderId = 2;
@@ -29,7 +30,6 @@ public class ElevatorConstants {
     public static final double elevatorTolerance = 0.05;
 
     // Simulation constants
-    public static final double gearRatio = 7.5; // gear ratio
     public static final double carriageMass = 13.0; // in kg
     public static final double drumRadius = 0.022; // in meters
     public static final double minHeight = 0; // in meters

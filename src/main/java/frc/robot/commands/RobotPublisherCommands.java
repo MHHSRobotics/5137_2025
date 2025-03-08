@@ -43,8 +43,8 @@ public class RobotPublisherCommands {
      * 
      * @return A command that simulates releasing a coral gamepiece
      */
-    public Command simOuttakeCoral() {
-        return new InstantCommand(() -> robotPublisher.simOuttakeCoral());
+    public Command simCoralOuttake() {
+        return new InstantCommand(() -> robotPublisher.simCoralOuttake());
     }
     
     /**
@@ -52,7 +52,7 @@ public class RobotPublisherCommands {
      * 
      * @return A command that simulates releasing an algae gamepiece
      */
-    public Command simOuttakeAlgae() {
-        return new InstantCommand(() -> robotPublisher.simOuttakeAlgae());
+    public Command simAlgaeOuttake() {
+        return new InstantCommand(() -> robotPublisher.simAlgaeOuttake());
     }
 } 

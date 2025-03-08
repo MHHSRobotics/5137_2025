@@ -172,7 +172,7 @@ public class RobotContainer {
 		armCommands = new ArmCommands(arm);
 
 		// Configure arm bindings
-		arm.setDefaultCommand(armCommands.changeGoal(() -> -MathUtil.applyDeadband(operator.getRightX(), ControlConstants.operatorDeadband) * ControlConstants.armManualRate));
+		arm.setDefaultCommand(armCommands.changeGoal(() -> -MathUtil.applyDeadband(operator.getLeftX(), ControlConstants.operatorDeadband) * ControlConstants.armManualRate));
 	}
 
 	private void initWrist() {

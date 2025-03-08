@@ -3,18 +3,16 @@ package frc.robot.commands;
 import java.util.function.Supplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
+import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.constants.IntakeConstants;
 import frc.robot.constants.RobotPositions;
-import frc.robot.constants.SwerveConstants;
 import frc.robot.other.RobotUtils;
 import frc.robot.states.RobotState;
 import frc.robot.subsystems.Arm;
@@ -40,12 +38,6 @@ public class MultiCommands {
     private SwerveCommands swerveCommands;
     @SuppressWarnings("unused")
     private HangCommands hangCommands;
-
-    // State variables for commands
-    private RobotState sourceState;
-    
-    // Timer for tracking command execution
-    private final Timer timer = new Timer();
     
     // Reference to RobotPublisher for simulation
     private RobotPublisher robotPublisher;
@@ -55,7 +47,7 @@ public class MultiCommands {
      */
     public MultiCommands(Arm arm, Elevator elevator, Wrist wrist, Swerve swerve, 
                          SwerveCommands swerveCommands, IntakeCommands intakeCommands, 
-                         HangCommands hangCommands) {
+                         HangCommands hangCommands, RobotPublisher robotPublisher) {
         this.arm = arm;
         this.elevator = elevator;
         this.wrist = wrist;
@@ -63,14 +55,6 @@ public class MultiCommands {
         this.swerveCommands = swerveCommands;
         this.intakeCommands = intakeCommands;
         this.hangCommands = hangCommands;
-    }
-    
-    /**
-     * Sets the RobotPublisher for simulation commands.
-     * 
-     * @param robotPublisher The RobotPublisher instance
-     */
-    public void setRobotPublisher(RobotPublisher robotPublisher) {
         this.robotPublisher = robotPublisher;
     }
 
@@ -114,7 +98,7 @@ public class MultiCommands {
      */
     private RobotState getClosestState(RobotState[] states) {
         Pose2d currentPose = swerve == null ? new Pose2d() : swerve.getPose();
-        return RobotUtils.getClosestState(currentPose, states, SwerveConstants.rotationWeight);
+        return RobotUtils.getClosestStateToPose(currentPose, states);
     }
 
     /**
@@ -124,19 +108,7 @@ public class MultiCommands {
      * @return A command that moves the robot to the specified state
      */
     public Command moveToState(Supplier<RobotState> state) {
-        return new FunctionalCommand(
-            () -> {
-                timer.reset();
-                timer.start();
-                setTargetState(state.get());
-            },
-            () -> {},
-            (interrupted) -> {
-                timer.stop();
-            },
-            () -> isFinished(),
-            arm, elevator, wrist, swerve
-        );
+        return moveToState(state,Double.MAX_VALUE);
     }
     
     /**
@@ -147,19 +119,12 @@ public class MultiCommands {
      * @return A command that moves the robot to the specified state
      */
     public Command moveToState(Supplier<RobotState> state, double timeout) {
-        return new FunctionalCommand(
-            () -> {
-                timer.reset();
-                timer.start();
-                setTargetState(state.get());
-            },
-            () -> {},
-            (interrupted) -> {
-                timer.stop();
-            },
-            () -> isFinished(timeout),
-            arm, elevator, wrist, swerve
-        );
+        return new ParallelRaceGroup(
+            new RepeatCommand(
+                new InstantCommand(()->setTargetState(state.get()),arm,elevator,wrist,swerve)
+            ),
+        new WaitCommand(timeout),
+        new WaitUntilCommand(()->atSetpoint()));
     }
     
     /**
@@ -171,74 +136,32 @@ public class MultiCommands {
      * @return A command that moves the robot to the specified state in sequence
      */
     public Command moveToStateSequenced(Supplier<RobotState> state, Supplier<RobotState> preState) {
-        if (preState.get() != null) {
-            // Create a pre-state with the target position but current arm/elevator/wrist positions
-            RobotState currentState = new RobotState(
-                arm != null ? arm.getMeasurement() : null,
-                elevator != null ? elevator.getMeasurement() : null,
-                wrist != null ? wrist.getMeasurement() : null,
-                state.get().robotPosition
-            );
-            
-            // Move to position first, then to the target state
+        if (preState.get() != RobotState.NULL) {
             return new SequentialCommandGroup(
-                moveToState(() -> currentState, 5),
-                moveToState(state)
+                moveToState(() -> preState.get().withPosition(state.get().robotPosition), 5),
+                moveToState(() -> state.get().stageOne()),
+                moveToState(() -> state.get().stageTwo())
             );
         } else {
-            // If no pre-state, just move to the target state
-            return moveToState(state);
+            return new SequentialCommandGroup(
+                moveToState(() -> preState.get().withPosition(state.get().robotPosition), 5),
+                moveToState(() -> state.get())
+            );
         }
-    }
-
-    /**
-     * Check if the robot has reached its target state or timed out.
-     * 
-     * @return True if the robot has reached its target state or timed out
-     */
-    private boolean isFinished() {
-        return (atSetpoint() || timer.hasElapsed(SwerveConstants.timeout)) && timer.hasElapsed(0.1);
-    }
-    
-    /**
-     * Check if the robot has reached its target state or timed out.
-     * 
-     * @param timeout The timeout in seconds
-     * @return True if the robot has reached its target state or timed out
-     */
-    private boolean isFinished(double timeout) {
-        return (atSetpoint() || timer.hasElapsed(timeout)) && timer.hasElapsed(0.1);
-    }
-
-    /**
-     * Wait until the robot has reached its target state or a timeout occurs.
-     * 
-     * @return A command that waits until the robot has reached its target state or times out
-     */
-    public Command waitUntilFinished() {
-        return new ParallelRaceGroup(
-            new WaitUntilCommand(this::atSetpoint),
-            new WaitCommand(SwerveConstants.timeout)
-        );
     }
 
     /**
      * Command to move to the source position.
      */
     public Command moveToSource() {
-        return new SequentialCommandGroup(
-            new InstantCommand(() -> {
-                sourceState = getClosestState(RobotPositions.sourceStates);
-            }),
-            moveToState(() -> sourceState)
-        );
+        return moveToState(()->getClosestState(RobotPositions.sourceStates));
     }
 
     /**
      * Command to move to the ground intake position.
      */
     public Command moveToGround(Supplier<Pose2d> pose) {
-        return moveToState(() -> RobotPositions.groundIntake.withPose(pose.get()));
+        return moveToState(() -> RobotPositions.groundIntake);
     }
 
     /**
@@ -323,7 +246,7 @@ public class MultiCommands {
     public Command simCoralOuttake() {
         return new InstantCommand(() -> {
             if (robotPublisher != null) {
-                robotPublisher.simOuttakeCoral();
+                robotPublisher.simCoralOuttake();
             }
         });
     }
@@ -334,7 +257,7 @@ public class MultiCommands {
     public Command simAlgaeOuttake() {
         return new InstantCommand(() -> {
             if (robotPublisher != null) {
-                robotPublisher.simOuttakeAlgae();
+                robotPublisher.simAlgaeOuttake();
             }
         });
     }

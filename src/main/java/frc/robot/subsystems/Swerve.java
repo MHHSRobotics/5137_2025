@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import frc.robot.Robot;
+import frc.robot.commands.SwerveCommands;
 import frc.robot.constants.SwerveConstants;
 import frc.robot.motorSystem.EnhancedTalonFX;
 import frc.robot.other.DetectedObject;
@@ -76,12 +77,6 @@ public class Swerve extends SubsystemBase {
 
     private Command currentAuto;
 
-    // PID Control
-    private PIDController xController;
-    private PIDController yController;
-    private PIDController rotController;
-    private boolean pidEnabled = true;
-
     /**
      * Constructor for the Swerve subsystem.
      *
@@ -148,19 +143,6 @@ public class Swerve extends SubsystemBase {
         // Warmup pathfinding
         Pathfinding.setPathfinder(new LocalADStar());
         PathfindingCommand.warmupCommand().schedule();
-
-        // Initialize PID controllers
-        xController = new PIDController(SwerveConstants.translationKP, SwerveConstants.translationKI, SwerveConstants.translationKD);
-        yController = new PIDController(SwerveConstants.translationKP, SwerveConstants.translationKI, SwerveConstants.translationKD);
-        rotController = new PIDController(SwerveConstants.rotationKP, SwerveConstants.rotationKI, SwerveConstants.rotationKD);
-        
-        // Configure rotation controller for continuous input
-        rotController.enableContinuousInput(-Math.PI, Math.PI);
-        
-        // Set tolerances
-        xController.setTolerance(SwerveConstants.transTol);
-        yController.setTolerance(SwerveConstants.transTol);
-        rotController.setTolerance(SwerveConstants.rotTol);
     }
 
     /**
@@ -217,7 +199,6 @@ public class Swerve extends SubsystemBase {
 
     private void startAuto(Command auto){
         cancelAuto();
-        auto=new ParallelRaceGroup(auto,new WaitCommand(SwerveConstants.moveTimeout));
         auto.schedule();
         currentAuto=auto;
     }
@@ -275,22 +256,33 @@ public class Swerve extends SubsystemBase {
         return targetPose;
     }
 
+    /**
+     * Sets the target pose for the robot to drive to.
+     * If a SwerveCommands instance is provided, it will use PID control.
+     * Otherwise, it will use pathfinding.
+     *
+     * @param target The target pose to drive to.
+     */
     public void setTargetPose(Pose2d target) {
         targetPose = target;
         
-        if (pidEnabled) {
-            // If PID is enabled, cancel any auto commands and use PID control
-            cancelAuto();
-            // Reset PID controllers
-            xController.reset();
-            yController.reset();
-            rotController.reset();
-            // Initial drive to target
-            driveToPose(target);
-        } else {
-            // Use the original pathfinding approach
-            startAuto(AutoBuilder.pathfindToPose(target, SwerveConstants.constraints, 0.0));
-        }
+        // Use pathfinding approach
+        startAuto(AutoBuilder.pathfindToPose(target, SwerveConstants.constraints, 0.0));
+    }
+    
+    /**
+     * Sets the target pose for the robot to drive to using the provided SwerveCommands.
+     * This method uses PID control through the SwerveCommands.
+     *
+     * @param target The target pose to drive to.
+     * @param commands The SwerveCommands instance to use for PID control.
+     */
+    public void setTargetPoseWithPID(Pose2d target, SwerveCommands commands) {
+        targetPose = target;
+        
+        // Use PID control through SwerveCommands
+        Command pidCommand = commands.driveToPoseWithPID(target);
+        startAuto(pidCommand);
     }
 
     public void followPath(String name) {
@@ -347,11 +339,6 @@ public class Swerve extends SubsystemBase {
             }
         }catch(Exception e){
             DataLogManager.log("Periodic error: "+RobotUtils.getError(e));
-        }
-
-        // If PID control is enabled and we have a target pose, drive to it
-        if (pidEnabled && targetPose != null) {
-            driveToPose(targetPose);
         }
     }
         
@@ -464,91 +451,20 @@ public class Swerve extends SubsystemBase {
     }
 
     /**
-     * Toggles PID control on or off
-     * 
-     * @return The new state of PID control (true = enabled, false = disabled)
+     * Gets the maximum translational speed of the robot.
+     *
+     * @return The maximum translational speed in meters per second.
      */
-    public boolean togglePIDControl() {
-        pidEnabled = !pidEnabled;
-        
-        if (pidEnabled) {
-            // Reset controllers when enabling
-            xController.reset();
-            yController.reset();
-            rotController.reset();
-            
-            // Log that PID control is enabled
-            DataLogManager.log("PID Control enabled");
-            SmartDashboard.putBoolean("PID Control", true);
-        } else {
-            // Log that PID control is disabled
-            DataLogManager.log("PID Control disabled");
-            SmartDashboard.putBoolean("PID Control", false);
-        }
-        
-        return pidEnabled;
+    public double getMaxSpeed() {
+        return maxSpeed;
     }
-    
+
     /**
-     * Sets whether PID control is enabled
-     * 
-     * @param enabled Whether PID control should be enabled
-     * @return The new state of PID control
+     * Gets the maximum angular speed of the robot.
+     *
+     * @return The maximum angular speed in radians per second.
      */
-    public boolean setPIDControl(boolean enabled) {
-        if (pidEnabled != enabled) {
-            return togglePIDControl();
-        }
-        return pidEnabled;
-    }
-    
-    /**
-     * Gets whether PID control is currently enabled
-     * 
-     * @return Whether PID control is enabled
-     */
-    public boolean isPIDControlEnabled() {
-        return pidEnabled;
-    }
-    
-    /**
-     * Drives to a target pose using PID control
-     * 
-     * @param targetPose The target pose to drive to
-     * @return Whether the robot has reached the target pose
-     */
-    public boolean driveToPose(Pose2d targetPose) {
-        if (!pidEnabled) {
-            return false;
-        }
-        
-        Pose2d currentPose = getPose();
-        
-        // Calculate errors in field-relative coordinates
-        double xSpeed = xController.calculate(currentPose.getX(), targetPose.getX());
-        double ySpeed = yController.calculate(currentPose.getY(), targetPose.getY());
-        double rotSpeed = rotController.calculate(currentPose.getRotation().getRadians(), 
-                                                targetPose.getRotation().getRadians());
-        
-        // Limit speeds
-        xSpeed = MathUtil.clamp(xSpeed, -maxSpeed, maxSpeed);
-        ySpeed = MathUtil.clamp(ySpeed, -maxSpeed, maxSpeed);
-        rotSpeed = MathUtil.clamp(rotSpeed, -maxAngularSpeed, maxAngularSpeed);
-        
-        // Apply speeds using field-relative control
-        drive(ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rotSpeed, currentPose.getRotation()));
-        
-        // Return whether we've reached the target
-        boolean atTarget = xController.atSetpoint() && 
-                          yController.atSetpoint() && 
-                          rotController.atSetpoint();
-                          
-        // Log PID data
-        SmartDashboard.putNumber("PID/X Error", currentPose.getX() - targetPose.getX());
-        SmartDashboard.putNumber("PID/Y Error", currentPose.getY() - targetPose.getY());
-        SmartDashboard.putNumber("PID/Rot Error", currentPose.getRotation().minus(targetPose.getRotation()).getRadians());
-        SmartDashboard.putBoolean("PID/At Target", atTarget);
-        
-        return atTarget;
+    public double getMaxAngularSpeed() {
+        return maxAngularSpeed;
     }
 }

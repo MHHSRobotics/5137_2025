@@ -2,14 +2,16 @@ package frc.robot.commands;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
-import edu.wpi.first.wpilibj2.command.RepeatCommand;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.SwerveConstants;
 import frc.robot.subsystems.Swerve;
 
@@ -40,24 +42,7 @@ public class SwerveCommands {
      * @return A command that drives the swerve subsystem.
      */
     public Command drive(DoubleSupplier dx, DoubleSupplier dy, DoubleSupplier dtheta, BooleanSupplier fieldOriented) {
-        return new FunctionalCommand(
-            () -> {},
-            () -> swerve.setPercentDrive(dx.getAsDouble(), dy.getAsDouble(), dtheta.getAsDouble(), fieldOriented.getAsBoolean()),
-            (Boolean onEnd) -> {},
-            () -> {return false;},
-            swerve
-        );
-    }
-
-    public Command overrideDrive(DoubleSupplier dx, DoubleSupplier dy, DoubleSupplier dtheta, BooleanSupplier fieldOriented, double time) {
-        return new ParallelRaceGroup(
-            new RepeatCommand(drive(dx,dy,dtheta,fieldOriented)),
-            new WaitCommand(time)
-        );
-    }
-
-    public Command driveBack(){
-        return overrideDrive(()->-SwerveConstants.driveBackPower, ()->0, ()->0, ()->false, SwerveConstants.driveBackTime);
+        return new InstantCommand(() -> swerve.setPercentDrive(dx.getAsDouble(), dy.getAsDouble(), dtheta.getAsDouble(), fieldOriented.getAsBoolean()),swerve);
     }
 
     /**
@@ -79,22 +64,116 @@ public class SwerveCommands {
     }
 
     /**
-     * Creates a command to run a quasistatic system identification routine.
-     *
-     * @param dir The direction of the quasistatic test.
-     * @return A command that runs the quasistatic system identification routine.
+     * Creates a command to drive to a target pose using PID control.
+     * 
+     * @param targetPoseSupplier A supplier for the target pose
+     * @return A command that drives to the target pose using PID control
      */
-    public Command sysIdQuasistatic(SysIdRoutine.Direction dir) {
-        return swerve.getRoutine().quasistatic(dir);
+    public Command driveToPoseWithPID(Supplier<Pose2d> targetPoseSupplier) {
+        // Create PID controllers outside the command so they can be accessed by all lambdas
+        PIDController xController = new PIDController(
+            SwerveConstants.translationKP,
+            SwerveConstants.translationKI,
+            SwerveConstants.translationKD
+        );
+        PIDController yController = new PIDController(
+            SwerveConstants.translationKP,
+            SwerveConstants.translationKI,
+            SwerveConstants.translationKD
+        );
+        PIDController rotController = new PIDController(
+            SwerveConstants.rotationKP,
+            SwerveConstants.rotationKI,
+            SwerveConstants.rotationKD
+        );
+        
+        // Configure rotation controller for continuous input
+        rotController.enableContinuousInput(-Math.PI, Math.PI);
+        
+        // Set tolerances
+        xController.setTolerance(SwerveConstants.transTol);
+        yController.setTolerance(SwerveConstants.transTol);
+        rotController.setTolerance(SwerveConstants.rotTol);
+        
+        return new FunctionalCommand(
+            // Initialize
+            () -> {
+                // Reset controllers when starting
+                xController.reset();
+                yController.reset();
+                rotController.reset();
+                
+                // Log that we're starting PID control
+                SmartDashboard.putBoolean("PID Control Active", true);
+            },
+            // Execute - calculate and apply PID outputs
+            () -> {
+                Pose2d targetPose = targetPoseSupplier.get();
+                Pose2d currentPose = swerve.getPose();
+                
+                // Calculate errors in field-relative coordinates
+                double xSpeed = xController.calculate(currentPose.getX(), targetPose.getX());
+                double ySpeed = yController.calculate(currentPose.getY(), targetPose.getY());
+                double rotSpeed = rotController.calculate(
+                    currentPose.getRotation().getRadians(),
+                    targetPose.getRotation().getRadians()
+                );
+                
+                // Limit speeds to maximum values
+                double maxSpeed = swerve.getMaxSpeed();
+                double maxAngularSpeed = swerve.getMaxAngularSpeed();
+                
+                xSpeed = MathUtil.clamp(xSpeed, -maxSpeed, maxSpeed);
+                ySpeed = MathUtil.clamp(ySpeed, -maxSpeed, maxSpeed);
+                rotSpeed = MathUtil.clamp(rotSpeed, -maxAngularSpeed, maxAngularSpeed);
+                
+                // Apply speeds using field-relative control
+                swerve.drive(ChassisSpeeds.fromFieldRelativeSpeeds(
+                    xSpeed, ySpeed, rotSpeed, currentPose.getRotation()
+                ));
+                
+                // Log PID data to SmartDashboard
+                SmartDashboard.putNumber("PID/X Error", currentPose.getX() - targetPose.getX());
+                SmartDashboard.putNumber("PID/Y Error", currentPose.getY() - targetPose.getY());
+                SmartDashboard.putNumber("PID/Rot Error", 
+                    currentPose.getRotation().minus(targetPose.getRotation()).getRadians());
+                
+                // Check if we're at the target
+                boolean atXTarget = xController.atSetpoint();
+                boolean atYTarget = yController.atSetpoint();
+                boolean atRotTarget = rotController.atSetpoint();
+                
+                SmartDashboard.putBoolean("PID/At X Target", atXTarget);
+                SmartDashboard.putBoolean("PID/At Y Target", atYTarget);
+                SmartDashboard.putBoolean("PID/At Rot Target", atRotTarget);
+                SmartDashboard.putBoolean("PID/At Target", atXTarget && atYTarget && atRotTarget);
+            },
+            // End - clean up when the command ends
+            (interrupted) -> {
+                // Stop the robot
+                swerve.drive(new ChassisSpeeds());
+                // Log that PID control is no longer active
+                SmartDashboard.putBoolean("PID Control Active", false);
+            },
+            // isFinished - determine when the command should end
+            () -> {
+                // Use the PID controllers' atSetpoint methods to determine if we're at the target
+                return xController.atSetpoint() && 
+                       yController.atSetpoint() && 
+                       rotController.atSetpoint();
+            },
+            // Requirements - this command requires the swerve subsystem
+            swerve
+        );
     }
-
+    
     /**
-     * Creates a command to run a dynamic system identification routine.
-     *
-     * @param dir The direction of the dynamic test.
-     * @return A command that runs the dynamic system identification routine.
+     * Creates a command to drive to a specific pose using PID control.
+     * 
+     * @param targetPose The target pose to drive to
+     * @return A command that drives to the target pose using PID control
      */
-    public Command sysIdDynamic(SysIdRoutine.Direction dir) {
-        return swerve.getRoutine().dynamic(dir);
+    public Command driveToPoseWithPID(Pose2d targetPose) {
+        return driveToPoseWithPID(() -> targetPose);
     }
 }

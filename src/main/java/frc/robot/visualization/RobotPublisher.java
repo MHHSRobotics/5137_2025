@@ -145,20 +145,11 @@ public class RobotPublisher extends SubsystemBase {
     }
     
     /**
-     * Gets the current wrist pose.
-     * 
-     * @return The current wrist pose
-     */
-    public Pose3d getCurrentWristPose() {
-        return currentWristPose;
-    }
-    
-    /**
      * Simulates picking up a coral gamepiece.
      */
     public void simCoralIntake() {
         if(gamepieces != null) {
-            currentPiece = gamepieces.getClosestCoral(getCurrentWristPose());
+            currentPiece = gamepieces.getClosestCoral(currentWristPose);
         }
     }
     
@@ -167,16 +158,16 @@ public class RobotPublisher extends SubsystemBase {
      */
     public void simAlgaeIntake() {
         if(gamepieces != null) {
-            currentPiece = gamepieces.getClosestAlgae(getCurrentWristPose());
+            currentPiece = gamepieces.getClosestAlgae(currentWristPose);
         }
     }
     
     /**
      * Simulates releasing a coral gamepiece.
      */
-    public void simOuttakeCoral() {
+    public void simCoralOuttake() {
         if(currentPiece != null) {
-            currentPiece.setGoalOnBot(getCurrentWristPose().plus(new Transform3d(-GamepieceConstants.coralDrop, 0, 0, new Rotation3d())));
+            currentPiece.setGoalOnBot(currentWristPose.plus(new Transform3d(-GamepieceConstants.coralDrop, 0, 0, new Rotation3d())));
             currentPiece = null;
         }
     }
@@ -184,9 +175,9 @@ public class RobotPublisher extends SubsystemBase {
     /**
      * Simulates releasing an algae gamepiece.
      */
-    public void simOuttakeAlgae() {
+    public void simAlgaeOuttake() {
         if(currentPiece != null) {
-            currentPiece.setGoalOnBot(getCurrentWristPose().plus(new Transform3d(-GamepieceConstants.algaeDrop, 0, 0, new Rotation3d())));
+            currentPiece.setGoalOnBot(currentWristPose.plus(new Transform3d(-GamepieceConstants.algaeDrop, 0, 0, new Rotation3d())));
             currentPiece = null;
         }
     }
@@ -199,7 +190,7 @@ public class RobotPublisher extends SubsystemBase {
         
         // Update gamepiece position if one is being held
         if(currentPiece != null) {
-            currentPiece.setGoalOnBot(getCurrentWristPose());
+            currentPiece.setGoalOnBot(currentWristPose);
         }
     }
 } 

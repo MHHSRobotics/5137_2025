@@ -33,9 +33,7 @@ public class IntakeCommands {
      * @return A command that, when executed, stops the intake motor.
      */
     public Command stop() {
-        Command command = new InstantCommand(() -> intake.stop());
-        command.addRequirements(intake);
-        return command;
+        return setSpeed(()->0);
     }
 
     /**
@@ -44,9 +42,7 @@ public class IntakeCommands {
      * @return A command that, when executed, stops the intake motor.
      */
     public Command setSpeed(DoubleSupplier speed) {
-        Command command = new InstantCommand(() -> intake.setSpeed(speed.getAsDouble()));
-        command.addRequirements(intake);
-        return command;
+        return new InstantCommand(() -> intake.setSpeed(speed.getAsDouble()),intake);
     }
 
 
@@ -57,13 +53,11 @@ public class IntakeCommands {
      * @return A command that runs the intake until the switch is triggered.
      */
     public Command intake() {
-        Command command = new SequentialCommandGroup(
-            new InstantCommand(() -> intake.setSpeed(IntakeConstants.intakeSpeed)), // Start the intake
+        return new SequentialCommandGroup(
+            setSpeed(()->IntakeConstants.intakeSpeed), // Start the intake
             new WaitCommand(IntakeConstants.intakeTime),                                                   // Wait for 1 second
-            stop()                                                                // Stop the intake
+            stop()                                                          // Stop the intake
         );
-        command.addRequirements(intake);
-        return command;
     }
 
     /**
@@ -73,16 +67,14 @@ public class IntakeCommands {
      * @return A command that runs the intake until the switch is triggered.
      */
     public Command pulseIntake() {
-        Command command = new RepeatCommand(
+        return new RepeatCommand(
             new SequentialCommandGroup(
                 setSpeed(() -> IntakeConstants.intakeSpeed),
-                new WaitCommand(0.1),
+                new WaitCommand(IntakeConstants.pulseTime),
                 stop(),
-                new WaitCommand(0.4)
+                new WaitCommand(IntakeConstants.pulseWait)
             )                                                          // Stop the intake
         );
-        command.addRequirements(intake);
-        return command;
     }
 
     /**
@@ -92,12 +84,10 @@ public class IntakeCommands {
      * @return A command that outtakes for 1 second and then stops.
      */
     public Command outtake() {
-        Command command = new SequentialCommandGroup(
-            new InstantCommand(() -> intake.setSpeed(-IntakeConstants.intakeSpeed)), // Start the intake
-            new WaitCommand(IntakeConstants.outtakeTime),                                                   // Wait for 1 second
-            stop()                                                                // Stop the intake
+        return new SequentialCommandGroup(
+            setSpeed(()->-IntakeConstants.intakeSpeed), // Start the intake
+            new WaitCommand(IntakeConstants.intakeTime),                                                   // Wait for 1 second
+            stop()                                                          // Stop the intake
         );
-        command.addRequirements(intake);
-        return command;
     }
 }

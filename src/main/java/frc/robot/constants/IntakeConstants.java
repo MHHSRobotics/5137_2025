@@ -7,4 +7,6 @@ public class IntakeConstants {
     public static final double intakeSpeed = 0.9;
     public static final double outtakeTime = 1;
     public static final double intakeTime = 1;
+    public static final double pulseTime = 0.1;
+    public static final double pulseWait = 0.4;
 }

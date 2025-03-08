@@ -134,6 +134,30 @@ public class RobotUtils {
         return closest;
     }
 
+    /**
+     * Finds the closest Pose2d from a list of poses to a given reference pose. The reference pose
+     * is first transformed to the current alliance's perspective before calculating distances.
+     *
+     * @param pose The reference pose.
+     * @param others An array of poses to compare against.
+     * @return The closest pose from the list.
+     */
+    public static RobotState getClosestStateToPose(Pose2d pose, RobotState[] others) {
+        RobotState closest = null;
+        double closestDistance = Double.MAX_VALUE;
+        for (RobotState other : others) {
+            if(other.robotPosition!=null){
+                Transform2d transform = other.robotPosition.alliancePos().minus(pose);
+                double distance = Math.hypot(transform.getX(), transform.getY());
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closest = other;
+                }
+            }
+        }
+        return closest;
+    }
+
     // Converts an exception to an error string
     public static String getError(Exception e){
         StringBuilder sb=new StringBuilder();
@@ -155,93 +179,6 @@ public class RobotUtils {
             return max;
         }
         return in;
-    }
-
-    /**
-     * Calculates the weighted distance between two poses, considering both translation and rotation.
-     * 
-     * @param pose1 The first pose
-     * @param pose2 The second pose
-     * @param rotationWeight The weight to apply to rotational differences (in meters per radian)
-     * @return The weighted distance between the poses
-     */
-    public static double getWeightedPoseDistance(Pose2d pose1, Pose2d pose2, double rotationWeight) {
-        if (pose1 == null || pose2 == null) {
-            return Double.MAX_VALUE;
-        }
-        
-        // Calculate translational distance
-        double translationDistance = pose1.getTranslation().getDistance(pose2.getTranslation());
-        
-        // Calculate rotational distance (in radians)
-        double rotationDistance = Math.abs(pose1.getRotation().minus(pose2.getRotation()).getRadians());
-        
-        // Apply weight to rotation and combine with translation
-        return translationDistance + rotationWeight * rotationDistance;
-    }
-
-    /**
-     * Find the closest RobotState from an array of states based on robot position.
-     * 
-     * @param currentPose The current pose to compare against
-     * @param states Array of possible states
-     * @return The closest state based on robot position, or null if states is empty
-     */
-    public static RobotState getClosestState(Pose2d currentPose, RobotState[] states) {
-        if (states == null || states.length == 0) {
-            return null;
-        }
-        
-        // Find the closest state based on robot position
-        RobotState closestState = states[0];
-        double minDistance = Double.MAX_VALUE;
-        
-        for (RobotState state : states) {
-            // Calculate distance to this state
-            if (state.robotPosition != null) {
-                Pose2d botPosition = state.robotPosition.alliancePos();
-                double distance = getWeightedPoseDistance(currentPose, botPosition, 1.0);
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    closestState = state;
-                }
-            }
-        }
-
-        return closestState;
-    }
-
-    /**
-     * Find the closest RobotState from an array of states based on robot position,
-     * using the specified rotation weight.
-     * 
-     * @param currentPose The current pose to compare against
-     * @param states Array of possible states
-     * @param rotationWeight The weight to apply to rotational differences (in meters per radian)
-     * @return The closest state based on robot position, or null if states is empty
-     */
-    public static RobotState getClosestState(Pose2d currentPose, RobotState[] states, double rotationWeight) {
-        if (states == null || states.length == 0) {
-            return null;
-        }
-        
-        // Find the closest state based on robot position
-        RobotState closestState = states[0];
-        double minDistance = Double.MAX_VALUE;
-        
-        for (RobotState state : states) {
-            // Calculate distance to this state
-            if (state.robotPosition != null) {
-                Pose2d botPosition = state.robotPosition.alliancePos();
-                double distance = getWeightedPoseDistance(currentPose, botPosition, rotationWeight);
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    closestState = state;
-                }
-            }
-        }
-
-        return closestState;
     }
 
     @SuppressWarnings("all")

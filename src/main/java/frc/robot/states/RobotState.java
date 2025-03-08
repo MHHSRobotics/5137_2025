@@ -8,6 +8,7 @@ import frc.robot.constants.RobotPositions.RobotPosition;
  * the arm, elevator, wrist, and the robot's position on the field.
  */
 public class RobotState {
+    public static final RobotState NULL = new RobotState(null,null,null,(RobotPosition) null);
     public final Double armPosition;
     public final Double elevatorPosition;
     public final Double wristPosition;
@@ -44,6 +45,14 @@ public class RobotState {
         this.robotPosition = botPosition != null ? new RobotPosition(botPosition) : null;
     }
 
+    public RobotState stageOne() {
+        return new RobotState(null, elevatorPosition, null, (RobotPosition)null);
+    }
+
+    public RobotState stageTwo() {
+        return new RobotState(armPosition, null, wristPosition, (RobotPosition)null);
+    }
+
     /**
      * Creates a new RobotState with the same arm, elevator, and wrist positions,
      * but with a different robot position.
@@ -64,15 +73,5 @@ public class RobotState {
      */
     public RobotState withPose(Pose2d pose) {
         return withPosition(pose != null ? new RobotPosition(pose) : null);
-    }
-
-    /**
-     * Gets the robot's position on the field, adjusted for the current alliance.
-     * This converts the blue alliance position to the current alliance position.
-     * 
-     * @return The robot's position on the field, adjusted for the current alliance.
-     */
-    public Pose2d getBotPosition() {
-        return robotPosition != null ? robotPosition.alliancePos() : null;
     }
 } 

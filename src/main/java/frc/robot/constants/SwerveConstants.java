@@ -33,23 +33,7 @@ public class SwerveConstants {
 
     public static final double transTol = 0.2; // in meters
     public static final double rotTol = Units.degreesToRadians(10); // in radians
-
-    public static final double moveTimeout = 10; // seconds
-
-    public static final double driveBackPower = 0.8;
-    public static final double driveBackTime = 0.5; // seconds
     
-    // Constants moved from RobotPositions
-    
-    // Timeout for movement commands
-    public static final double timeout = 3; // seconds
-    
-    // Weight for rotation vs translation when finding closest state
-    public static final double rotationWeight = 1.0; // meters per radian
-
     // Offset from the center of the robot to the arm pivot
     public static final Translation3d armTransOffset = new Translation3d(0.11, -0.18, 0.26);
-    
-    // Distance for intake operations
-    public static final double intakeDistance = 1;
 }

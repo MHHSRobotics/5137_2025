@@ -8,7 +8,6 @@ public class ArmConstants {
     // Motor ID
     public static final int motorId = Robot.isSimulation()?22:2;
     public static final double gearRatio = 700/9.;
-    public static final double armOffset = 0;
 
     // Encoder ID
     public static final int encoderId = 1;
@@ -23,14 +22,11 @@ public class ArmConstants {
     public static final double kV = 0;
     public static final double kA = 0;
 
-    // Motion Profile constants
-    //public static final Constraints pidConstraints=new Constraints(Units.degreesToRadians(180),Units.degreesToRadians(360));
-
     // Arm tolerance
     public static final double armTolerance = Units.degreesToRadians(1);
 
     // Hang Position
-    public static final double hangPosition = Units.degreesToRadians(-30);
+    //public static final double hangPosition = Units.degreesToRadians(-30);
     
     // Simulation constants
     public static final double minAngle = Units.degreesToRadians(-135);
