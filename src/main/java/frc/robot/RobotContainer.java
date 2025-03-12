@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
+import choreo.auto.AutoFactory;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
@@ -20,12 +21,10 @@ import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
-import frc.robot.elastic.*;
 import frc.robot.gamepieces.Gamepieces;
-import frc.robot.other.AutoFactory;
-import frc.robot.other.CageChoice;
 import frc.robot.other.RobotUtils;
 import frc.robot.subsystems.*;
+import frc.robot.visualization.RobotPublisher;
 import frc.robot.commands.*;
 import frc.robot.constants.*;
 
@@ -40,8 +39,6 @@ public class RobotContainer {
 	private Vision vision;
 	private Swerve swerve;
 	private SwerveCommands swerveCommands;
-	private SwerveSystem swerveSystem;
-	private SwerveSystemCommands swerveSystemCommands;
 
 	private Elevator elevator;
 	private ElevatorCommands elevatorCommands;
@@ -58,18 +55,15 @@ public class RobotContainer {
 	private Hang hang;
 	private HangCommands hangCommands;
 
-	private LED led;
-
 	private MultiCommands multiCommands;
 
 	// Additional components
-	private Reef reef;
-	private ReefScoring reefScoring;
-	private CageChoice cageChoice;
-	private AutoFactory autoFactory;
 	private Gamepieces gamepieces;
 
 	private SendableChooser<String> autoChoice;
+
+	private RobotPublisher robotPublisher;
+	private RobotPublisherCommands robotPublisherCommands;
 
 	/**
 	 * Constructor for RobotContainer.
@@ -86,9 +80,9 @@ public class RobotContainer {
 			// Configure emergency stop - this should always be available
 			driver.touchpad().onTrue(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
 			
-			initReef();
 			if (Robot.isSimulation()) {
 				initGamepieces();
+				initRobotPublisher();
 			}
 			
 			// Initialize subsystems
@@ -99,24 +93,14 @@ public class RobotContainer {
 			//initWrist();
 			initIntake();
 			initHang();
-			//initLED();
 			
 			// Initialize combined systems and commands
-			//initSwerveSystem();
 			//initMultiCommands();
-			//initAdditionalComponents();
 
 			autoChoice = new SendableChooser<String>();
 			autoChoice.setDefaultOption("Single Center", "Single Center");
 			AutoBuilder.getAllAutoNames().forEach((name) -> autoChoice.addOption(name, name));
 			SmartDashboard.putData("Auto Choice", autoChoice);
-
-			// Configure SysId bindings for elevator
-			//configureSysIdBindings(elevatorCommands);
-
-			//arm.resetPos();
-			//wrist.resetPos();
-			//elevator.resetPos();
 		} catch (Exception e) {
 			DataLogManager.log("Error while initializing: " + RobotUtils.getError(e));
 		}
@@ -128,19 +112,12 @@ public class RobotContainer {
 		//sysIdTest = new CommandPS5Controller(2);
 	}
 
-	private void initReef() {
-		reef = new Reef();
-		reefScoring = new ReefScoring(reef);
-		SmartDashboard.putData("reef", reef);
-		SmartDashboard.putData("reefScoring", reefScoring);
-	}
-
 	private void initGamepieces() {
 		gamepieces=new Gamepieces();
 	}
 
 	private void initVision() {
-		vision = new Vision(reef);
+		vision = new Vision();
 	}
 
 	private void initSwerve() {
@@ -208,23 +185,8 @@ public class RobotContainer {
 		driver.povUp().whileTrue(hangCommands.setSpeed(() -> -driver.getRightY()*HangConstants.hangSpeed));
 	}
 
-	private void initLED() {
-		led = new LED();
-	}
-
 	private void initSwerveSystem() {
-		swerveSystem = new SwerveSystem(arm, elevator, wrist, swerve, gamepieces);
-		swerveSystemCommands = new SwerveSystemCommands(swerveSystem);
-
-		driver.square().and(driver.R2().negate()).onTrue(swerveSystemCommands.moveToProcessor());
-		driver.cross().and(driver.R2().negate()).onTrue(swerveSystemCommands.moveToBarge());
-
-		driver.triangle().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(3, 1.0));
-		driver.square().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(2));
-		driver.circle().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(1));
-		driver.cross().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(0));
-
-		NamedCommands.registerCommand("L4", swerveSystemCommands.moveToLevel(3, 1.0, 0.01));
+		
 
 		//driver.axisLessThan(0,-0.1).onTrue(swerveSystemCommands.moveToLevel(3));
 
@@ -239,7 +201,7 @@ public class RobotContainer {
 	}
 
 	private void initMultiCommands() {
-		multiCommands = new MultiCommands(swerveSystemCommands, swerveCommands, intakeCommands, hangCommands);
+		multiCommands = new MultiCommands(arm,elevator,wrist,swerve, swerveCommands, intakeCommands, hangCommands,robotPublisherCommands);
 
 		driver.triangle().and(driver.R2().negate()).onTrue(multiCommands.getCoralFromSource());
 		driver.circle().and(driver.R2().negate())
@@ -260,29 +222,21 @@ public class RobotContainer {
 		driver.L1()
 		.toggleOnTrue(intakeCommands.pulseIntake())
 		.onTrue(wristCommands.setGoal(() -> Units.degreesToRadians(-45)));
+
+		driver.square().and(driver.R2().negate()).onTrue(multiCommands.moveToProcessor());
+		//driver.cross().and(driver.R2().negate()).onTrue(multiCommands.moveToBarge());
+
+		driver.triangle().and(driver.R2()).onTrue(multiCommands.moveToLevel(3));
+		driver.square().and(driver.R2()).onTrue(multiCommands.moveToLevel(2));
+		driver.circle().and(driver.R2()).onTrue(multiCommands.moveToLevel(1));
+		driver.cross().and(driver.R2()).onTrue(multiCommands.moveToLevel(0));
+
+		NamedCommands.registerCommand("L4", multiCommands.moveToLevel(3));
 	}
 
-	private void initAdditionalComponents() {
-		cageChoice = new CageChoice();
-		autoFactory = new AutoFactory(multiCommands);
-	}
-
-	private void configureSysIdBindings(SysIdCommands subsystemCommands) {
-		sysIdTest.cross()
-			.onTrue(subsystemCommands.sysIdDynamic(Direction.kForward))
-			.onFalse(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
-
-		sysIdTest.circle()
-			.onTrue(subsystemCommands.sysIdDynamic(Direction.kReverse))
-			.onFalse(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
-
-		sysIdTest.square()
-			.onTrue(subsystemCommands.sysIdQuasistatic(Direction.kForward))
-			.onFalse(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
-
-		sysIdTest.triangle()
-			.onTrue(subsystemCommands.sysIdQuasistatic(Direction.kReverse))
-			.onFalse(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
+	private void initRobotPublisher() {
+		robotPublisher = new RobotPublisher(arm, elevator, wrist, swerve, gamepieces);
+		robotPublisherCommands = new RobotPublisherCommands(robotPublisher);
 	}
 
 	/**

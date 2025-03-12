@@ -16,12 +16,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.ArmConstants;
-import frc.robot.constants.SwerveSystemConstants;
 import frc.robot.motorSystem.EnhancedTalonFX;
 import frc.robot.motorSystem.EnhancedEncoder;
 import frc.robot.motorSystem.MotorSystem;
 import frc.robot.motorSystem.ArmMechanismSim;
 import frc.robot.constants.GeneralConstants;
+import frc.robot.constants.RobotPositions;
 import frc.robot.other.RobotUtils;
 
 import static edu.wpi.first.units.Units.Radians;
@@ -128,7 +128,7 @@ public class Arm extends SubsystemBase {
         );
         
         // Set initial goal position
-        goal = SwerveSystemConstants.getDefaultState().armPosition;
+        goal = RobotPositions.defaultState.armPosition;
 
         // Initialize simulation components
         armSim = new SingleJointedArmSim(
@@ -139,7 +139,7 @@ public class Arm extends SubsystemBase {
             ArmConstants.minAngle,
             ArmConstants.maxAngle,
             false,
-            SwerveSystemConstants.getDefaultState().armPosition
+            RobotPositions.defaultState.armPosition
         );
         mechanismSim = new ArmMechanismSim(armSim);
 

@@ -23,7 +23,7 @@ import frc.robot.motorSystem.MotorSystem;
 import frc.robot.motorSystem.ArmMechanismSim;
 import frc.robot.other.RobotUtils;
 import frc.robot.constants.GeneralConstants;
-import frc.robot.constants.SwerveSystemConstants;
+import frc.robot.constants.RobotPositions;
 
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
@@ -141,7 +141,7 @@ public class Wrist extends SubsystemBase {
         );
         
         // Set initial goal position
-        desiredGoal = SwerveSystemConstants.getDefaultState().wristPosition;
+        desiredGoal = RobotPositions.defaultState.wristPosition;
 
         // Initialize simulation components
         wristSim = new SingleJointedArmSim(
@@ -152,7 +152,7 @@ public class Wrist extends SubsystemBase {
             WristConstants.minAngle,
             WristConstants.maxAngle,
             false,
-            SwerveSystemConstants.getDefaultState().wristPosition
+            RobotPositions.defaultState.wristPosition
         );
         mechanismSim = new ArmMechanismSim(wristSim);
 

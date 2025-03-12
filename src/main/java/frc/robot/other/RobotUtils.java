@@ -13,6 +13,7 @@ import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Robot;
 import frc.robot.constants.FieldGeometry;
+import frc.robot.states.RobotState;
 
 /**
  * Utility class for robot-related operations, such as alliance-specific transformations,
@@ -133,6 +134,30 @@ public class RobotUtils {
         return closest;
     }
 
+    /**
+     * Finds the closest Pose2d from a list of poses to a given reference pose. The reference pose
+     * is first transformed to the current alliance's perspective before calculating distances.
+     *
+     * @param pose The reference pose.
+     * @param others An array of poses to compare against.
+     * @return The closest pose from the list.
+     */
+    public static RobotState getClosestStateToPose(Pose2d pose, RobotState[] others) {
+        RobotState closest = null;
+        double closestDistance = Double.MAX_VALUE;
+        for (RobotState other : others) {
+            if(other.robotPosition!=null){
+                Transform2d transform = other.robotPosition.alliancePos().minus(pose);
+                double distance = Math.hypot(transform.getX(), transform.getY());
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closest = other;
+                }
+            }
+        }
+        return closest;
+    }
+
     // Converts an exception to an error string
     public static String getError(Exception e){
         StringBuilder sb=new StringBuilder();
@@ -154,33 +179,6 @@ public class RobotUtils {
             return max;
         }
         return in;
-    }
-
-    /**
-     * Calculates the weighted distance between two poses, combining translational and rotational distances.
-     * The rotational distance properly handles wraparound (e.g., 350° to 0° is 10°, not 350°).
-     *
-     * @param pose1 The first pose
-     * @param pose2 The second pose
-     * @param rotationWeight Weight for rotational difference (in meters per radian)
-     * @return The weighted sum of translational and rotational distances
-     */
-    public static double getWeightedPoseDistance(Pose2d pose1, Pose2d pose2, double rotationWeight) {
-        // Calculate translational distance
-        double dx = pose1.getX() - pose2.getX();
-        double dy = pose1.getY() - pose2.getY();
-        double translationDist = Math.hypot(dx, dy);
-        
-        // Calculate rotational distance, handling wraparound
-        double angle1 = pose1.getRotation().getRadians();
-        double angle2 = pose2.getRotation().getRadians();
-        double diff = angle1 - angle2;
-        
-        // Normalize to [-pi, pi]
-        diff = (diff + Math.PI) % (2 * Math.PI) - Math.PI;
-        
-        // Return weighted sum using absolute rotational difference
-        return translationDist + Math.abs(diff) * rotationWeight;
     }
 
     @SuppressWarnings("all")

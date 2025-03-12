@@ -14,8 +14,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.ElevatorConstants;
 import frc.robot.constants.GeneralConstants;
+import frc.robot.constants.RobotPositions;
 import frc.robot.other.RobotUtils;
-import frc.robot.constants.SwerveSystemConstants;
 import frc.robot.motorSystem.EnhancedEncoder;
 import frc.robot.motorSystem.EnhancedTalonFX;
 import frc.robot.motorSystem.MotorSystem;
@@ -110,7 +110,7 @@ public class Elevator extends SubsystemBase {
         );
         
         // Set initial goal position
-        goal = SwerveSystemConstants.getDefaultState().elevatorPosition;
+        goal = RobotPositions.defaultState.elevatorPosition;
 
         // Initialize simulation components
         elevatorSim = new ElevatorSim(
@@ -121,7 +121,7 @@ public class Elevator extends SubsystemBase {
             ElevatorConstants.minHeight,
             ElevatorConstants.maxHeight,
             true,
-            SwerveSystemConstants.getDefaultState().elevatorPosition
+            RobotPositions.defaultState.elevatorPosition
         );
         mechanismSim = new ElevatorMechanismSim(elevatorSim);
 

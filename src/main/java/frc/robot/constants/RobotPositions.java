@@ -5,24 +5,16 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.other.RobotUtils;
+import frc.robot.states.RobotState;
 
+/**
+ * Centralizes all robot positions and states for the entire robot.
+ * This includes field positions, robot states, and mechanism configurations.
+ */
 public final class RobotPositions {
-    // Reef geometry for robot positions
-    private static final double d1 = 1.3;
-    private static final double d2 = 0.165;
-    private static final double dShift = -0.21;
-
-    // Static robot positions
-    public static final RobotPosition processor = new RobotPosition(
-        new Pose2d(new Translation2d(6.25, 1), new Rotation2d(3*Math.PI/2))
-    );
-
-    public static final RobotPosition[] cages = generateCages();
-    public static final RobotPosition[] stations = generateStations();
-    public static final RobotPosition[] pickups = generatePickups();
-    public static final RobotPosition[] centerReef = generateCenterReef();
-    public static final RobotPosition[] branchReef = generateBranchReef();
-
+    /**
+     * Represents a position on the field, with methods to convert between alliance perspectives.
+     */
     public static class RobotPosition {
         private final Pose2d bluePosition;
         
@@ -36,12 +28,82 @@ public final class RobotPositions {
             return RobotUtils.invertToAlliance(bluePosition);
         }
     }
+    
+    // ===== Reef geometry for robot positions =====
+    private static final double d1 = 1.3;
+    private static final double d2 = 0.165;
+    private static final double dShift = -0.21;
 
+    // ===== Robot Positions =====
+    
+    // Static robot positions
+    public static final RobotPosition processor = new RobotPosition(
+        new Pose2d(new Translation2d(6.25, 1), new Rotation2d(3*Math.PI/2))
+    );
+
+    // Cage positions (previously in CageConstants)
+    public static final RobotPosition leftCage = new RobotPosition(
+        new Pose2d(new Translation2d(8.5, 7.25), new Rotation2d(3*Math.PI/2))
+    );
+    
+    public static final RobotPosition centerCage = new RobotPosition(
+        new Pose2d(new Translation2d(8.5, 6.15), new Rotation2d(3*Math.PI/2))
+    );
+    
+    public static final RobotPosition rightCage = new RobotPosition(
+        new Pose2d(new Translation2d(8.5, 5.05), new Rotation2d(3*Math.PI/2))
+    );
+
+    // Arrays of positions
+    public static final RobotPosition[] cages = generateCages();
+    public static final RobotPosition[] stations = generateStations();
+    public static final RobotPosition[] pickups = generatePickups();
+    public static final RobotPosition[] centerReef = generateCenterReef();
+    public static final RobotPosition[] branchReef = generateBranchReef();
+
+    // ===== Robot States =====
+    
+    // Basic states without specific robot positions
+    public static final RobotState groundIntake = new RobotState(
+        -2.0,
+        0.41,
+        -1.39,
+        (RobotPosition)null  // Robot position determined at runtime
+    );   
+
+    public static final RobotState defaultState = new RobotState(
+        Units.degreesToRadians(0),
+        0.05,
+        Units.degreesToRadians(90),
+        (RobotPosition)null  // Robot position determined at runtime
+    );
+    
+    // Processor state
+    public static final RobotState processorState = new RobotState(
+        Units.degreesToRadians(-95),
+        0.65,
+        Units.degreesToRadians(-45),
+        processor
+    );
+    
+    // Source states
+    public static final RobotState[] sourceStates = generateSourceStates();
+    
+    // Algae states
+    public static final RobotState[] algaeStates = generateAlgaeStates();
+    
+    // Scoring states
+    public static final RobotState[][] scoringStates = generateScoringStates();
+    
+    
+
+    // ===== Position Generators =====
+    
     private static RobotPosition[] generateCages() {
         return new RobotPosition[] {
-            new RobotPosition(new Pose2d(new Translation2d(8.5, 7.25), new Rotation2d(3*Math.PI/2))), // left
-            new RobotPosition(new Pose2d(new Translation2d(8.5, 6.15), new Rotation2d(3*Math.PI/2))), // center
-            new RobotPosition(new Pose2d(new Translation2d(8.5, 5.05), new Rotation2d(3*Math.PI/2)))  // right
+            leftCage,
+            centerCage,
+            rightCage
         };
     }
 
@@ -93,5 +155,67 @@ public final class RobotPositions {
         }
         
         return positions;
+    }
+    
+    // ===== State Generators =====
+    
+    private static RobotState[] generateSourceStates() {
+        RobotState[] states = new RobotState[stations.length];
+        for (int i = 0; i < states.length; i++) {
+            states[i] = new RobotState(
+                -0.43,
+                0.17,
+                Units.degreesToRadians(-113.6),
+                stations[i]
+            );
+        }
+        return states;
+    }
+    
+    private static RobotState[] generateAlgaeStates() {
+        RobotState[] states = new RobotState[FieldGeometry.reefSides];
+        for (int i = 0; i < states.length; i++) {
+            states[i] = new RobotState(
+                Units.degreesToRadians(-55),
+                (i%2==0) ? 0.43 : 0.9,
+                Units.degreesToRadians(-115),
+                centerReef[i]
+            );
+        }
+        return states;
+    }
+    
+    private static RobotState[][] generateScoringStates() {
+        RobotState[][] states = new RobotState[4][FieldGeometry.reefSides*2];
+        double[] armAngles = {
+            0.66,   // L1
+            0.34,   // L2
+            0.34,   // L3
+            0.4     // L4
+        };
+        double[] elevatorHeights = {
+            0.01,  // L1
+            0.06,  // L2
+            0.46,  // L3
+            1.11   // L4
+        };
+        double[] wristAngles = {
+            0.1,   // L1
+            0.1,   // L2
+            0.1,   // L3
+            0.1    // L4
+        };
+
+        for (int level = 0; level < states.length; level++) {
+            for (int pos = 0; pos < states[level].length; pos++) {
+                states[level][pos] = new RobotState(
+                    armAngles[level],
+                    elevatorHeights[level],
+                    wristAngles[level],
+                    branchReef[pos]
+                );
+            }
+        }
+        return states;
     }
 } 
