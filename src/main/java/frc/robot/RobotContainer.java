@@ -88,14 +88,14 @@ public class RobotContainer {
 			// Initialize subsystems
 			initVision();
 			initSwerve();
-			//initElevator();
-			//initArm();
-			//initWrist();
+			initElevator();
+			initArm();
+			initWrist();
 			initIntake();
 			initHang();
 			
 			// Initialize combined systems and commands
-			//initMultiCommands();
+			initMultiCommands();
 
 			autoChoice = new SendableChooser<String>();
 			autoChoice.setDefaultOption("Single Center", "Single Center");
@@ -185,21 +185,6 @@ public class RobotContainer {
 		driver.povUp().whileTrue(hangCommands.setSpeed(() -> -driver.getRightY()*HangConstants.hangSpeed));
 	}
 
-	private void initSwerveSystem() {
-		
-
-		//driver.axisLessThan(0,-0.1).onTrue(swerveSystemCommands.moveToLevel(3));
-
-		//driver.L1().onTrue(swerveSystemCommands.moveToState(()->SwerveSystemConstants.getGroundIntake()));
-
-		// operator.povUp().onTrue(swerveSystemCommands.moveToGround(()->new Pose2d()));
-		// operator.povDown().onTrue(swerveSystemCommands.moveToState(()->SwerveSystemConstants.getSourceStates()[0]));
-		// operator.cross().onTrue(swerveSystemCommands.moveToBranch(()->0,()->0));
-		// operator.triangle().onTrue(swerveSystemCommands.moveToBranch(()->1,()->0));
-		// operator.square().onTrue(swerveSystemCommands.moveToBranch(()->2,()->0));
-		// operator.circle().onTrue(swerveSystemCommands.moveToBranch(()->3,()->0));
-	}
-
 	private void initMultiCommands() {
 		multiCommands = new MultiCommands(arm,elevator,wrist,swerve, swerveCommands, intakeCommands, hangCommands,robotPublisherCommands);
 
@@ -245,9 +230,6 @@ public class RobotContainer {
 	 * @return The autonomous command
 	 */
 	public Command getAutonomousCommand() {
-		/*if (autoFactory != null) {
-			return autoFactory.getAuto();
-		}*/
 		swerve.resetGyro();
 		return AutoBuilder.buildAuto(autoChoice.getSelected());
 	}

@@ -14,7 +14,6 @@ import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.ArmConstants;
 import frc.robot.motorSystem.EnhancedTalonFX;
 import frc.robot.motorSystem.EnhancedEncoder;
@@ -24,9 +23,6 @@ import frc.robot.constants.GeneralConstants;
 import frc.robot.constants.RobotPositions;
 import frc.robot.other.RobotUtils;
 
-import static edu.wpi.first.units.Units.Radians;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
 import java.util.List;
@@ -71,9 +67,6 @@ public class Arm extends SubsystemBase {
 
     /** Adapter to make SingleJointedArmSim compatible with MotorSystem */
     private final ArmMechanismSim mechanismSim;
-
-    /** System identification routine for parameter tuning */
-    private final SysIdRoutine sysIdRoutine;
 
     // linear quadratic regulator
     // first N2 = dimension of state space of the arm, position and velocity
@@ -142,26 +135,6 @@ public class Arm extends SubsystemBase {
             RobotPositions.defaultState.armPosition
         );
         mechanismSim = new ArmMechanismSim(armSim);
-
-        // Initialize system identification routine
-        sysIdRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(
-                null,        // Use default ramp rate (1 V/s)
-                Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
-                null        // Use default timeout (10 s)
-            ),
-            new SysIdRoutine.Mechanism(
-                this::setVoltage,
-                log -> {
-                    log.motor("arm")
-                        .voltage(getVolts())
-                        .angularPosition(Radians.of(getMeasurement()+ArmConstants.feedOffset)) // Offset so that 0 = horizontal
-                        .angularVelocity(RadiansPerSecond.of(getVelocity()))
-                        .angularAcceleration(RadiansPerSecondPerSecond.of(getAcceleration()));
-                },
-                this
-            )
-        );
 
         // Initializes the linear-quadratic regulator
         lqr=new LinearQuadraticRegulator<N2,N1,N2>(plant,VecBuilder.fill(ArmConstants.posWeight,ArmConstants.velWeight),VecBuilder.fill(ArmConstants.volWeight),GeneralConstants.simPeriod);
@@ -256,15 +229,6 @@ public class Arm extends SubsystemBase {
      */
     public boolean atSetpoint() {
         return getError()<ArmConstants.armTolerance;
-    }
-
-    /**
-     * Get the system identification routine for tuning.
-     * 
-     * @return The SysId routine configured for this arm.
-     */
-    public SysIdRoutine getRoutine() {
-        return sysIdRoutine;
     }
 
     /**

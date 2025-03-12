@@ -15,7 +15,6 @@ import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.WristConstants;
 import frc.robot.motorSystem.EnhancedTalonFX;
 import frc.robot.motorSystem.EnhancedEncoder;
@@ -25,10 +24,6 @@ import frc.robot.other.RobotUtils;
 import frc.robot.constants.GeneralConstants;
 import frc.robot.constants.RobotPositions;
 
-import static edu.wpi.first.units.Units.Radians;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
-import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
 import java.util.List;
@@ -76,9 +71,6 @@ public class Wrist extends SubsystemBase {
 
     /** Adapter to make SingleJointedArmSim compatible with MotorSystem */
     private final ArmMechanismSim mechanismSim;
-
-    /** System identification routine for parameter tuning */
-    private final SysIdRoutine sysIdRoutine;
 
     /** Reference to the main arm this wrist is attached to */
     private final Arm arm;
@@ -155,26 +147,6 @@ public class Wrist extends SubsystemBase {
             RobotPositions.defaultState.wristPosition
         );
         mechanismSim = new ArmMechanismSim(wristSim);
-
-        // Initialize system identification routine
-        sysIdRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(
-                Volts.of(0.2).div(Seconds.of(1.0)),
-                Volts.of(1),
-                null
-            ),
-            new SysIdRoutine.Mechanism(
-                this::setVoltage,
-                log -> {
-                    log.motor("wrist")
-                        .voltage(getVolts())
-                        .angularPosition(Radians.of(getMeasurement()+WristConstants.feedOffset))
-                        .angularVelocity(RadiansPerSecond.of(getVelocity()))
-                        .angularAcceleration(RadiansPerSecondPerSecond.of(getAcceleration()));
-                },
-                this
-            )
-        );
 
         // Initialize LQR controller
         lqr = new LinearQuadraticRegulator<N2,N1,N2>(
@@ -276,15 +248,6 @@ public class Wrist extends SubsystemBase {
      */
     public boolean atSetpoint() {
         return controller.atSetpoint();
-    }
-
-    /**
-     * Get the system identification routine for tuning.
-     * 
-     * @return The SysId routine configured for this wrist.
-     */
-    public SysIdRoutine getRoutine() {
-        return sysIdRoutine;
     }
 
     /**

@@ -1,7 +1,4 @@
 package frc.robot.subsystems;
-
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
 import edu.wpi.first.math.controller.ElevatorFeedforward;
@@ -11,7 +8,6 @@ import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.ElevatorConstants;
 import frc.robot.constants.GeneralConstants;
 import frc.robot.constants.RobotPositions;
@@ -59,9 +55,6 @@ public class Elevator extends SubsystemBase {
 
     /** Adapter to make ElevatorSim compatible with MotorSystem */
     private final ElevatorMechanismSim mechanismSim;
-
-    /** System identification routine for parameter tuning */
-    private final SysIdRoutine sysIdRoutine;
 
     /**
      * Constructor for the Elevator subsystem.
@@ -124,25 +117,6 @@ public class Elevator extends SubsystemBase {
             RobotPositions.defaultState.elevatorPosition
         );
         mechanismSim = new ElevatorMechanismSim(elevatorSim);
-
-        // Initialize system identification routine
-        sysIdRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(
-                null,         // Use default ramp rate (1 V/s)
-                Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
-                null         // Use default timeout (10 s)
-            ),
-            new SysIdRoutine.Mechanism(
-                this::setVoltage,
-                log -> {
-                    log.motor("elevator")
-                        .voltage(getVolts())
-                        .linearPosition(Meters.of(getMeasurement()))
-                        .linearVelocity(MetersPerSecond.of(getVelocity()));
-                },
-                this
-            )
-        );
     }
 
     /**
@@ -218,15 +192,6 @@ public class Elevator extends SubsystemBase {
      */
     public void setVoltage(Voltage v) {
         motorSystem.setVoltage(v);
-    }
-
-    /**
-     * Get the system identification routine for tuning.
-     * 
-     * @return The SysId routine configured for this elevator.
-     */
-    public SysIdRoutine getRoutine() {
-        return sysIdRoutine;
     }
 
     /**

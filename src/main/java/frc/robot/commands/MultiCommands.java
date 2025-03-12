@@ -217,6 +217,38 @@ public class MultiCommands {
         );
     }
 
+    private Command simCoralIntake(){
+        if(robotPublisherCommands!=null){
+            return robotPublisherCommands.simCoralIntake();
+        }else{
+            return new InstantCommand();
+        }
+    }
+
+    private Command simCoralOuttake(){
+        if(robotPublisherCommands!=null){
+            return robotPublisherCommands.simCoralOuttake();
+        }else{
+            return new InstantCommand();
+        }
+    }
+
+    private Command simAlgaeIntake(){
+        if(robotPublisherCommands!=null){
+            return robotPublisherCommands.simAlgaeIntake();
+        }else{
+            return new InstantCommand();
+        }
+    }
+
+    private Command simAlgaeOuttake(){
+        if(robotPublisherCommands!=null){
+            return robotPublisherCommands.simAlgaeOuttake();
+        }else{
+            return new InstantCommand();
+        }
+    }
+
     /**
      * Command to retrieve coral from the source.
      */
@@ -225,7 +257,7 @@ public class MultiCommands {
             moveToSource(),
             new ParallelCommandGroup(
                 intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),
-                robotPublisherCommands.simCoralIntake()
+                simCoralIntake()
             )
         );
     }
@@ -238,7 +270,7 @@ public class MultiCommands {
             moveToGround(pose),
             new ParallelCommandGroup(
                 intakeCommands.intake(),
-                robotPublisherCommands.simCoralIntake()
+                simCoralIntake()
             )
         );
     }
@@ -252,7 +284,7 @@ public class MultiCommands {
             new WaitCommand(0.5),
             new ParallelCommandGroup(
                 intakeCommands.outtake(),
-                robotPublisherCommands.simCoralOuttake()
+                simCoralOuttake()
             )
         );
     }
@@ -265,7 +297,7 @@ public class MultiCommands {
             moveToLevel(level),
             new ParallelCommandGroup(
                 intakeCommands.outtake(),
-                robotPublisherCommands.simCoralOuttake()
+                simCoralOuttake()
             )
         );
     }
@@ -278,7 +310,7 @@ public class MultiCommands {
             moveToAlgae(side),
             new ParallelCommandGroup(
                 intakeCommands.intake(),
-                robotPublisherCommands.simAlgaeIntake()
+                simAlgaeIntake()
             )
             //,swerveCommands.driveBack()
         );
@@ -292,7 +324,7 @@ public class MultiCommands {
             moveToAlgae(),
             new ParallelCommandGroup(
                 intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),
-                robotPublisherCommands.simAlgaeIntake()
+                simAlgaeIntake()
             )
             //,swerveCommands.driveBack()
         );
@@ -306,7 +338,7 @@ public class MultiCommands {
             moveToProcessor(),
             new ParallelCommandGroup(
                 intakeCommands.outtake(),
-                robotPublisherCommands.simAlgaeOuttake()
+                simAlgaeOuttake()
             )
         );
     }

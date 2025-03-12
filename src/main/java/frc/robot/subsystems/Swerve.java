@@ -6,8 +6,6 @@ import frc.robot.motorSystem.EnhancedTalonFX;
 import frc.robot.other.RobotUtils;
 import frc.robot.other.SwerveFactory;
 
-import static edu.wpi.first.units.Units.*;
-
 import java.io.File;
 import java.util.List;
 
@@ -41,7 +39,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 /**
  * The Swerve subsystem controls the swerve drivetrain of the robot.
@@ -318,81 +315,6 @@ public class Swerve extends SubsystemBase {
             swerve.getModule(i).getDriveMotor().log("driveState/module"+i+"/driveMotor");
             swerve.getModule(i).getSteerMotor().log("driveState/module"+i+"/steerMotor");
         }
-    }
-
-    // SysId Routines for system characterization
-
-    /**
-     * SysId routine for characterizing translation.
-     * This is used to find PID gains for the drive motors.
-     */
-    public final SysIdRoutine sysIdRoutineTranslation = new SysIdRoutine(
-        new SysIdRoutine.Config(
-            null,        // Use default ramp rate (1 V/s)
-            Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
-            null        // Use default timeout (10 s)
-        ),
-        new SysIdRoutine.Mechanism(
-            output -> setControl(new SwerveRequest.SysIdSwerveTranslation().withVolts(output)),
-            null,
-            this
-        )
-    );
-
-    /**
-     * SysId routine for characterizing steer.
-     * This is used to find PID gains for the steer motors.
-     */
-    public final SysIdRoutine sysIdRoutineSteer = new SysIdRoutine(
-        new SysIdRoutine.Config(
-            null,        // Use default ramp rate (1 V/s)
-            Volts.of(7), // Use dynamic voltage of 7 V
-            null        // Use default timeout (10 s)
-        ),
-        new SysIdRoutine.Mechanism(
-            volts -> setControl(new SwerveRequest.SysIdSwerveSteerGains().withVolts(volts)),
-            null,
-            this
-        )
-    );
-
-    /**
-     * SysId routine for characterizing rotation.
-     * This is used to find PID gains for the FieldCentricFacingAngle HeadingController.
-     */
-    public final SysIdRoutine sysIdRoutineRotation = new SysIdRoutine(
-        new SysIdRoutine.Config(
-            Volts.of(Math.PI / 6).per(Second), // Ramp rate in radians per second²
-            Volts.of(Math.PI), // Dynamic voltage in radians per second
-            null // Use default timeout (10 s)
-        ),
-        new SysIdRoutine.Mechanism(
-            output -> {
-                setControl(new SwerveRequest.SysIdSwerveRotation().withRotationalRate(output.in(Volts)));
-            },
-            null,
-            this
-        )
-    );
-
-    private SysIdRoutine routine = sysIdRoutineTranslation; // Current SysId routine to test
-
-    /**
-     * Sets the current SysId routine.
-     *
-     * @param routine The SysId routine to set.
-     */
-    public void setRoutine(SysIdRoutine routine) {
-        this.routine = routine;
-    }
-
-    /**
-     * Gets the current SysId routine.
-     *
-     * @return The current SysId routine.
-     */
-    public SysIdRoutine getRoutine() {
-        return routine;
     }
 
     // Simulation
