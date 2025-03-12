@@ -85,7 +85,7 @@ public class SwerveSystemCommands {
     public Command moveToSource(){
         return new SequentialCommandGroup(
             new InstantCommand(()->{
-                sourceState=swerveSystem.getClosestState(SwerveSystemConstants.getSourceStates());
+                sourceState=swerveSystem.getClosestState(SwerveSystemConstants.getSourceStates()).noRobotPose();
             }),
             moveToState(()->sourceState)
         );
@@ -96,7 +96,7 @@ public class SwerveSystemCommands {
     }
 
     public Command moveToAlgae(Supplier<Integer> side){
-        return moveToState(()->SwerveSystemConstants.getAlgaeStates()[side.get()]);
+        return moveToState(()->SwerveSystemConstants.getAlgaeStates()[side.get()].noRobotPose());
     }
 
     public Command moveToAlgae() {
@@ -108,7 +108,7 @@ public class SwerveSystemCommands {
     }
 
     public Command moveToProcessor(){
-        return moveToStateSequenced(()->SwerveSystemConstants.getProcessor(),()->SwerveSystemState.NULL);
+        return moveToStateSequenced(()->SwerveSystemConstants.getProcessor().noRobotPose(),()->SwerveSystemState.NULL);
     }
 
     public Command moveToBarge(){

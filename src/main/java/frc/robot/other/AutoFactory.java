@@ -3,6 +3,7 @@ package frc.robot.other;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.robot.RobotContainer;
 import frc.robot.commands.MultiCommands;
 import frc.robot.constants.GeneralConstants;
 
@@ -18,6 +19,8 @@ public class AutoFactory {
     // The final autonomous command that will be executed
     private PathPlannerAuto auto;
 
+    private RobotContainer container;
+
     /**
      * Constructor for the AutoFactory class.
      * Initializes the autonomous steps and sets up a chooser on the SmartDashboard.
@@ -25,9 +28,11 @@ public class AutoFactory {
      * @param multiCommands An instance of MultiCommands that provides the necessary commands
      *                      for the autonomous steps.
      */
-    public AutoFactory(MultiCommands multiCommands) {
+    public AutoFactory(MultiCommands multiCommands, RobotContainer container) {
         // Initialize the array of AutoStep objects
         choices = new AutoStep[GeneralConstants.numAuto];
+
+        this.container = container;
 
         // Populate the choices array with AutoStep objects
         for (int i = 0; i < GeneralConstants.numAuto; i++) {
@@ -50,6 +55,8 @@ public class AutoFactory {
 
         // Create a SequentialCommandGroup from the array of commands and wrap it in a PathPlannerAuto
         auto = new PathPlannerAuto(new SequentialCommandGroup(autoCommands));
+
+        container.resetGyro();
     }
 
     /**

@@ -4,6 +4,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.subsystems.SwerveSystem;
 import frc.robot.elastic.Reef;
+import frc.robot.other.RobotUtils;
 
 /**
  * Constants for coordinated positions of the arm, elevator, and wrist mechanisms.
@@ -94,7 +95,7 @@ public final class SwerveSystemConstants {
         for (int i = 0; i < states.length; i++) {
             states[i] = new SwerveSystem.SwerveSystemState(
                 Units.degreesToRadians(-55),  // 30 - 90 = -60, 120 - 90 = 30
-                Reef.isAlgaeLow(i) ? 0.43 : 0.9,
+                RobotUtils.onRedAlliance() ? Reef.isAlgaeLow(i) ? 0.43 : 0.9 : Reef.isAlgaeLow(i) ? 0.9 : 0.43, // Evil Algae Decision Tree
                 Units.degreesToRadians(-115),                             // From WristConstants.minAngle
                 RobotPositions.centerReef[i].alliancePos()
             );

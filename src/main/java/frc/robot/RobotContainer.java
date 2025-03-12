@@ -34,7 +34,6 @@ public class RobotContainer {
 	// Controllers
 	private CommandPS5Controller driver;
 	private CommandPS5Controller operator;
-	private CommandPS5Controller sysIdTest;
 
 	// Subsystems and their commands
 	private Vision vision;
@@ -99,17 +98,17 @@ public class RobotContainer {
 			initArm();
 			initWrist();
 			initIntake();
-			initHang();
+			//initHang();
 			//initLED();
 			
 			// Initialize combined systems and commands
 			initSwerveSystem();
 			initMultiCommands();
-			//initAdditionalComponents();
+			initAdditionalComponents();
 
-			autoChoice = new SendableChooser<String>();
+			/*autoChoice = new SendableChooser<String>();
 			autoChoice.setDefaultOption("Single Center", "Single Center");
-			AutoBuilder.getAllAutoNames().forEach((name) -> autoChoice.addOption(name, name));
+			AutoBuilder.getAllAutoNames().forEach((name) -> autoChoice.addOption(name, name));*/
 			SmartDashboard.putData("Auto Choice", autoChoice);
 		} catch (Exception e) {
 			DataLogManager.log("Error while initializing: " + RobotUtils.getError(e));
@@ -119,7 +118,6 @@ public class RobotContainer {
 	private void initControllers() {
 		driver = new CommandPS5Controller(0);
 		operator = new CommandPS5Controller(1);
-		//sysIdTest = new CommandPS5Controller(2);
 	}
 
 	private void initReef() {
@@ -210,21 +208,8 @@ public class RobotContainer {
 		swerveSystem = new SwerveSystem(arm, elevator, wrist, swerve, gamepieces);
 		swerveSystemCommands = new SwerveSystemCommands(swerveSystem);
 
-		//driver.square().and(driver.R2().negate()).onTrue(swerveSystemCommands.moveToProcessor());
-		//driver.cross().and(driver.R2().negate()).onTrue(swerveSystemCommands.moveToBarge());
-
-		NamedCommands.registerCommand("L4", swerveSystemCommands.moveToLevel(3));
-
-		//driver.axisLessThan(0,-0.1).onTrue(swerveSystemCommands.moveToLevel(3));
-
-		//driver.L1().onTrue(swerveSystemCommands.moveToState(()->SwerveSystemConstants.getGroundIntake()));
-
-		// operator.povUp().onTrue(swerveSystemCommands.moveToGround(()->new Pose2d()));
-		// operator.povDown().onTrue(swerveSystemCommands.moveToState(()->SwerveSystemConstants.getSourceStates()[0]));
-		// operator.cross().onTrue(swerveSystemCommands.moveToBranch(()->0,()->0));
-		// operator.triangle().onTrue(swerveSystemCommands.moveToBranch(()->1,()->0));
-		// operator.square().onTrue(swerveSystemCommands.moveToBranch(()->2,()->0));
-		// operator.circle().onTrue(swerveSystemCommands.moveToBranch(()->3,()->0));
+		driver.square().and(driver.R2().negate()).onTrue(swerveSystemCommands.moveToProcessor());
+		driver.cross().and(driver.R2().negate()).onTrue(swerveSystemCommands.moveToBarge());
 	}
 
 	private void initMultiCommands() {
@@ -258,25 +243,7 @@ public class RobotContainer {
 
 	private void initAdditionalComponents() {
 		cageChoice = new CageChoice();
-		autoFactory = new AutoFactory(multiCommands);
-	}
-
-	private void configureSysIdBindings(SysIdCommands subsystemCommands) {
-		sysIdTest.cross()
-			.onTrue(subsystemCommands.sysIdDynamic(Direction.kForward))
-			.onFalse(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
-
-		sysIdTest.circle()
-			.onTrue(subsystemCommands.sysIdDynamic(Direction.kReverse))
-			.onFalse(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
-
-		sysIdTest.square()
-			.onTrue(subsystemCommands.sysIdQuasistatic(Direction.kForward))
-			.onFalse(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
-
-		sysIdTest.triangle()
-			.onTrue(subsystemCommands.sysIdQuasistatic(Direction.kReverse))
-			.onFalse(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
+		autoFactory = new AutoFactory(multiCommands, this);
 	}
 
 	public void resetGyro() {
@@ -294,7 +261,7 @@ public class RobotContainer {
 		/*if (autoFactory != null) {
 			return autoFactory.getAuto();
 		}*/
-		resetGyro();
+		//resetGyro();
 		return new WaitCommand(2.0).andThen(multiCommands.placeCoral(3)).andThen(multiCommands.moveToDefault());
 	}
 }
