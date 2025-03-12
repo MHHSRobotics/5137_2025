@@ -301,8 +301,8 @@ public class Swerve extends SubsystemBase {
                     vision.updateSim(this.getPose());
                 }
             }
-        }catch(Exception e){
-            DataLogManager.log("Periodic error: "+RobotUtils.getError(e));
+        }catch(RuntimeException e){
+            DataLogManager.log("Periodic error: "+RobotUtils.processError(e));
         }
     }
         

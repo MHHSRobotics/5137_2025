@@ -20,8 +20,8 @@ import frc.robot.motorSystem.EnhancedEncoder;
 import frc.robot.motorSystem.MotorSystem;
 import frc.robot.motorSystem.ArmMechanismSim;
 import frc.robot.constants.GeneralConstants;
-import frc.robot.constants.RobotPositions;
 import frc.robot.other.RobotUtils;
+import frc.robot.positions.RobotPositions;
 
 import static edu.wpi.first.units.Units.Volts;
 
@@ -107,8 +107,6 @@ public class Arm extends SubsystemBase {
 
         // Create the plant, simulates the arm movement
         LinearSystem<N2,N1,N2> plant=LinearSystemId.createSingleJointedArmSystem(ArmConstants.motorSim, ArmConstants.momentOfInertia, ArmConstants.gearRatio);
-        
-        
 
         // Create motor system
         motorSystem = new MotorSystem(List.of(armMotor), armEncoder);
@@ -291,8 +289,8 @@ public class Arm extends SubsystemBase {
             
             // Apply the calculated voltage to the motor
             setVoltage(Volts.of(voltage));
-        } catch (Exception e) {
-            DataLogManager.log("Periodic error: " + RobotUtils.getError(e));
+        } catch (RuntimeException e) {
+            DataLogManager.log("Periodic error: " + RobotUtils.processError(e));
         }
     }
 

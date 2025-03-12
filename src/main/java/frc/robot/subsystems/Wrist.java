@@ -21,8 +21,8 @@ import frc.robot.motorSystem.EnhancedEncoder;
 import frc.robot.motorSystem.MotorSystem;
 import frc.robot.motorSystem.ArmMechanismSim;
 import frc.robot.other.RobotUtils;
+import frc.robot.positions.RobotPositions;
 import frc.robot.constants.GeneralConstants;
-import frc.robot.constants.RobotPositions;
 
 import static edu.wpi.first.units.Units.Volts;
 
@@ -330,8 +330,8 @@ public class Wrist extends SubsystemBase {
 
             // Apply the calculated voltage to the motor
             setVoltage(Volts.of(voltage));
-        } catch (Exception e) {
-            DataLogManager.log("Periodic error: " + RobotUtils.getError(e));
+        } catch (RuntimeException e) {
+            DataLogManager.log("Periodic error: " + RobotUtils.processError(e));
         }
     }
         

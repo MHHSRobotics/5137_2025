@@ -10,8 +10,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.ElevatorConstants;
 import frc.robot.constants.GeneralConstants;
-import frc.robot.constants.RobotPositions;
 import frc.robot.other.RobotUtils;
+import frc.robot.positions.RobotPositions;
 import frc.robot.motorSystem.EnhancedEncoder;
 import frc.robot.motorSystem.EnhancedTalonFX;
 import frc.robot.motorSystem.MotorSystem;
@@ -230,8 +230,8 @@ public class Elevator extends SubsystemBase {
             
             // Apply the calculated voltage to the motors
             setVoltage(Volts.of(voltage));
-        } catch (Exception e) {
-            DataLogManager.log("Periodic error: " + RobotUtils.getError(e));
+        } catch (RuntimeException e) {
+            DataLogManager.log("Periodic error: " + RobotUtils.processError(e));
         }
     }
         

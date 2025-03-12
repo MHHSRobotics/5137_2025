@@ -11,9 +11,11 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot;
-import frc.robot.constants.FieldGeometry;
-import frc.robot.states.RobotState;
+import frc.robot.positions.FieldPositions;
+import frc.robot.positions.RobotState;
 
 /**
  * Utility class for robot-related operations, such as alliance-specific transformations,
@@ -43,8 +45,8 @@ public class RobotUtils {
      */
     public static Pose2d invertPose(Pose2d pose) {
         return new Pose2d(
-            FieldGeometry.fieldLength - pose.getX(),
-            FieldGeometry.fieldWidth - pose.getY(),
+            FieldPositions.fieldLength - pose.getX(),
+            FieldPositions.fieldWidth - pose.getY(),
             pose.getRotation().rotateBy(Rotation2d.k180deg)
         );
     }
@@ -73,8 +75,8 @@ public class RobotUtils {
      */
     public static Pose3d invertPose(Pose3d pose) {
         return new Pose3d(
-            FieldGeometry.fieldLength - pose.getX(),
-            FieldGeometry.fieldWidth - pose.getY(),
+            FieldPositions.fieldLength - pose.getX(),
+            FieldPositions.fieldWidth - pose.getY(),
             pose.getZ(),
             pose.getRotation().rotateBy(new Rotation3d(Rotation2d.k180deg))
         );
@@ -158,17 +160,28 @@ public class RobotUtils {
         return closest;
     }
 
-    // Converts an exception to an error string
-    public static String getError(Exception e){
-        StringBuilder sb=new StringBuilder();
-        sb.append(e.getMessage());
-        sb.append("\nBegin stack trace\n");
-        for (var ste:e.getStackTrace()) {
-            sb.append(ste);
-            sb.append("\n");
+    public static SendableChooser<Boolean> testing;
+    static{
+        testing=new SendableChooser<>();
+        testing.setDefaultOption("Testing", true);
+        testing.addOption("Production",false);
+        SmartDashboard.putData("Test Mode",testing);
+    }
+    // Converts an exception to an error string, or throws it if testing
+    public static String processError(RuntimeException e){
+        if(testing.getSelected()){
+            throw e;
+        }else{
+            StringBuilder sb=new StringBuilder();
+            sb.append(e.getMessage());
+            sb.append("\nBegin stack trace\n");
+            for (var ste:e.getStackTrace()) {
+                sb.append(ste);
+                sb.append("\n");
+            }
+            sb.append("End stack trace");
+            return sb.toString();
         }
-        sb.append("End stack trace");
-        return sb.toString();
     }
 
     public static double clamp(double in,double min,double max){

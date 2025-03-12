@@ -12,9 +12,9 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.constants.IntakeConstants;
-import frc.robot.constants.RobotPositions;
 import frc.robot.other.RobotUtils;
-import frc.robot.states.RobotState;
+import frc.robot.positions.RobotPositions;
+import frc.robot.positions.RobotState;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Swerve;
@@ -63,13 +63,13 @@ public class MultiCommands {
      * @param state The state to set
      */
     private void setTargetState(RobotState state) {
-        if (arm != null) {
+        if (arm != null && state.armPosition!=null) {
             arm.setGoal(state.armPosition);
         }
-        if (elevator != null) {
+        if (elevator != null && state.elevatorPosition!=null) {
             elevator.setGoal(state.elevatorPosition);
         }
-        if (wrist != null) {
+        if (wrist != null && state.wristPosition!=null) {
             wrist.setGoal(state.wristPosition);
         }
         if (swerve != null && state.robotPosition != null) {
@@ -176,7 +176,7 @@ public class MultiCommands {
     public Command moveToAlgae() {
         return moveToStateSequenced(
             () -> getClosestState(RobotPositions.algaeStates),
-            () -> null
+            () -> RobotState.NULL
         );
     }
 
@@ -193,7 +193,7 @@ public class MultiCommands {
     public Command moveToProcessor() {
         return moveToStateSequenced(
             () -> RobotPositions.processorState,
-            () -> null
+            () -> RobotState.NULL
         );
     }
 
@@ -213,7 +213,7 @@ public class MultiCommands {
     public Command moveToLevel(int level) {
         return moveToStateSequenced(
             () -> getClosestState(RobotPositions.scoringStates[level]),
-            () -> null
+            () -> RobotState.NULL
         );
     }
 

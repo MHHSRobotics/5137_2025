@@ -33,7 +33,6 @@ public class RobotContainer {
 	// Controllers
 	private CommandPS5Controller driver;
 	private CommandPS5Controller operator;
-	private CommandPS5Controller sysIdTest;
 
 	// Subsystems and their commands
 	private Vision vision;
@@ -82,7 +81,6 @@ public class RobotContainer {
 			
 			if (Robot.isSimulation()) {
 				initGamepieces();
-				initRobotPublisher();
 			}
 			
 			// Initialize subsystems
@@ -93,6 +91,7 @@ public class RobotContainer {
 			initWrist();
 			initIntake();
 			initHang();
+			initRobotPublisher();
 			
 			// Initialize combined systems and commands
 			initMultiCommands();
@@ -101,15 +100,14 @@ public class RobotContainer {
 			autoChoice.setDefaultOption("Single Center", "Single Center");
 			AutoBuilder.getAllAutoNames().forEach((name) -> autoChoice.addOption(name, name));
 			SmartDashboard.putData("Auto Choice", autoChoice);
-		} catch (Exception e) {
-			DataLogManager.log("Error while initializing: " + RobotUtils.getError(e));
+		} catch (RuntimeException e) {
+			DataLogManager.log("Error while initializing: " + RobotUtils.processError(e));
 		}
 	}
 
 	private void initControllers() {
 		driver = new CommandPS5Controller(0);
 		operator = new CommandPS5Controller(1);
-		//sysIdTest = new CommandPS5Controller(2);
 	}
 
 	private void initGamepieces() {

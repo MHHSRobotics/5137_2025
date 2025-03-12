@@ -1,11 +1,10 @@
-package frc.robot.constants;
+package frc.robot.positions;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.other.RobotUtils;
-import frc.robot.states.RobotState;
 
 /**
  * Centralizes all robot positions and states for the entire robot.
@@ -41,21 +40,6 @@ public final class RobotPositions {
         new Pose2d(new Translation2d(6.25, 1), new Rotation2d(3*Math.PI/2))
     );
 
-    // Cage positions (previously in CageConstants)
-    public static final RobotPosition leftCage = new RobotPosition(
-        new Pose2d(new Translation2d(8.5, 7.25), new Rotation2d(3*Math.PI/2))
-    );
-    
-    public static final RobotPosition centerCage = new RobotPosition(
-        new Pose2d(new Translation2d(8.5, 6.15), new Rotation2d(3*Math.PI/2))
-    );
-    
-    public static final RobotPosition rightCage = new RobotPosition(
-        new Pose2d(new Translation2d(8.5, 5.05), new Rotation2d(3*Math.PI/2))
-    );
-
-    // Arrays of positions
-    public static final RobotPosition[] cages = generateCages();
     public static final RobotPosition[] stations = generateStations();
     public static final RobotPosition[] pickups = generatePickups();
     public static final RobotPosition[] centerReef = generateCenterReef();
@@ -98,14 +82,6 @@ public final class RobotPositions {
     
 
     // ===== Position Generators =====
-    
-    private static RobotPosition[] generateCages() {
-        return new RobotPosition[] {
-            leftCage,
-            centerCage,
-            rightCage
-        };
-    }
 
     private static RobotPosition[] generateStations() {
         return new RobotPosition[] {
@@ -125,11 +101,11 @@ public final class RobotPositions {
     }
 
     private static RobotPosition[] generateCenterReef() {
-        RobotPosition[] positions = new RobotPosition[FieldGeometry.reefSides];
+        RobotPosition[] positions = new RobotPosition[FieldPositions.reefSides];
         
-        for(int i = 0; i < FieldGeometry.reefSides; i++) {
-            Rotation2d forward = new Rotation2d(2*i*Math.PI/FieldGeometry.reefSides).rotateBy(Rotation2d.k180deg);
-            Translation2d outer = FieldGeometry.reefCenter.plus(new Translation2d(d1, forward));
+        for(int i = 0; i < FieldPositions.reefSides; i++) {
+            Rotation2d forward = new Rotation2d(2*i*Math.PI/FieldPositions.reefSides).rotateBy(Rotation2d.k180deg);
+            Translation2d outer = FieldPositions.reefCenter.plus(new Translation2d(d1, forward));
             Rotation2d sidewaysAngle = forward.rotateBy(Rotation2d.kCW_90deg);
             Translation2d algae = outer.plus(new Translation2d(dShift, sidewaysAngle));
             positions[i] = new RobotPosition(new Pose2d(algae, forward));
@@ -139,11 +115,11 @@ public final class RobotPositions {
     }
 
     private static RobotPosition[] generateBranchReef() {
-        RobotPosition[] positions = new RobotPosition[FieldGeometry.reefSides * 2];
+        RobotPosition[] positions = new RobotPosition[FieldPositions.reefSides * 2];
         
-        for(int i = 0; i < FieldGeometry.reefSides; i++) {
-            Rotation2d forward = new Rotation2d(2*i*Math.PI/FieldGeometry.reefSides).rotateBy(Rotation2d.k180deg);
-            Translation2d outer = FieldGeometry.reefCenter.plus(new Translation2d(d1, forward));
+        for(int i = 0; i < FieldPositions.reefSides; i++) {
+            Rotation2d forward = new Rotation2d(2*i*Math.PI/FieldPositions.reefSides).rotateBy(Rotation2d.k180deg);
+            Translation2d outer = FieldPositions.reefCenter.plus(new Translation2d(d1, forward));
             Rotation2d sidewaysAngle = forward.rotateBy(Rotation2d.kCW_90deg);
             Translation2d algae = outer.plus(new Translation2d(dShift, sidewaysAngle));
             
@@ -173,7 +149,7 @@ public final class RobotPositions {
     }
     
     private static RobotState[] generateAlgaeStates() {
-        RobotState[] states = new RobotState[FieldGeometry.reefSides];
+        RobotState[] states = new RobotState[FieldPositions.reefSides];
         for (int i = 0; i < states.length; i++) {
             states[i] = new RobotState(
                 Units.degreesToRadians(-55),
@@ -186,7 +162,7 @@ public final class RobotPositions {
     }
     
     private static RobotState[][] generateScoringStates() {
-        RobotState[][] states = new RobotState[4][FieldGeometry.reefSides*2];
+        RobotState[][] states = new RobotState[4][FieldPositions.reefSides*2];
         double[] armAngles = {
             0.66,   // L1
             0.34,   // L2

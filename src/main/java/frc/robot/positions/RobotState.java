@@ -1,7 +1,7 @@
-package frc.robot.states;
+package frc.robot.positions;
 
 import edu.wpi.first.math.geometry.Pose2d;
-import frc.robot.constants.RobotPositions.RobotPosition;
+import frc.robot.positions.RobotPositions.RobotPosition;
 
 /**
  * Represents a complete state of the robot, including positions for
