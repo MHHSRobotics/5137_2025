@@ -92,19 +92,19 @@ public class RobotContainer {
 			}
 			
 			// Initialize subsystems
-			initVision();
+			//initVision();
 			initSwerve();
 			initElevator();
 			initArm();
 			initWrist();
 			initIntake();
-			//initHang();
+			initHang();
 			//initLED();
 			
 			// Initialize combined systems and commands
 			initSwerveSystem();
 			initMultiCommands();
-			initAdditionalComponents();
+			//initAdditionalComponents();
 
 			/*autoChoice = new SendableChooser<String>();
 			autoChoice.setDefaultOption("Single Center", "Single Center");

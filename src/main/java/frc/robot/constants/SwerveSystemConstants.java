@@ -11,7 +11,7 @@ import frc.robot.other.RobotUtils;
  * This class centralizes all the goal positions for the entire arm system.
  */
 public final class SwerveSystemConstants {
-    public static final double timeout = 1; // seconds
+    public static final double timeout = 2.0; // seconds
     
     // Weight for how much to consider rotation vs translation when finding closest state
     // Higher values mean rotation differences matter more
@@ -32,7 +32,7 @@ public final class SwerveSystemConstants {
 
     private static final SwerveSystem.SwerveSystemState baseDefaultState = new SwerveSystem.SwerveSystemState(
         Units.degreesToRadians(0),  // From ArmConstants.defaultGoal (vertical)
-        0.05,                         // From ElevatorConstants.defaultGoal
+        0.0,                         // From ElevatorConstants.defaultGoal
         wristUp,                   // From WristConstants.pos1 (down)
         null                         // Robot position determined at runtime
     );
@@ -117,15 +117,15 @@ public final class SwerveSystemConstants {
         };
         double[] elevatorHeights = {
             0.01,  // L1
-            0.04,  // L2
-            0.44,  // L3
-            1.11   // L4
+            0.125,  // L2
+            0.51,  // L3
+            1.2   // L4
         };
         double[] wristAngles = {
             0.15,   // L1 (135 - 90)
             0.18,   // L2 (135 - 90)
             0.18,   // L3 (135 - 90)
-            0.2    // L4 (120 - 90)
+            0.22    // L4 (120 - 90)
         };
 
         for (int level = 0; level < states.length; level++) {

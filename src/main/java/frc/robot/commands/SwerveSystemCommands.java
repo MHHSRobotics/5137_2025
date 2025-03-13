@@ -61,13 +61,13 @@ public class SwerveSystemCommands {
     public Command moveToStateSequenced(Supplier<SwerveSystem.SwerveSystemState> state, Supplier<SwerveSystem.SwerveSystemState> preState) {
         if (preState.get() != SwerveSystemState.NULL) {
             return new SequentialCommandGroup(
-                moveToState(() -> preState.get().withPose(state.get().botPosition), 5),
+                moveToState(() -> preState.get().withPose(state.get().botPosition), 1.0),
                 moveToState(() -> state.get().stageOne()),
                 moveToState(() -> state.get().stageTwo())
             );
         } else {
             return new SequentialCommandGroup(
-                moveToState(() -> preState.get().withPose(state.get().botPosition), 5),
+                moveToState(() -> preState.get().withPose(state.get().botPosition), 1.0),
                 moveToState(() -> state.get())
             );
         }
