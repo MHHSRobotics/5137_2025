@@ -57,7 +57,7 @@ public final class RobotPositions {
 
     public static final RobotState defaultState = new RobotState(
         Units.degreesToRadians(0),
-        0.05,
+        0.,
         Units.degreesToRadians(90),
         (RobotPosition)null  // Robot position determined at runtime
     );
@@ -171,15 +171,15 @@ public final class RobotPositions {
         };
         double[] elevatorHeights = {
             0.01,  // L1
-            0.06,  // L2
-            0.46,  // L3
-            1.11   // L4
+            0.125,  // L2
+            0.51,  // L3
+            1.2   // L4
         };
         double[] wristAngles = {
-            0.1,   // L1
-            0.1,   // L2
-            0.1,   // L3
-            0.1    // L4
+            0.15,   // L1
+            0.18,   // L2
+            0.18,   // L3
+            0.22    // L4
         };
 
         for (int level = 0; level < states.length; level++) {
