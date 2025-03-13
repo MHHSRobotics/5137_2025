@@ -198,6 +198,13 @@ public class MultiCommands {
     }
 
     /**
+     * Command to move to the processor position.
+     */
+    public Command moveToBarge() {
+        return moveToState(()->RobotPositions.bargeState);
+    }
+
+    /**
      * Command to move to the default position.
      */
     public Command moveToDefault() {

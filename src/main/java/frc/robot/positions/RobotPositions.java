@@ -69,6 +69,13 @@ public final class RobotPositions {
         Units.degreesToRadians(-45),
         processor
     );
+
+    public static final RobotState bargeState = new RobotState(
+        Units.degreesToRadians(0),
+        1.11,
+        Units.degreesToRadians(-45),
+        (RobotPosition)null
+    );
     
     // Source states
     public static final RobotState[] sourceStates = generateSourceStates();

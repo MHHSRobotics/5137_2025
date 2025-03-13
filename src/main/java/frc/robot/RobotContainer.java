@@ -164,11 +164,11 @@ public class RobotContainer {
 		intakeCommands = new IntakeCommands(intake);
 
 		// Configure intake bindings
-		operator.L2().or(driver.L2().and(driver.R2().negate()))
+		operator.L2().or(driver.L2().and(driver.R2().negate())).or(driver.R1().and(driver.R2()))
 			.onTrue(intakeCommands.setSpeed(()->IntakeConstants.intakeSpeed))
 			.onFalse(intakeCommands.stop());
 
-		operator.R2().or(driver.R1()).or(driver.L2().and(driver.R2()))
+		operator.R2().or(driver.L2().and(driver.R2())).or(driver.R1().and(driver.R2().negate()))
 			.onTrue(intakeCommands.setSpeed(()->-IntakeConstants.intakeSpeed))
 			.onFalse(intakeCommands.stop());
 		
@@ -190,6 +190,11 @@ public class RobotContainer {
 		driver.circle().and(driver.R2().negate())
 		.onTrue(multiCommands.getAlgae());
 
+		driver.triangle().and(driver.R2()).onTrue(multiCommands.placeCoral(3));
+		driver.square().and(driver.R2()).onTrue(multiCommands.placeCoral(2));
+		driver.circle().and(driver.R2()).onTrue(multiCommands.placeCoral(1));
+		driver.cross().and(driver.R2()).onTrue(multiCommands.placeCoral(0));
+
 		driver.triangle().negate()
 		.and(driver.square().negate())
 		.and(driver.circle().negate())
@@ -207,14 +212,7 @@ public class RobotContainer {
 		.onTrue(wristCommands.setGoal(() -> Units.degreesToRadians(-45)));
 
 		driver.square().and(driver.R2().negate()).onTrue(multiCommands.moveToProcessor());
-		//driver.cross().and(driver.R2().negate()).onTrue(multiCommands.moveToBarge());
-
-		driver.triangle().and(driver.R2()).onTrue(multiCommands.moveToLevel(3));
-		driver.square().and(driver.R2()).onTrue(multiCommands.moveToLevel(2));
-		driver.circle().and(driver.R2()).onTrue(multiCommands.moveToLevel(1));
-		driver.cross().and(driver.R2()).onTrue(multiCommands.moveToLevel(0));
-
-		NamedCommands.registerCommand("L4", multiCommands.moveToLevel(3));
+		driver.cross().and(driver.R2().negate()).onTrue(multiCommands.moveToBarge());
 	}
 
 	private void initRobotPublisher() {
