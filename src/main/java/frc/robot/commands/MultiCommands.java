@@ -70,8 +70,9 @@ public class MultiCommands {
 
     public Command placeCoral(int level) {
         return new SequentialCommandGroup(
-            swerveSystemCommands.moveToLevel(level)
-            //new ParallelCommandGroup(intakeCommands.outtake(),swerveSystemCommands.simCoralOuttake())
+            swerveSystemCommands.moveToLevel(level),
+            intakeCommands.intake(() -> 0.1),
+            new ParallelCommandGroup(intakeCommands.outtake(),swerveSystemCommands.simCoralOuttake())
         );
     }
 

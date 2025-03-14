@@ -67,6 +67,22 @@ public class IntakeCommands {
     }
 
     /**
+     * Creates a command that runs the intake at a specified speed until a switch is triggered.
+     * The command will continuously run the intake until the switch condition is met.
+     *
+     * @return A command that runs the intake until the switch is triggered.
+     */
+    public Command intake(DoubleSupplier time) {
+        Command command = new SequentialCommandGroup(
+            new InstantCommand(() -> intake.setSpeed(IntakeConstants.intakeSpeed)), // Start the intake
+            new WaitCommand(time.getAsDouble()),                                                   // Wait for 1 second
+            stop()                                                                // Stop the intake
+        );
+        command.addRequirements(intake);
+        return command;
+    }
+
+    /**
      * Creates a command that will pulse the intake.
      * The command will pulse the intake until overriden.
      *
