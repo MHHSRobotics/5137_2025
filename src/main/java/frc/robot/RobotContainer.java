@@ -92,14 +92,14 @@ public class RobotContainer {
 			}
 			
 			// Initialize subsystems
-			//initVision();
+			initVision();
 			initSwerve();
 			initElevator();
 			initArm();
 			initWrist();
 			initIntake();
 			initHang();
-			//initLED();
+			initLED();
 			
 			// Initialize combined systems and commands
 			initSwerveSystem();

@@ -9,8 +9,8 @@
     "Active",
     "Inactive"
   ],
-  "defaultMaxVel": 1.0,
-  "defaultMaxAccel": 1.0,
+  "defaultMaxVel": 2.0,
+  "defaultMaxAccel": 3.0,
   "defaultMaxAngVel": 270.0,
   "defaultMaxAngAccel": 360.0,
   "defaultNominalVoltage": 13.0,

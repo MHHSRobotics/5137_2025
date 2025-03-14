@@ -32,14 +32,14 @@ public final class SwerveSystemConstants {
 
     private static final SwerveSystem.SwerveSystemState baseDefaultState = new SwerveSystem.SwerveSystemState(
         Units.degreesToRadians(0),  // From ArmConstants.defaultGoal (vertical)
-        0.0,                         // From ElevatorConstants.defaultGoal
+        0.05,                         // From ElevatorConstants.defaultGoal
         wristUp,                   // From WristConstants.pos1 (down)
         null                         // Robot position determined at runtime
     );
 
     private static final SwerveSystem.SwerveSystemState bargeState = new SwerveSystem.SwerveSystemState(
         Units.degreesToRadians(0),
-        1.11,
+        1.2,
         Units.degreesToRadians(-45),
         null
     );
@@ -94,7 +94,7 @@ public final class SwerveSystemConstants {
         SwerveSystem.SwerveSystemState[] states = new SwerveSystem.SwerveSystemState[FieldGeometry.reefSides];
         for (int i = 0; i < states.length; i++) {
             states[i] = new SwerveSystem.SwerveSystemState(
-                Units.degreesToRadians(-55),  // 30 - 90 = -60, 120 - 90 = 30
+                Units.degreesToRadians(-65),  // 30 - 90 = -60, 120 - 90 = 30
                 RobotUtils.onRedAlliance() ? Reef.isAlgaeLow(i) ? 0.43 : 0.9 : Reef.isAlgaeLow(i) ? 0.9 : 0.43, // Evil Algae Decision Tree
                 Units.degreesToRadians(-115),                             // From WristConstants.minAngle
                 RobotPositions.centerReef[i].alliancePos()

@@ -254,9 +254,9 @@ public class Swerve extends SubsystemBase {
     }
 
     public void setTargetPose(Pose2d target){
-        targetPose = target;
-        startAuto(AutoBuilder.pathfindToPose(target, SwerveConstants.constraints, 0.0));
-        //followPath("Reef H");
+        //targetPose = target;
+        //startAuto(AutoBuilder.pathfindToPose(target, SwerveConstants.constraints, 0.0));
+        followPath("Reef G");
     }
 
     public void followPath(String name) {
