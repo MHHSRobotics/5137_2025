@@ -26,6 +26,7 @@ import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -61,11 +62,15 @@ public class Swerve extends SubsystemBase {
     private SwerveRequest.SwerveDriveBrake lock; // Request to lock the swerve modules in place
 
     // Target pose
-    private Pose2d targetPose=new Pose2d();
+    private Pose2d targetPose=null;
 
     private StructArrayPublisher<Pose2d> estPosePublisher = NetworkTableInstance.getDefault().getStructArrayTopic("SmartDashboard/estimatedPoses",Pose2d.struct).publish();
 
     private Command currentAuto;
+
+    private PIDController xController;
+    private PIDController yController;
+    private PIDController rotController;
     /**
      * Constructor for the Swerve subsystem.
      *
@@ -130,6 +135,10 @@ public class Swerve extends SubsystemBase {
         // Warmup pathfinding
         Pathfinding.setPathfinder(new LocalADStar());
         PathfindingCommand.warmupCommand().schedule();
+
+        xController=new PIDController(SwerveConstants.translationKP, 0, SwerveConstants.translationKD);
+        yController=new PIDController(SwerveConstants.translationKP, 0, SwerveConstants.translationKD);
+        rotController=new PIDController(SwerveConstants.rotationKP, 0, SwerveConstants.rotationKD);
     }
 
     /**
@@ -237,6 +246,7 @@ public class Swerve extends SubsystemBase {
     }
 
     public void setTargetPose(Pose2d target){
+        targetPose=target;
         /*if(target!=targetPose){
             targetPose=target;
             if(targetPose!=null){
@@ -301,6 +311,13 @@ public class Swerve extends SubsystemBase {
                     vision.updateSim(this.getPose());
                 }
             }
+            if(targetPose!=null){
+                double xDrive=xController.calculate(getPose().getX(),getTargetPose().getX());
+                double yDrive=yController.calculate(getPose().getY(),getTargetPose().getY());
+                double rotDrive=rotController.calculate(getPose().getRotation().getRadians(),getTargetPose().getRotation().getRadians());
+                setPercentDrive(xDrive, yDrive, rotDrive, true);
+            }
+            
         }catch(RuntimeException e){
             DataLogManager.log("Periodic error: "+RobotUtils.processError(e));
         }

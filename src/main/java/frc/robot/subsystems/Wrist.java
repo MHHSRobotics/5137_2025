@@ -22,6 +22,7 @@ import frc.robot.motorSystem.MotorSystem;
 import frc.robot.motorSystem.ArmMechanismSim;
 import frc.robot.other.RobotUtils;
 import frc.robot.positions.RobotPositions;
+import frc.robot.constants.ArmConstants;
 import frc.robot.constants.GeneralConstants;
 
 import static edu.wpi.first.units.Units.Volts;
@@ -55,7 +56,7 @@ public class Wrist extends SubsystemBase {
     private final MotorSystem motorSystem;
 
     /** PID controller for wrist position control */
-    private final ProfiledPIDController controller;
+    //private final ProfiledPIDController controller;
     
     /** Feedforward controller for gravity compensation and dynamics */
     private final ArmFeedforward feedforward;
@@ -108,7 +109,7 @@ public class Wrist extends SubsystemBase {
         // Create the plant, simulates the wrist movement
         LinearSystem<N2,N1,N2> plant = LinearSystemId.createSingleJointedArmSystem(
             WristConstants.motorSim, 
-            WristConstants.momentOfInertia, 
+            WristConstants.momentOfInertia/2, 
             WristConstants.gearRatio
         );
 
@@ -116,13 +117,13 @@ public class Wrist extends SubsystemBase {
         motorSystem = new MotorSystem(List.of(wristMotor), wristEncoder);
                 
         // Initialize PID controller
-        controller = new ProfiledPIDController(
-            WristConstants.kP,
-            WristConstants.kI,
-            WristConstants.kD,
-            WristConstants.pidConstraints
-        );
-        controller.setTolerance(WristConstants.wristTolerance);
+        // controller = new ProfiledPIDController(
+        //     WristConstants.kP,
+        //     WristConstants.kI,
+        //     WristConstants.kD,
+        //     WristConstants.pidConstraints
+        // );
+        //controller.setTolerance(WristConstants.wristTolerance);
 
         
         // Initialize feedforward controller
@@ -241,16 +242,6 @@ public class Wrist extends SubsystemBase {
     }
 
     /**
-     * Check if the wrist is at its target position.
-     * 
-     * @return true if the wrist is within the tolerance of its goal position,
-     *         false otherwise.
-     */
-    public boolean atSetpoint() {
-        return controller.atSetpoint();
-    }
-
-    /**
      * Determines if the arm's path will intersect the danger zone.
      * 
      * @param currentArmAngle Current angle of the arm in radians
@@ -281,6 +272,17 @@ public class Wrist extends SubsystemBase {
     public double getProfileError(){
         return Math.abs(getMeasurement()-goalState.position);
     }
+
+    /**
+     * Check if the arm is at its target position.
+     * 
+     * @return true if the arm is within the tolerance of its goal position,
+     *         false otherwise.
+     */
+    public boolean atSetpoint() {
+        return getError()<ArmConstants.armTolerance;
+    }
+
     /**
      * Display telemetry data on SmartDashboard.
      * Outputs current position, goal, velocity, and error information
@@ -310,7 +312,7 @@ public class Wrist extends SubsystemBase {
             motorSystem.periodic();
 
             double measurement = getMeasurement();
-            //double velocity = getVelocity();
+            double velocity = getVelocity();
 
             // Update telemetry
             telemetry();
@@ -321,12 +323,24 @@ public class Wrist extends SubsystemBase {
             // Update goal based on arm's current position and goal
             goal = getSafeGoal(armRotation, arm.getGoal());
 
-            // Calculate feedforward with combined arm and wrist angles
-            double feed = feedforward.calculate(
-                controller.getSetpoint().position + armRotation + WristConstants.feedOffset,
-                controller.getSetpoint().velocity);
+             // Generate smooth goal trajectory
+             goalState = goalProfile.calculate(
+                GeneralConstants.simPeriod,
+                goalState,
+                new TrapezoidProfile.State(goal, 0)  // Target state
+            );
             
-            double voltage = controller.calculate(measurement,goal) + feed;
+            // Use profile state as the goal for LQR
+            double voltage = lqr.calculate(
+                VecBuilder.fill(measurement, velocity),
+                VecBuilder.fill(goalState.position, goalState.velocity)
+            ).get(0,0);
+
+            // Calculate feedforward and PID control outputs
+            voltage+=feedforward.calculate(
+                goal + ArmConstants.feedOffset, // Offset so that 0 = horizontal
+                0
+            );
 
             // Apply the calculated voltage to the motor
             setVoltage(Volts.of(voltage));

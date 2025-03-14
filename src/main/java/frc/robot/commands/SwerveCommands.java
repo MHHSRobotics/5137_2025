@@ -41,9 +41,14 @@ public class SwerveCommands {
     public Command drive(DoubleSupplier dx, DoubleSupplier dy, DoubleSupplier dtheta, BooleanSupplier fieldOriented) {
         return new FunctionalCommand(
             () -> {},
-            () -> swerve.setPercentDrive(dx.getAsDouble(), dy.getAsDouble(), dtheta.getAsDouble(), fieldOriented.getAsBoolean()),
+            () -> {
+                if(dx!=null||dy!=null||dtheta!=null){
+                    swerve.setTargetPose(null);
+                    swerve.setPercentDrive(dx.getAsDouble(), dy.getAsDouble(), dtheta.getAsDouble(), fieldOriented.getAsBoolean());
+                }
+            },
             (Boolean onEnd) -> {},
-            () -> {return false;},
+            () -> false,
             swerve
         );
     }
