@@ -109,7 +109,7 @@ public class Wrist extends SubsystemBase {
         // Create the plant, simulates the wrist movement
         LinearSystem<N2,N1,N2> plant = LinearSystemId.createSingleJointedArmSystem(
             WristConstants.motorSim, 
-            WristConstants.momentOfInertia/2, 
+            WristConstants.momentOfInertia*1/3, 
             WristConstants.gearRatio
         );
 
