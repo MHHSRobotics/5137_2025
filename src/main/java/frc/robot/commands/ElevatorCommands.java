@@ -68,4 +68,12 @@ public class ElevatorCommands implements SysIdCommands{
     public Command sysIdDynamic(SysIdRoutine.Direction dir) {
         return elevator.getRoutine().dynamic(dir);
     }
+
+    public Command upShift() {
+        return new InstantCommand(() -> elevator.upShift());
+    }
+
+    public Command downShift() {
+        return new InstantCommand(() -> elevator.downShift());
+    }
 }

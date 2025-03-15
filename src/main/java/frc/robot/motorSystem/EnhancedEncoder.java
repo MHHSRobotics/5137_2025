@@ -36,6 +36,14 @@ public class EnhancedEncoder extends DutyCycleEncoder{
         last=pos;
     }
 
+    public void downShift() {
+        shift -= 1;
+    }
+
+    public void upShift() {
+        shift += 1;
+    }
+
     public void set(double val){
         double encoderVal=(val-offset)/mul;
         shift=Math.floor(encoderVal);

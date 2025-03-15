@@ -220,6 +220,15 @@ public class Elevator extends SubsystemBase {
         motorSystem.setVoltage(v);
     }
 
+    public void downShift() {
+        motorSystem.getEncoder().downShift();
+    }
+
+
+    public void upShift() {
+        motorSystem.getEncoder().upShift();
+    }
+
     /**
      * Get the system identification routine for tuning.
      * 

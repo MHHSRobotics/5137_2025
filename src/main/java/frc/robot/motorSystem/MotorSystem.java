@@ -26,6 +26,10 @@ public class MotorSystem {
         return motors;
     }
 
+    public EnhancedEncoder getEncoder() {
+        return encoder;
+    }
+
     public void set(double vel){
         motors.forEach(m->m.set(vel));
     }

@@ -157,6 +157,15 @@ public class RobotContainer {
 
 		// Configure elevator bindings
 		elevator.setDefaultCommand(elevatorCommands.changeGoal(() -> -MathUtil.applyDeadband(operator.getLeftY(),0.1) / 50));
+
+		driver.povLeft().whileTrue(
+			new SequentialCommandGroup(
+				new WaitCommand(3),
+				elevatorCommands.downShift()));
+		driver.povRight().whileTrue(
+			new SequentialCommandGroup(
+				new WaitCommand(3),
+				elevatorCommands.upShift()));
 	}
 
 	private void initArm() {
