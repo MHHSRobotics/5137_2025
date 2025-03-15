@@ -1,5 +1,9 @@
 package frc.robot.subsystems;
 
+import java.util.Optional;
+
+import com.pathplanner.lib.path.PathPlannerPath;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -27,27 +31,27 @@ public class SwerveSystem extends SubsystemBase {
         public final Double armPosition;
         public final Double elevatorPosition;
         public final Double wristPosition;
-        public final Pose2d botPosition;
+        public final PathPlannerPath botPath;
 
-        public static final SwerveSystemState NULL=new SwerveSystemState(null,null,null,null);
+        public static final SwerveSystemState NULL=new SwerveSystemState(null,null,null, null);
 
-        public SwerveSystemState(Double armPosition, Double elevatorPosition, Double wristPosition, Pose2d botPosition) {
+        public SwerveSystemState(Double armPosition, Double elevatorPosition, Double wristPosition, PathPlannerPath botPath) {
             this.armPosition = armPosition;
             this.elevatorPosition = elevatorPosition;
             this.wristPosition = wristPosition;
-            this.botPosition = botPosition;
+            this.botPath = botPath;
         }
 
-        public SwerveSystemState withPose(Pose2d pose){
-            return new SwerveSystemState(armPosition, elevatorPosition, wristPosition, pose);
+        public SwerveSystemState withPath(PathPlannerPath path){
+            return new SwerveSystemState(armPosition, elevatorPosition, wristPosition, path);
         }
 
-        public SwerveSystemState robotPoseOnly(){
-            return new SwerveSystemState(null, null, null, botPosition);
+        public SwerveSystemState robotPathOnly(){
+            return new SwerveSystemState(null, null, null, botPath);
         }
 
-        public SwerveSystemState noRobotPose(){
-            return withPose(null);
+        public SwerveSystemState noRobotPath(){
+            return withPath(null);
         }
 
         public SwerveSystemState stageOne() {
@@ -90,8 +94,11 @@ public class SwerveSystem extends SubsystemBase {
         StructPublisher<Pose3d> secondStagePosePublisher = RobotUtils.getPublisher("SmartDashboard/"+path+"/elevatorSecond", Pose3d.struct);
         StructPublisher<Pose3d> armPosePublisher = RobotUtils.getPublisher("SmartDashboard/"+path+"/arm", Pose3d.struct);
         StructPublisher<Pose3d> wristPosePublisher = RobotUtils.getPublisher("SmartDashboard/"+path+"/wrist", Pose3d.struct);
-        if(state.botPosition!=null){
-            Pose3d botPose=new Pose3d(state.botPosition);
+        Pose3d botPose = new Pose3d(swerve.getPose());
+        if(state.botPath!=null || botPose != null){
+            if (state.botPath != null && state.botPath.getStartingHolonomicPose().isPresent()) {
+                botPose=new Pose3d(RobotUtils.invertToAlliance(state.botPath.getStartingHolonomicPose().get()));  
+            }
             botPosePublisher.set(botPose);
             if(state.elevatorPosition!=null){
                 // Calculate elevator positions
@@ -130,7 +137,7 @@ public class SwerveSystem extends SubsystemBase {
             arm==null?null:arm.getMeasurement(), 
             elevator==null?null:elevator.getMeasurement(), 
             wrist==null?null:wrist.getMeasurement(), 
-            swerve==null?null:swerve.getPose()
+            null
         );
     }
 
@@ -139,7 +146,7 @@ public class SwerveSystem extends SubsystemBase {
             arm==null?null:arm.getGoal(), 
             elevator==null?null:elevator.getGoal(), 
             wrist==null?null:wrist.getGoal(), 
-            swerve==null?null:swerve.getTargetPose()
+            swerve==null?null:swerve.getTargetPath()
         );
     }
 
@@ -209,9 +216,9 @@ public class SwerveSystem extends SubsystemBase {
         if(wrist!=null && state.wristPosition != null){
             wrist.setGoal(state.wristPosition);
         }
-        if(swerve!=null && state.botPosition != null){
+        if(swerve!=null && state.botPath != null){
             // Uncomment at your own risk
-            swerve.setTargetPose(state.botPosition);
+            swerve.followPath(state.botPath);
         }
     }
 
@@ -230,10 +237,15 @@ public class SwerveSystem extends SubsystemBase {
         
         for (SwerveSystemState state : states) {
             // Use targetPose if state's position is null
-            double distance = calculateDistance(currentPose, state.botPosition);
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestState = state;
+            if (state.botPath != null) {
+                Optional<Pose2d> targetPose = state.botPath.getStartingHolonomicPose();
+                if (targetPose.isPresent()) {
+                    double distance = calculateDistance(currentPose, RobotUtils.invertToAlliance(targetPose.get()));
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestState = state;
+                    }
+                }
             }
         }
 

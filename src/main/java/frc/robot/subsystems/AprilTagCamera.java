@@ -118,7 +118,7 @@ public class AprilTagCamera extends SubsystemBase {
                 // If the estimated pose is present, add it to the list
                 if (estimatedPose.isPresent()) {
                     var target = res.getBestTarget();
-                    if (target.getPoseAmbiguity() < 0.2) {
+                    if (target.getPoseAmbiguity() < 0.5) {
                         estimatedPoses.add(estimatedPose.get());
                     }
                 }

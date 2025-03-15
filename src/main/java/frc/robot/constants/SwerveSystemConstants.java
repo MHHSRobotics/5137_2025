@@ -1,5 +1,12 @@
 package frc.robot.constants;
 
+import java.io.IOException;
+
+import org.json.simple.parser.ParseException;
+
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.util.FileVersionException;
+
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.subsystems.SwerveSystem;
@@ -73,7 +80,7 @@ public final class SwerveSystemConstants {
             Units.degreesToRadians(-95),  // 75 - 90 = -15 degrees
             0.65,
             Units.degreesToRadians(-45),
-            RobotPositions.processor.alliancePos()
+            null
         );
     }
 
@@ -84,7 +91,7 @@ public final class SwerveSystemConstants {
                 -0.43,  // 45 - 90 = -45 degrees
                 0.23,                        // From ElevatorConstants.sourceGoal
                 Units.degreesToRadians(-113.6),              // From WristConstants.pos2 (straight)
-                RobotPositions.stations[i].alliancePos()
+                null
             );
         }
         return states;
@@ -97,7 +104,7 @@ public final class SwerveSystemConstants {
                 Units.degreesToRadians(-65),  // 30 - 90 = -60, 120 - 90 = 30
                 RobotUtils.onRedAlliance() ? Reef.isAlgaeLow(i) ? 0.43 : 0.9 : Reef.isAlgaeLow(i) ? 0.9 : 0.43, // Evil Algae Decision Tree
                 Units.degreesToRadians(-115),                             // From WristConstants.minAngle
-                RobotPositions.centerReef[i].alliancePos()
+                null
             );
         }
         return states;
@@ -108,7 +115,7 @@ public final class SwerveSystemConstants {
     }
 
     public static SwerveSystem.SwerveSystemState[][] getScoringStates() {
-        SwerveSystem.SwerveSystemState[][] states = new SwerveSystem.SwerveSystemState[4][FieldGeometry.reefSides*2];
+        SwerveSystem.SwerveSystemState[][] states = new SwerveSystem.SwerveSystemState[4][12];
         double[] armAngles = {
             0.66,   // L1 (135 - 90)
             0.34,   // L2 (135 - 90)
@@ -125,17 +132,22 @@ public final class SwerveSystemConstants {
             0.15,   // L1 (135 - 90)
             0.18,   // L2 (135 - 90)
             0.18,   // L3 (135 - 90)
-            0.22    // L4 (120 - 90)
+            0.32    // L4 (120 - 90)
         };
 
         for (int level = 0; level < states.length; level++) {
             for (int pos = 0; pos < states[level].length; pos++) {
-                states[level][pos] = new SwerveSystem.SwerveSystemState(
-                    armAngles[level],
-                    elevatorHeights[level],
-                    wristAngles[level],
-                    RobotPositions.branchReef[pos].alliancePos()
-                );
+                try {
+                    PathPlannerPath path = PathPlannerPath.fromPathFile("Reef " + (char) ('A'+pos));
+                    states[level][pos] = new SwerveSystem.SwerveSystemState(
+                        armAngles[level],
+                        elevatorHeights[level],
+                        wristAngles[level],
+                        path
+                    );
+                } catch (FileVersionException | IOException | ParseException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
         return states;

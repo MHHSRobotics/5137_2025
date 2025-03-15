@@ -122,7 +122,8 @@ public class AutoStep {
             return multiCommands.getAlgae(()->branchChooser.getSelected());
         }else{
             return new SequentialCommandGroup(
-                multiCommands.getCoralFromGround(()->pickupChooser.getSelected()),
+                //TODO: Fix this
+                multiCommands.getCoralFromSource(),
                 multiCommands.placeCoral(()->levelChooser.getSelected(), ()->branchChooser.getSelected())
             );
         }

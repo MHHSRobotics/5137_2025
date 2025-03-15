@@ -12,6 +12,7 @@ import static edu.wpi.first.units.Units.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.photonvision.EstimatedRobotPose;
 
@@ -41,7 +42,6 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -68,7 +68,7 @@ public class Swerve extends SubsystemBase {
     private SwerveRequest.SwerveDriveBrake lock; // Request to lock the swerve modules in place
 
     // Target pose
-    private Pose2d targetPose=new Pose2d();
+    private PathPlannerPath targetPath=null;
 
     private StructArrayPublisher<Pose2d> estPosePublisher = NetworkTableInstance.getDefault().getStructArrayTopic("SmartDashboard/estimatedPoses",Pose2d.struct).publish();
 
@@ -249,21 +249,28 @@ public class Swerve extends SubsystemBase {
         }
     }
 
-    public Pose2d getTargetPose(){
-        return targetPose;
+    public PathPlannerPath getTargetPath(){
+        return targetPath;
+    }
+
+    public Pose2d getTargetPose() {
+        if (targetPath != null) {
+            Optional<Pose2d> targetPose = targetPath.getStartingHolonomicPose();
+            if (targetPose.isPresent()) {
+                return RobotUtils.invertToAlliance(targetPose.get());
+            }
+        }
+        return getPose();
     }
 
     public void setTargetPose(Pose2d target){
         //targetPose = target;
         //startAuto(AutoBuilder.pathfindToPose(target, SwerveConstants.constraints, 0.0));
-        followPath("Reef G");
     }
 
-    public void followPath(String name) {
+    public void followPath(PathPlannerPath path) {
         try {
-            PathPlannerPath path = PathPlannerPath.fromPathFile(name);
-            var poses = path.getPathPoses();
-            targetPose = RobotUtils.invertToAlliance(path.getPathPoses().get(poses.size() - 1));
+            targetPath = path;
             startAuto(AutoBuilder.pathfindThenFollowPath(path, SwerveConstants.constraints));
         } catch (Exception e) {
             e.printStackTrace();
@@ -271,17 +278,20 @@ public class Swerve extends SubsystemBase {
     }
 
     public boolean atTarget(){
-        if(targetPose==null){
+        if(targetPath==null){
             return true;
         }
         Pose2d currentPose=getPose();
-        double dist=currentPose.getTranslation().getDistance(targetPose.getTranslation());
-        if(dist>SwerveConstants.transTol){
-            return false;
-        }
-        double rotDist=currentPose.getRotation().minus(targetPose.getRotation()).getRadians();
-        if(rotDist>SwerveConstants.rotTol){
-            return false;
+        Pose2d targetPose = getTargetPose();
+        if (targetPose != null) {
+            double dist=currentPose.getTranslation().getDistance(targetPose.getTranslation());
+            if(dist>SwerveConstants.transTol){
+                return false;
+            }
+            double rotDist=currentPose.getRotation().minus(targetPose.getRotation()).getRadians();
+            if(rotDist>SwerveConstants.rotTol){
+                return false;
+            }
         }
         return true;
     }

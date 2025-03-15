@@ -2,7 +2,6 @@ package frc.robot.commands;
 
 import java.util.function.Supplier;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
@@ -61,13 +60,13 @@ public class SwerveSystemCommands {
     public Command moveToStateSequenced(Supplier<SwerveSystem.SwerveSystemState> state, Supplier<SwerveSystem.SwerveSystemState> preState) {
         if (preState.get() != SwerveSystemState.NULL) {
             return new SequentialCommandGroup(
-                moveToState(() -> preState.get().withPose(state.get().botPosition), 1.0),
+                moveToState(() -> preState.get().withPath(state.get().botPath), 1.0),
                 moveToState(() -> state.get().stageOne()),
                 moveToState(() -> state.get().stageTwo())
             );
         } else {
             return new SequentialCommandGroup(
-                moveToState(() -> preState.get().withPose(state.get().botPosition), 1.0),
+                moveToState(() -> preState.get().withPath(state.get().botPath), 1.0),
                 moveToState(() -> state.get())
             );
         }
@@ -85,18 +84,20 @@ public class SwerveSystemCommands {
     public Command moveToSource(){
         return new SequentialCommandGroup(
             new InstantCommand(()->{
-                sourceState=swerveSystem.getClosestState(SwerveSystemConstants.getSourceStates()).noRobotPose();
+                sourceState=swerveSystem.getClosestState(SwerveSystemConstants.getSourceStates());
             }),
             moveToState(()->sourceState)
         );
     }
 
+    /*
+    TODO: Fix this
     public Command moveToGround(Supplier<Pose2d> pose){
         return moveToState(()->SwerveSystemConstants.getGroundIntake().withPose(pose.get()));
-    }
+    }*/
 
     public Command moveToAlgae(Supplier<Integer> side){
-        return moveToState(()->SwerveSystemConstants.getAlgaeStates()[side.get()].noRobotPose());
+        return moveToState(()->SwerveSystemConstants.getAlgaeStates()[side.get()]);
     }
 
     public Command moveToAlgae() {
@@ -108,7 +109,7 @@ public class SwerveSystemCommands {
     }
 
     public Command moveToProcessor(){
-        return moveToStateSequenced(()->SwerveSystemConstants.getProcessor().noRobotPose(),()->SwerveSystemState.NULL);
+        return moveToStateSequenced(()->SwerveSystemConstants.getProcessor(),()->SwerveSystemState.NULL);
     }
 
     public Command moveToBarge(){
