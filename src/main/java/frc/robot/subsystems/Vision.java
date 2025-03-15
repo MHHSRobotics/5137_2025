@@ -33,10 +33,10 @@ public class Vision extends SubsystemBase {
         fieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
         // Initialize AprilTag cameras with their respective positions and the field layout
-        //AprilTagCamera blatCamera = new AprilTagCamera("BackLeft_AT", VisionConstants.robotToBLATCamera, fieldLayout);
+        AprilTagCamera blatCamera = new AprilTagCamera("BackLeft_AT", VisionConstants.robotToBLATCamera, fieldLayout);
         AprilTagCamera bratCamera = new AprilTagCamera("BackRight_AT", VisionConstants.robotToBRATCamera, fieldLayout);
         AprilTagCamera flatCamera = new AprilTagCamera("FrontLeft_AT", VisionConstants.robotToFLATCamera, fieldLayout);
-        aprilTagCameras = new AprilTagCamera[]{/*blatCamera, */bratCamera, flatCamera};
+        aprilTagCameras = new AprilTagCamera[]{blatCamera, flatCamera};
 
         // Initialize the vision system simulation and add AprilTags to it
         visionSim = new VisionSystemSim("main");

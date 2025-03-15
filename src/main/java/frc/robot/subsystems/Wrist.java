@@ -56,7 +56,7 @@ public class Wrist extends SubsystemBase {
     private final MotorSystem motorSystem;
 
     /** PID controller for wrist position control */
-    //private final ProfiledPIDController controller;
+    private final ProfiledPIDController controller;
     
     /** Feedforward controller for gravity compensation and dynamics */
     private final ArmFeedforward feedforward;
@@ -77,7 +77,7 @@ public class Wrist extends SubsystemBase {
     private final Arm arm;
 
     // Linear quadratic regulator
-    private LinearQuadraticRegulator<N2,N1,N2> lqr;
+    //private LinearQuadraticRegulator<N2,N1,N2> lqr;
 
     private final TrapezoidProfile goalProfile;
     private TrapezoidProfile.State goalState;
@@ -107,23 +107,23 @@ public class Wrist extends SubsystemBase {
         );
         
         // Create the plant, simulates the wrist movement
-        LinearSystem<N2,N1,N2> plant = LinearSystemId.createSingleJointedArmSystem(
+        /*LinearSystem<N2,N1,N2> plant = LinearSystemId.createSingleJointedArmSystem(
             WristConstants.motorSim, 
             WristConstants.momentOfInertia*1/3, 
             WristConstants.gearRatio
-        );
+        );*/
 
         // Create motor system
         motorSystem = new MotorSystem(List.of(wristMotor), wristEncoder);
                 
         // Initialize PID controller
-        // controller = new ProfiledPIDController(
-        //     WristConstants.kP,
-        //     WristConstants.kI,
-        //     WristConstants.kD,
-        //     WristConstants.pidConstraints
-        // );
-        //controller.setTolerance(WristConstants.wristTolerance);
+        controller = new ProfiledPIDController(
+            WristConstants.kP,
+            WristConstants.kI,
+            WristConstants.kD,
+            WristConstants.pidConstraints
+        );
+        controller.setTolerance(WristConstants.wristTolerance);
 
         
         // Initialize feedforward controller
@@ -150,12 +150,12 @@ public class Wrist extends SubsystemBase {
         mechanismSim = new ArmMechanismSim(wristSim);
 
         // Initialize LQR controller
-        lqr = new LinearQuadraticRegulator<N2,N1,N2>(
+        /*lqr = new LinearQuadraticRegulator<N2,N1,N2>(
             plant,
             VecBuilder.fill(WristConstants.posWeight, WristConstants.velWeight),  // State cost
             VecBuilder.fill(WristConstants.volWeight),  // Input cost
             GeneralConstants.simPeriod
-        );
+        );*/
 
         // Initialize goal profiler
         goalProfile = new TrapezoidProfile(
@@ -331,10 +331,12 @@ public class Wrist extends SubsystemBase {
             );
             
             // Use profile state as the goal for LQR
-            double voltage = lqr.calculate(
+            /*double voltage = lqr.calculate(
                 VecBuilder.fill(measurement, velocity),
                 VecBuilder.fill(goalState.position, goalState.velocity)
-            ).get(0,0);
+            ).get(0,0);*/
+
+            double voltage = controller.calculate(measurement, goal);
 
             // Calculate feedforward and PID control outputs
             voltage+=feedforward.calculate(
