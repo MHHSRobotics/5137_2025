@@ -1,7 +1,4 @@
 package frc.robot.subsystems;
-
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
 import edu.wpi.first.math.controller.ElevatorFeedforward;
@@ -11,11 +8,10 @@ import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.ElevatorConstants;
 import frc.robot.constants.GeneralConstants;
 import frc.robot.other.RobotUtils;
-import frc.robot.constants.SwerveSystemConstants;
+import frc.robot.positions.RobotPositions;
 import frc.robot.motorSystem.EnhancedEncoder;
 import frc.robot.motorSystem.EnhancedTalonFX;
 import frc.robot.motorSystem.MotorSystem;
@@ -59,9 +55,6 @@ public class Elevator extends SubsystemBase {
 
     /** Adapter to make ElevatorSim compatible with MotorSystem */
     private final ElevatorMechanismSim mechanismSim;
-
-    /** System identification routine for parameter tuning */
-    private final SysIdRoutine sysIdRoutine;
 
     /**
      * Constructor for the Elevator subsystem.
@@ -110,7 +103,7 @@ public class Elevator extends SubsystemBase {
         );
         
         // Set initial goal position
-        goal = SwerveSystemConstants.getDefaultState().elevatorPosition;
+        goal = RobotPositions.defaultState.elevatorPosition;
 
         // Initialize simulation components
         elevatorSim = new ElevatorSim(
@@ -121,28 +114,9 @@ public class Elevator extends SubsystemBase {
             ElevatorConstants.minHeight,
             ElevatorConstants.maxHeight,
             true,
-            SwerveSystemConstants.getDefaultState().elevatorPosition
+            RobotPositions.defaultState.elevatorPosition
         );
         mechanismSim = new ElevatorMechanismSim(elevatorSim);
-
-        // Initialize system identification routine
-        sysIdRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(
-                null,         // Use default ramp rate (1 V/s)
-                Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
-                null         // Use default timeout (10 s)
-            ),
-            new SysIdRoutine.Mechanism(
-                this::setVoltage,
-                log -> {
-                    log.motor("elevator")
-                        .voltage(getVolts())
-                        .linearPosition(Meters.of(getMeasurement()))
-                        .linearVelocity(MetersPerSecond.of(getVelocity()));
-                },
-                this
-            )
-        );
     }
 
     /**
@@ -230,15 +204,6 @@ public class Elevator extends SubsystemBase {
     }
 
     /**
-     * Get the system identification routine for tuning.
-     * 
-     * @return The SysId routine configured for this elevator.
-     */
-    public SysIdRoutine getRoutine() {
-        return sysIdRoutine;
-    }
-
-    /**
      * Display telemetry data on SmartDashboard.
      * Outputs current position, goal, velocity, and error information
      * for debugging and monitoring.
@@ -274,8 +239,8 @@ public class Elevator extends SubsystemBase {
             
             // Apply the calculated voltage to the motors
             setVoltage(Volts.of(voltage));
-        } catch (Exception e) {
-            DataLogManager.log("Periodic error: " + RobotUtils.getError(e));
+        } catch (RuntimeException e) {
+            DataLogManager.log("Periodic error: " + RobotUtils.processError(e));
         }
     }
         

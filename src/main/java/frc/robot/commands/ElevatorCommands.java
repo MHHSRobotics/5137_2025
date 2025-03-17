@@ -5,14 +5,13 @@ import java.util.function.DoubleSupplier;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.Elevator;
 
 /**
  * A class that provides a set of commands for controlling the elevator subsystem.
  * These commands are used to set specific goals for the elevator or dynamically adjust the goal based on input.
  */
-public class ElevatorCommands implements SysIdCommands{
+public class ElevatorCommands{
     private final Elevator elevator;
 
     /**
@@ -47,26 +46,6 @@ public class ElevatorCommands implements SysIdCommands{
             (Boolean onEnd) -> {},
             () -> {return false;},
             elevator);
-    }
-
-    /**
-     * Creates a command to run a quasistatic system identification routine on the elevator.
-     *
-     * @param dir The direction of the quasistatic test (forward or reverse).
-     * @return A command that runs the quasistatic system identification routine when executed.
-     */
-    public Command sysIdQuasistatic(SysIdRoutine.Direction dir) {
-        return elevator.getRoutine().quasistatic(dir);
-    }
-
-    /**
-     * Creates a command to run a dynamic system identification routine on the elevator.
-     *
-     * @param dir The direction of the dynamic test (forward or reverse).
-     * @return A command that runs the dynamic system identification routine when executed.
-     */
-    public Command sysIdDynamic(SysIdRoutine.Direction dir) {
-        return elevator.getRoutine().dynamic(dir);
     }
 
     public Command upShift() {

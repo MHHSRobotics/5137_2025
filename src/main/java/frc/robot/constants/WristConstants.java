@@ -28,7 +28,7 @@ public class WristConstants {
     
     // LQR constants
     // 1/posWeight^2 = how much to value position error
-    public static final double posWeight = 0.1;
+    public static final double posWeight = 0.02;
     // 1/velWeight^2 = how much to value velocity error
     public static final double velWeight = 0.1;
     // 1/volWeight^2 = how much to value voltage error

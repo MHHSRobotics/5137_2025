@@ -123,8 +123,8 @@ public class AprilTagCamera extends SubsystemBase {
                     }
                 }
             }
-        }catch(Exception e){
-            DataLogManager.log("Periodic error from camera "+name+": "+RobotUtils.getError(e));
+        }catch(RuntimeException e){
+            DataLogManager.log("Periodic error from camera "+name+": "+RobotUtils.processError(e));
         }
         
     }
