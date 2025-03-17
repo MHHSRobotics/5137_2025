@@ -1,4 +1,4 @@
-package frc.robot.constants;
+package frc.robot.positions;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -7,7 +7,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.other.RobotUtils;
 
-public final class FieldGeometry {
+public final class FieldPositions {
     public static final double fieldLength = 17.55;
     public static final double fieldWidth = 8.05;
     public static final int reefSides = 6;

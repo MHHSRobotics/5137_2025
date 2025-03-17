@@ -3,18 +3,12 @@ package frc.robot.subsystems;
 import frc.robot.Robot;
 import frc.robot.constants.SwerveConstants;
 import frc.robot.motorSystem.EnhancedTalonFX;
-import frc.robot.other.DetectedObject;
 import frc.robot.other.RobotUtils;
 import frc.robot.other.SwerveFactory;
 
-import static edu.wpi.first.units.Units.*;
-
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
-import org.json.simple.parser.ParseException;
 import org.photonvision.EstimatedRobotPose;
 
 import com.ctre.phoenix6.Utils;
@@ -22,25 +16,18 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.path.GoalEndState;
-import com.pathplanner.lib.path.IdealStartingState;
-import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
-import com.pathplanner.lib.path.Waypoint;
 import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
-import com.pathplanner.lib.util.FileVersionException;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
@@ -53,7 +40,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 /**
  * The Swerve subsystem controls the swerve drivetrain of the robot.
@@ -76,11 +62,15 @@ public class Swerve extends SubsystemBase {
     private SwerveRequest.SwerveDriveBrake lock; // Request to lock the swerve modules in place
 
     // Target pose
-    private Pose2d targetPose=new Pose2d();
+    private Pose2d targetPose=null;
 
     private StructArrayPublisher<Pose2d> estPosePublisher = NetworkTableInstance.getDefault().getStructArrayTopic("SmartDashboard/estimatedPoses",Pose2d.struct).publish();
 
     private Command currentAuto;
+
+    private PIDController xController;
+    private PIDController yController;
+    private PIDController rotController;
     /**
      * Constructor for the Swerve subsystem.
      *
@@ -145,6 +135,10 @@ public class Swerve extends SubsystemBase {
         // Warmup pathfinding
         Pathfinding.setPathfinder(new LocalADStar());
         PathfindingCommand.warmupCommand().schedule();
+
+        xController=new PIDController(SwerveConstants.translationKP, 0, SwerveConstants.translationKD);
+        yController=new PIDController(SwerveConstants.translationKP, 0, SwerveConstants.translationKD);
+        rotController=new PIDController(SwerveConstants.rotationKP, 0, SwerveConstants.rotationKD);
     }
 
     /**
@@ -247,19 +241,12 @@ public class Swerve extends SubsystemBase {
         this.setControl(lock);
     }
 
-    public List<DetectedObject> getGroundCoral(){
-        if(vision!=null){
-            return vision.getGroundCoral(SwerveConstants.coralExpirationTime);
-        }else{
-            return new ArrayList<DetectedObject>();
-        }
-    }
-
     public Pose2d getTargetPose(){
         return targetPose;
     }
 
     public void setTargetPose(Pose2d target){
+        targetPose=target;
         /*if(target!=targetPose){
             targetPose=target;
             if(targetPose!=null){
@@ -319,14 +306,20 @@ public class Swerve extends SubsystemBase {
                 for (EstimatedRobotPose newPose : newPoses) {
                     swerve.addVisionMeasurement(newPose.estimatedPose.toPose2d(), Utils.fpgaToCurrentTime(newPose.timestampSeconds));
                 }
-                vision.processNewObjects(this.getPose());
                 field.setRobotPose(this.getPose());
                 if(Robot.isSimulation()){
                     vision.updateSim(this.getPose());
                 }
             }
-        }catch(Exception e){
-            DataLogManager.log("Periodic error: "+RobotUtils.getError(e));
+            if(targetPose!=null){
+                double xDrive=xController.calculate(getPose().getX(),getTargetPose().getX());
+                double yDrive=yController.calculate(getPose().getY(),getTargetPose().getY());
+                double rotDrive=rotController.calculate(getPose().getRotation().getRadians(),getTargetPose().getRotation().getRadians());
+                setPercentDrive(xDrive, yDrive, rotDrive, true);
+            }
+            
+        }catch(RuntimeException e){
+            DataLogManager.log("Periodic error: "+RobotUtils.processError(e));
         }
     }
         
@@ -339,81 +332,6 @@ public class Swerve extends SubsystemBase {
             swerve.getModule(i).getDriveMotor().log("driveState/module"+i+"/driveMotor");
             swerve.getModule(i).getSteerMotor().log("driveState/module"+i+"/steerMotor");
         }
-    }
-
-    // SysId Routines for system characterization
-
-    /**
-     * SysId routine for characterizing translation.
-     * This is used to find PID gains for the drive motors.
-     */
-    public final SysIdRoutine sysIdRoutineTranslation = new SysIdRoutine(
-        new SysIdRoutine.Config(
-            null,        // Use default ramp rate (1 V/s)
-            Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
-            null        // Use default timeout (10 s)
-        ),
-        new SysIdRoutine.Mechanism(
-            output -> setControl(new SwerveRequest.SysIdSwerveTranslation().withVolts(output)),
-            null,
-            this
-        )
-    );
-
-    /**
-     * SysId routine for characterizing steer.
-     * This is used to find PID gains for the steer motors.
-     */
-    public final SysIdRoutine sysIdRoutineSteer = new SysIdRoutine(
-        new SysIdRoutine.Config(
-            null,        // Use default ramp rate (1 V/s)
-            Volts.of(7), // Use dynamic voltage of 7 V
-            null        // Use default timeout (10 s)
-        ),
-        new SysIdRoutine.Mechanism(
-            volts -> setControl(new SwerveRequest.SysIdSwerveSteerGains().withVolts(volts)),
-            null,
-            this
-        )
-    );
-
-    /**
-     * SysId routine for characterizing rotation.
-     * This is used to find PID gains for the FieldCentricFacingAngle HeadingController.
-     */
-    public final SysIdRoutine sysIdRoutineRotation = new SysIdRoutine(
-        new SysIdRoutine.Config(
-            Volts.of(Math.PI / 6).per(Second), // Ramp rate in radians per second²
-            Volts.of(Math.PI), // Dynamic voltage in radians per second
-            null // Use default timeout (10 s)
-        ),
-        new SysIdRoutine.Mechanism(
-            output -> {
-                setControl(new SwerveRequest.SysIdSwerveRotation().withRotationalRate(output.in(Volts)));
-            },
-            null,
-            this
-        )
-    );
-
-    private SysIdRoutine routine = sysIdRoutineTranslation; // Current SysId routine to test
-
-    /**
-     * Sets the current SysId routine.
-     *
-     * @param routine The SysId routine to set.
-     */
-    public void setRoutine(SysIdRoutine routine) {
-        this.routine = routine;
-    }
-
-    /**
-     * Gets the current SysId routine.
-     *
-     * @return The current SysId routine.
-     */
-    public SysIdRoutine getRoutine() {
-        return routine;
     }
 
     // Simulation

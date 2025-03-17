@@ -7,9 +7,11 @@ import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 
 import com.pathplanner.lib.path.PathConstraints;
 
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 
 public class SwerveConstants {
+
     public static final double translationalDeadband = 0.1;
     public static final double rotationalDeadband = 0.1;
     public static final double odometryFrequency = 20; // ms
@@ -17,10 +19,10 @@ public class SwerveConstants {
 
     public static final double translationKP = 1.0;
     public static final double translationKI = 0.0;
-    public static final double translationKD = 0.4;
-    public static final double rotationKP = 2.0;
+    public static final double translationKD = 0.1;
+    public static final double rotationKP = 1.0;
     public static final double rotationKI = 0.0;
-    public static final double rotationKD = 0.4;
+    public static final double rotationKD = 0.1;
 
     public static final PathConstraints constraints = new PathConstraints(
         MetersPerSecond.of(1),
@@ -37,4 +39,7 @@ public class SwerveConstants {
 
     public static final double driveBackPower = 0.8;
     public static final double driveBackTime = 0.5; // seconds
+
+    // Offset from the center of the robot to the arm pivot
+    public static final Translation3d armTransOffset = new Translation3d(0.11, -0.18, 0.26);
 }
