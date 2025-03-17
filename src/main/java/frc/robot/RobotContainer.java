@@ -71,6 +71,7 @@ public class RobotContainer {
 	public RobotContainer() {
 		// Start data logging
 		DataLogManager.start();
+		
 		DriverStation.startDataLog(DataLogManager.getLog());
 
 		try {

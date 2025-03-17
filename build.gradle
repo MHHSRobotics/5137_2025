@@ -10,12 +10,6 @@ java {
 
 def ROBOT_MAIN_CLASS = "frc.robot.Main"
 
-/*frcJavaProperties.getAt('robotJvmArgs').addAll([
-    '-XX:+UseG1GC',
-    '-XX:MaxGCPauseMillis=50',
-    '-XX:G1HeapRegionSize=32m'
-])*/
-
 // Define my targets (RoboRIO) and artifacts (deployable files)
 // This is added by GradleRIO's backing project DeployUtils.
 deploy {
@@ -33,6 +27,9 @@ deploy {
                 // getTargetTypeClass is a shortcut to get the class type using a string
 
                 frcJava(getArtifactTypeClass('FRCJavaArtifact')) {
+                    //jvmArgs.add('-XX:+UseG1GC')
+                    jvmArgs.add('-XX:MaxGCPauseMillis=20')
+                    jvmArgs.add('-XX:G1HeapRegionSize=32m')
                 // Enable VisualVM connection
                 jvmArgs.add("-Dcom.sun.management.jmxremote=true")
                 jvmArgs.add("-Dcom.sun.management.jmxremote.port=1198")
