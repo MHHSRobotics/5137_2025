@@ -43,11 +43,10 @@ public class SwerveCommands {
             () -> {},
             () -> {
                 if(dx!=null||dy!=null||dtheta!=null){
-                    swerve.setTargetPose(null);
                     swerve.setPercentDrive(dx.getAsDouble(), dy.getAsDouble(), dtheta.getAsDouble(), fieldOriented.getAsBoolean());
                 }
             },
-            (Boolean onEnd) -> {},
+            (interrupted) -> {},
             () -> false,
             swerve
         );

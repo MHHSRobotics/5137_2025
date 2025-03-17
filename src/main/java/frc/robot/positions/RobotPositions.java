@@ -1,5 +1,12 @@
 package frc.robot.positions;
 
+import java.io.IOException;
+
+import org.json.simple.parser.ParseException;
+
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.util.FileVersionException;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -67,13 +74,20 @@ public final class RobotPositions {
         Units.degreesToRadians(-95),
         0.65,
         Units.degreesToRadians(-45),
-        processor
+        (RobotPosition)null
     );
 
     public static final RobotState bargeState = new RobotState(
         Units.degreesToRadians(0),
         1.11,
         Units.degreesToRadians(-45),
+        (RobotPosition)null
+    );
+
+    public static final RobotState preScoringState = new RobotState(
+        Units.degreesToRadians(0),
+        null,
+        Units.degreesToRadians(0),
         (RobotPosition)null
     );
     
@@ -149,7 +163,7 @@ public final class RobotPositions {
                 -0.43,
                 0.17,
                 Units.degreesToRadians(-113.6),
-                stations[i]
+                (RobotPosition) null
             );
         }
         return states;
@@ -169,25 +183,33 @@ public final class RobotPositions {
     }
     
     private static RobotState[][] generateScoringStates() {
-        RobotState[][] states = new RobotState[4][FieldPositions.reefSides*2];
+        RobotState[][] states = new RobotState[4][12];
         double[] armAngles = {
             0.66,   // L1
             0.34,   // L2
             0.34,   // L3
-            0.4     // L4
+            0.36    // L4
         };
         double[] elevatorHeights = {
-            0.01,  // L1
+            0.01,   // L1
             0.125,  // L2
-            0.51,  // L3
-            1.2   // L4
+            0.51,   // L3
+            1.2     // L4
         };
         double[] wristAngles = {
             0.15,   // L1
             0.18,   // L2
             0.18,   // L3
-            0.22    // L4
+            0.32    // L4
         };
+        PathPlannerPath[] paths = new PathPlannerPath[12];
+        for (int i = 0; i < 12; i++) {
+            try {
+                paths[i] = PathPlannerPath.fromPathFile("Reef " + (char) ('A' + i));
+            } catch (FileVersionException | IOException | ParseException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
         for (int level = 0; level < states.length; level++) {
             for (int pos = 0; pos < states[level].length; pos++) {
@@ -195,7 +217,7 @@ public final class RobotPositions {
                     armAngles[level],
                     elevatorHeights[level],
                     wristAngles[level],
-                    branchReef[pos]
+                    paths[pos]
                 );
             }
         }

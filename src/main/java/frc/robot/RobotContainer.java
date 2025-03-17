@@ -60,6 +60,7 @@ public class RobotContainer {
 	private Gamepieces gamepieces;
 
 	private SendableChooser<String> autoChoice;
+	private Command auto;
 
 	private RobotPublisher robotPublisher;
 	private RobotPublisherCommands robotPublisherCommands;
@@ -98,9 +99,13 @@ public class RobotContainer {
 			initMultiCommands();
 
 			autoChoice = new SendableChooser<String>();
-			autoChoice.setDefaultOption("Single Center", "Single Center");
 			AutoBuilder.getAllAutoNames().forEach((name) -> autoChoice.addOption(name, name));
 			SmartDashboard.putData("Auto Choice", autoChoice);
+
+			autoChoice.onChange((choice) -> {
+				swerve.resetGyro();
+				auto = AutoBuilder.buildAuto(choice);
+			});
 		} catch (RuntimeException e) {
 			DataLogManager.log("Error while initializing: " + RobotUtils.processError(e));
 		}
@@ -141,6 +146,15 @@ public class RobotContainer {
 
 		// Configure elevator bindings
 		elevator.setDefaultCommand(elevatorCommands.changeGoal(() -> -MathUtil.applyDeadband(operator.getLeftY(),0.1) / 50));
+
+		driver.povLeft().whileTrue(
+			new SequentialCommandGroup(
+				new WaitCommand(3),
+				elevatorCommands.downShift()));
+		driver.povRight().whileTrue(
+			new SequentialCommandGroup(
+				new WaitCommand(3),
+				elevatorCommands.upShift()));
 	}
 
 	private void initArm() {
@@ -188,8 +202,7 @@ public class RobotContainer {
 		multiCommands = new MultiCommands(arm,elevator,wrist,swerve, swerveCommands, intakeCommands, hangCommands,robotPublisherCommands);
 
 		driver.triangle().and(driver.R2().negate()).onTrue(multiCommands.getCoralFromSource());
-		driver.circle().and(driver.R2().negate())
-		.onTrue(multiCommands.getAlgae());
+		driver.circle().and(driver.R2().negate()).onTrue(multiCommands.getAlgae());
 
 		driver.triangle().and(driver.R2()).onTrue(multiCommands.placeCoral(3));
 		driver.square().and(driver.R2()).onTrue(multiCommands.placeCoral(2));
@@ -227,7 +240,10 @@ public class RobotContainer {
 	 * @return The autonomous command
 	 */
 	public Command getAutonomousCommand() {
-		swerve.resetGyro();
-		return AutoBuilder.buildAuto(autoChoice.getSelected());
+		if (auto != null) {
+			return auto;
+		} else {
+			return AutoBuilder.buildAuto("Leave");
+		}
 	}
 }

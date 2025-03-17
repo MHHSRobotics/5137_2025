@@ -1,13 +1,7 @@
 package frc.robot.subsystems;
 
-import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.ArmFeedforward;
-import edu.wpi.first.math.controller.LinearQuadraticRegulator;
 import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N2;
-import edu.wpi.first.math.system.LinearSystem;
-import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Voltage;
@@ -280,7 +274,7 @@ public class Wrist extends SubsystemBase {
      *         false otherwise.
      */
     public boolean atSetpoint() {
-        return getError()<ArmConstants.armTolerance;
+        return getError()<WristConstants.wristTolerance*5; // Wrist does not reach setpoint -- greater tolerance than PID
     }
 
     /**
@@ -312,6 +306,7 @@ public class Wrist extends SubsystemBase {
             motorSystem.periodic();
 
             double measurement = getMeasurement();
+            @SuppressWarnings("unused")
             double velocity = getVelocity();
 
             // Update telemetry

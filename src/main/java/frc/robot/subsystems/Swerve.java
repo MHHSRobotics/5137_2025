@@ -8,6 +8,7 @@ import frc.robot.other.SwerveFactory;
 
 import java.io.File;
 import java.util.List;
+import java.util.Optional;
 
 import org.photonvision.EstimatedRobotPose;
 
@@ -26,7 +27,6 @@ import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -54,6 +54,7 @@ public class Swerve extends SubsystemBase {
     private double maxAngularSpeed; // Maximum rotational speed of the robot
 
     private Field2d field; // Field visualization for SmartDashboard
+    private Field2d targetField;
 
     // Swerve control requests
     private SwerveRequest.FieldCentric fieldOrientedDrive; // Field-oriented driving request
@@ -62,15 +63,15 @@ public class Swerve extends SubsystemBase {
     private SwerveRequest.SwerveDriveBrake lock; // Request to lock the swerve modules in place
 
     // Target pose
-    private Pose2d targetPose=null;
+    private PathPlannerPath targetPath=null;
 
     private StructArrayPublisher<Pose2d> estPosePublisher = NetworkTableInstance.getDefault().getStructArrayTopic("SmartDashboard/estimatedPoses",Pose2d.struct).publish();
 
     private Command currentAuto;
 
-    private PIDController xController;
-    private PIDController yController;
-    private PIDController rotController;
+    //private PIDController xController;
+    //private PIDController yController;
+    //private PIDController rotController;
     /**
      * Constructor for the Swerve subsystem.
      *
@@ -130,15 +131,17 @@ public class Swerve extends SubsystemBase {
         swerve.registerTelemetry(this::telemetry);
 
         field = new Field2d();
+        targetField = new Field2d();
         SmartDashboard.putData("field", field);
+        SmartDashboard.putData("targetField", targetField);
 
         // Warmup pathfinding
         Pathfinding.setPathfinder(new LocalADStar());
         PathfindingCommand.warmupCommand().schedule();
 
-        xController=new PIDController(SwerveConstants.translationKP, 0, SwerveConstants.translationKD);
-        yController=new PIDController(SwerveConstants.translationKP, 0, SwerveConstants.translationKD);
-        rotController=new PIDController(SwerveConstants.rotationKP, 0, SwerveConstants.rotationKD);
+        //xController=new PIDController(SwerveConstants.translationKP, 0, SwerveConstants.translationKD);
+        //yController=new PIDController(SwerveConstants.translationKP, 0, SwerveConstants.translationKD);
+        //rotController=new PIDController(SwerveConstants.rotationKP, 0, SwerveConstants.rotationKD);
     }
 
     /**
@@ -196,6 +199,7 @@ public class Swerve extends SubsystemBase {
     private void startAuto(Command auto){
         cancelAuto();
         auto=new ParallelRaceGroup(auto,new WaitCommand(SwerveConstants.moveTimeout));
+        auto.addRequirements(this);
         auto.schedule();
         currentAuto=auto;
     }
@@ -241,31 +245,28 @@ public class Swerve extends SubsystemBase {
         this.setControl(lock);
     }
 
-    public Pose2d getTargetPose(){
-        return targetPose;
+    public PathPlannerPath getTargetPath(){
+        return targetPath;
     }
 
-    public void setTargetPose(Pose2d target){
-        targetPose=target;
-        /*if(target!=targetPose){
-            targetPose=target;
-            if(targetPose!=null){
-                //startAuto(AutoBuilder.pathfindToPose(targetPose, SwerveConstants.constraints));
-                PathPlannerPath path = new PathPlannerPath(
-                    PathPlannerPath.waypointsFromPoses(RobotUtils.invertToAlliance(target),RobotUtils.invertToAlliance(target)), 
-                    SwerveConstants.constraints,
-                    null, 
-                    new GoalEndState(0.0, RobotUtils.invertToAlliance(target).getRotation()), 
-                    false
-                );
-                startAuto(AutoBuilder.pathfindThenFollowPath(path, SwerveConstants.constraints));
+    public Pose2d getTargetPose() {
+        if (targetPath != null) {
+            Optional<Pose2d> targetPose = targetPath.getStartingHolonomicPose();
+            if (targetPose.isPresent()) {
+                return RobotUtils.invertToAlliance(targetPose.get());
             }
-        }*/
+        }
+        return getPose();
     }
 
-    public void followPath(String name) {
+    /*public void setTargetPose(Pose2d target){
+        targetPose = target;
+        startAuto(AutoBuilder.pathfindToPose(target, SwerveConstants.constraints, 0.0));
+    }*/
+
+    public void followPath(PathPlannerPath path) {
         try {
-            PathPlannerPath path = PathPlannerPath.fromPathFile(name);
+            targetPath = path;
             startAuto(AutoBuilder.pathfindThenFollowPath(path, SwerveConstants.constraints));
         } catch (Exception e) {
             e.printStackTrace();
@@ -273,17 +274,20 @@ public class Swerve extends SubsystemBase {
     }
 
     public boolean atTarget(){
-        if(targetPose==null){
+        if(targetPath==null){
             return true;
         }
         Pose2d currentPose=getPose();
-        double dist=currentPose.getTranslation().getDistance(targetPose.getTranslation());
-        if(dist>SwerveConstants.transTol){
-            return false;
-        }
-        double rotDist=currentPose.getRotation().minus(targetPose.getRotation()).getRadians();
-        if(rotDist>SwerveConstants.rotTol){
-            return false;
+        Pose2d targetPose = getTargetPose();
+        if (targetPose != null) {
+            double dist=currentPose.getTranslation().getDistance(targetPose.getTranslation());
+            if(dist>SwerveConstants.transTol){
+                return false;
+            }
+            double rotDist=currentPose.getRotation().minus(targetPose.getRotation()).getRadians();
+            if(rotDist>SwerveConstants.rotTol){
+                return false;
+            }
         }
         return true;
     }
@@ -307,16 +311,17 @@ public class Swerve extends SubsystemBase {
                     swerve.addVisionMeasurement(newPose.estimatedPose.toPose2d(), Utils.fpgaToCurrentTime(newPose.timestampSeconds));
                 }
                 field.setRobotPose(this.getPose());
+                targetField.setRobotPose(this.getTargetPose());
                 if(Robot.isSimulation()){
                     vision.updateSim(this.getPose());
                 }
             }
-            if(targetPose!=null){
+            /*if(targetPath!=null){
                 double xDrive=xController.calculate(getPose().getX(),getTargetPose().getX());
                 double yDrive=yController.calculate(getPose().getY(),getTargetPose().getY());
                 double rotDrive=rotController.calculate(getPose().getRotation().getRadians(),getTargetPose().getRotation().getRadians());
                 setPercentDrive(xDrive, yDrive, rotDrive, true);
-            }
+            }*/
             
         }catch(RuntimeException e){
             DataLogManager.log("Periodic error: "+RobotUtils.processError(e));
