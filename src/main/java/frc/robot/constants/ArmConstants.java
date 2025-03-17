@@ -12,8 +12,8 @@ public class ArmConstants {
 
     // Encoder ID
     public static final int encoderId = 1;
-    public static final double encoderRatio = -28/9.;
-    public static final double encoderOffset = 0.945;
+    public static final double encoderRatio = 28/9.;
+    public static final double encoderOffset = -1.052;
 
     public static final double feedOffset = Units.degreesToRadians(90);
 

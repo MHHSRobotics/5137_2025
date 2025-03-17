@@ -5,7 +5,6 @@ import java.util.function.DoubleSupplier;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.Arm;
 
 /**
@@ -13,7 +12,7 @@ import frc.robot.subsystems.Arm;
  * These commands are used to set or adjust the arm's goal position, move to predefined positions,
  * and perform system identification (SysId) routines.
  */
-public class ArmCommands implements SysIdCommands{
+public class ArmCommands{
 
     private Arm arm; // The arm subsystem that these commands will control.
 
@@ -49,25 +48,5 @@ public class ArmCommands implements SysIdCommands{
             (Boolean onEnd) -> {},
             () -> {return false;},
             arm);
-    }
-
-    /**
-     * Returns a command that runs a quasi-static system identification routine on the arm.
-     *
-     * @param dir The direction of the SysId routine (forward or reverse).
-     * @return A command that runs the quasi-static SysId routine.
-     */
-    public Command sysIdQuasistatic(SysIdRoutine.Direction dir) {
-        return arm.getRoutine().quasistatic(dir);
-    }
-
-    /**
-     * Returns a command that runs a dynamic system identification routine on the arm.
-     *
-     * @param dir The direction of the SysId routine (forward or reverse).
-     * @return A command that runs the dynamic SysId routine.
-     */
-    public Command sysIdDynamic(SysIdRoutine.Direction dir) {
-        return arm.getRoutine().dynamic(dir);
     }
 }

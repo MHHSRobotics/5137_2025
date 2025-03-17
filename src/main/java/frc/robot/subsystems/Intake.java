@@ -44,8 +44,8 @@ public class Intake extends SubsystemBase {
     public void periodic() {
         try{
             telemetry();
-        }catch(Exception e){
-            DataLogManager.log("Periodic error: "+RobotUtils.getError(e));
+        }catch(RuntimeException e){
+            DataLogManager.log("Periodic error: "+RobotUtils.processError(e));
         }
     }
         

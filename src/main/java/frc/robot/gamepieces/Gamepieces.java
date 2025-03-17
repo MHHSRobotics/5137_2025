@@ -8,8 +8,8 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.constants.FieldGeometry;
 import frc.robot.constants.GamepieceConstants;
+import frc.robot.positions.FieldPositions;
 
 public class Gamepieces extends SubsystemBase{
     private StructArrayPublisher<Pose3d> algaePublisher=NetworkTableInstance.getDefault().getStructArrayTopic("SmartDashboard/sim/algae",Pose3d.struct).publish();
@@ -19,7 +19,7 @@ public class Gamepieces extends SubsystemBase{
     public Gamepieces(){
         // Initialize algae
         algae = new ArrayList<>();
-        for (FieldGeometry.FieldPosition pos : FieldGeometry.algaePositions) {
+        for (FieldPositions.FieldPosition pos : FieldPositions.algaePositions) {
             algae.add(new Gamepiece(GamepieceConstants.algae, pos.bluePos()));
             algae.add(new Gamepiece(GamepieceConstants.algae, pos.redPos()));
         }
@@ -27,7 +27,7 @@ public class Gamepieces extends SubsystemBase{
         // Initialize source corals
         coral = new ArrayList<>();
         // Add blue alliance corals
-        for (FieldGeometry.FieldPosition pos : FieldGeometry.sourceCoralPositions) {
+        for (FieldPositions.FieldPosition pos : FieldPositions.sourceCoralPositions) {
             coral.add(new Gamepiece(GamepieceConstants.coral, pos.bluePos()));
             coral.add(new Gamepiece(GamepieceConstants.coral, pos.redPos()));
         }

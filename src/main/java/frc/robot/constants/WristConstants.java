@@ -13,7 +13,7 @@ public class WristConstants {
     // Encoder ID
     public static final int encoderId = 0;
     public static final double encoderRatio = -1.0;  // Negate multiplier since encoder was inverted before
-    public static final double encoderOffset = 4.17;
+    public static final double encoderOffset = 7.05;
 
     // Limits
     public static final double minAngle = Units.degreesToRadians(-115);
@@ -28,15 +28,15 @@ public class WristConstants {
     
     // LQR constants
     // 1/posWeight^2 = how much to value position error
-    public static final double posWeight = 0.1;
+    public static final double posWeight = 0.02;
     // 1/velWeight^2 = how much to value velocity error
     public static final double velWeight = 0.1;
     // 1/volWeight^2 = how much to value voltage error
     public static final double volWeight = 0.1;
 
     // Feedforward constants
-    public static final double kS = Robot.isSimulation()?0.0:0.16;
-    public static final double kG = Robot.isSimulation()?0.0:0.56;
+    public static final double kS = Robot.isSimulation()?0.0:0.1;
+    public static final double kG = Robot.isSimulation()?0.0:0.47;
     public static final double kV = 0.25757;
     public static final double kA = 0.050664;
 

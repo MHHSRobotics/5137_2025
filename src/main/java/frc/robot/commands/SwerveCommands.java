@@ -9,7 +9,6 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.SwerveConstants;
 import frc.robot.subsystems.Swerve;
 
@@ -42,9 +41,14 @@ public class SwerveCommands {
     public Command drive(DoubleSupplier dx, DoubleSupplier dy, DoubleSupplier dtheta, BooleanSupplier fieldOriented) {
         return new FunctionalCommand(
             () -> {},
-            () -> swerve.setPercentDrive(dx.getAsDouble(), dy.getAsDouble(), dtheta.getAsDouble(), fieldOriented.getAsBoolean()),
+            () -> {
+                if(dx!=null||dy!=null||dtheta!=null){
+                    swerve.setTargetPose(null);
+                    swerve.setPercentDrive(dx.getAsDouble(), dy.getAsDouble(), dtheta.getAsDouble(), fieldOriented.getAsBoolean());
+                }
+            },
             (Boolean onEnd) -> {},
-            () -> {return false;},
+            () -> false,
             swerve
         );
     }
@@ -76,25 +80,5 @@ public class SwerveCommands {
      */
     public Command resetGyro() {
         return new InstantCommand(() -> swerve.resetGyro(), swerve);
-    }
-
-    /**
-     * Creates a command to run a quasistatic system identification routine.
-     *
-     * @param dir The direction of the quasistatic test.
-     * @return A command that runs the quasistatic system identification routine.
-     */
-    public Command sysIdQuasistatic(SysIdRoutine.Direction dir) {
-        return swerve.getRoutine().quasistatic(dir);
-    }
-
-    /**
-     * Creates a command to run a dynamic system identification routine.
-     *
-     * @param dir The direction of the dynamic test.
-     * @return A command that runs the dynamic system identification routine.
-     */
-    public Command sysIdDynamic(SysIdRoutine.Direction dir) {
-        return swerve.getRoutine().dynamic(dir);
     }
 }

@@ -15,20 +15,16 @@ import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.WristConstants;
 import frc.robot.motorSystem.EnhancedTalonFX;
 import frc.robot.motorSystem.EnhancedEncoder;
 import frc.robot.motorSystem.MotorSystem;
 import frc.robot.motorSystem.ArmMechanismSim;
 import frc.robot.other.RobotUtils;
+import frc.robot.positions.RobotPositions;
+import frc.robot.constants.ArmConstants;
 import frc.robot.constants.GeneralConstants;
-import frc.robot.constants.SwerveSystemConstants;
 
-import static edu.wpi.first.units.Units.Radians;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
-import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
 import java.util.List;
@@ -77,14 +73,11 @@ public class Wrist extends SubsystemBase {
     /** Adapter to make SingleJointedArmSim compatible with MotorSystem */
     private final ArmMechanismSim mechanismSim;
 
-    /** System identification routine for parameter tuning */
-    private final SysIdRoutine sysIdRoutine;
-
     /** Reference to the main arm this wrist is attached to */
     private final Arm arm;
 
     // Linear quadratic regulator
-    private LinearQuadraticRegulator<N2,N1,N2> lqr;
+    //private LinearQuadraticRegulator<N2,N1,N2> lqr;
 
     private final TrapezoidProfile goalProfile;
     private TrapezoidProfile.State goalState;
@@ -114,11 +107,11 @@ public class Wrist extends SubsystemBase {
         );
         
         // Create the plant, simulates the wrist movement
-        LinearSystem<N2,N1,N2> plant = LinearSystemId.createSingleJointedArmSystem(
+        /*LinearSystem<N2,N1,N2> plant = LinearSystemId.createSingleJointedArmSystem(
             WristConstants.motorSim, 
-            WristConstants.momentOfInertia, 
+            WristConstants.momentOfInertia*1/3, 
             WristConstants.gearRatio
-        );
+        );*/
 
         // Create motor system
         motorSystem = new MotorSystem(List.of(wristMotor), wristEncoder);
@@ -141,7 +134,7 @@ public class Wrist extends SubsystemBase {
         );
         
         // Set initial goal position
-        desiredGoal = SwerveSystemConstants.getDefaultState().wristPosition;
+        desiredGoal = RobotPositions.defaultState.wristPosition;
 
         // Initialize simulation components
         wristSim = new SingleJointedArmSim(
@@ -152,37 +145,17 @@ public class Wrist extends SubsystemBase {
             WristConstants.minAngle,
             WristConstants.maxAngle,
             false,
-            SwerveSystemConstants.getDefaultState().wristPosition
+            RobotPositions.defaultState.wristPosition
         );
         mechanismSim = new ArmMechanismSim(wristSim);
 
-        // Initialize system identification routine
-        sysIdRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(
-                Volts.of(0.2).div(Seconds.of(1.0)),
-                Volts.of(1),
-                null
-            ),
-            new SysIdRoutine.Mechanism(
-                this::setVoltage,
-                log -> {
-                    log.motor("wrist")
-                        .voltage(getVolts())
-                        .angularPosition(Radians.of(getMeasurement()+WristConstants.feedOffset))
-                        .angularVelocity(RadiansPerSecond.of(getVelocity()))
-                        .angularAcceleration(RadiansPerSecondPerSecond.of(getAcceleration()));
-                },
-                this
-            )
-        );
-
         // Initialize LQR controller
-        lqr = new LinearQuadraticRegulator<N2,N1,N2>(
+        /*lqr = new LinearQuadraticRegulator<N2,N1,N2>(
             plant,
             VecBuilder.fill(WristConstants.posWeight, WristConstants.velWeight),  // State cost
             VecBuilder.fill(WristConstants.volWeight),  // Input cost
             GeneralConstants.simPeriod
-        );
+        );*/
 
         // Initialize goal profiler
         goalProfile = new TrapezoidProfile(
@@ -269,25 +242,6 @@ public class Wrist extends SubsystemBase {
     }
 
     /**
-     * Check if the wrist is at its target position.
-     * 
-     * @return true if the wrist is within the tolerance of its goal position,
-     *         false otherwise.
-     */
-    public boolean atSetpoint() {
-        return controller.atSetpoint();
-    }
-
-    /**
-     * Get the system identification routine for tuning.
-     * 
-     * @return The SysId routine configured for this wrist.
-     */
-    public SysIdRoutine getRoutine() {
-        return sysIdRoutine;
-    }
-
-    /**
      * Determines if the arm's path will intersect the danger zone.
      * 
      * @param currentArmAngle Current angle of the arm in radians
@@ -318,6 +272,17 @@ public class Wrist extends SubsystemBase {
     public double getProfileError(){
         return Math.abs(getMeasurement()-goalState.position);
     }
+
+    /**
+     * Check if the arm is at its target position.
+     * 
+     * @return true if the arm is within the tolerance of its goal position,
+     *         false otherwise.
+     */
+    public boolean atSetpoint() {
+        return getError()<ArmConstants.armTolerance;
+    }
+
     /**
      * Display telemetry data on SmartDashboard.
      * Outputs current position, goal, velocity, and error information
@@ -347,7 +312,7 @@ public class Wrist extends SubsystemBase {
             motorSystem.periodic();
 
             double measurement = getMeasurement();
-            //double velocity = getVelocity();
+            double velocity = getVelocity();
 
             // Update telemetry
             telemetry();
@@ -358,17 +323,31 @@ public class Wrist extends SubsystemBase {
             // Update goal based on arm's current position and goal
             goal = getSafeGoal(armRotation, arm.getGoal());
 
-            // Calculate feedforward with combined arm and wrist angles
-            double feed = feedforward.calculate(
-                controller.getSetpoint().position + armRotation + WristConstants.feedOffset,
-                controller.getSetpoint().velocity);
+             // Generate smooth goal trajectory
+             goalState = goalProfile.calculate(
+                GeneralConstants.simPeriod,
+                goalState,
+                new TrapezoidProfile.State(goal, 0)  // Target state
+            );
             
-            double voltage = controller.calculate(measurement,goal) + feed;
+            // Use profile state as the goal for LQR
+            /*double voltage = lqr.calculate(
+                VecBuilder.fill(measurement, velocity),
+                VecBuilder.fill(goalState.position, goalState.velocity)
+            ).get(0,0);*/
+
+            double voltage = controller.calculate(measurement, goal);
+
+            // Calculate feedforward and PID control outputs
+            voltage+=feedforward.calculate(
+                goal + ArmConstants.feedOffset, // Offset so that 0 = horizontal
+                0
+            );
 
             // Apply the calculated voltage to the motor
             setVoltage(Volts.of(voltage));
-        } catch (Exception e) {
-            DataLogManager.log("Periodic error: " + RobotUtils.getError(e));
+        } catch (RuntimeException e) {
+            DataLogManager.log("Periodic error: " + RobotUtils.processError(e));
         }
     }
         
