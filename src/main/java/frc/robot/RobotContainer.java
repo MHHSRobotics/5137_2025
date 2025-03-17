@@ -60,6 +60,7 @@ public class RobotContainer {
 	private Gamepieces gamepieces;
 
 	private SendableChooser<String> autoChoice;
+	private Command auto;
 
 	private RobotPublisher robotPublisher;
 	private RobotPublisherCommands robotPublisherCommands;
@@ -97,10 +98,14 @@ public class RobotContainer {
 			// Initialize combined systems and commands
 			initMultiCommands();
 
-			/*autoChoice = new SendableChooser<String>();
-			autoChoice.setDefaultOption("Single Center", "Single Center");
-			AutoBuilder.getAllAutoNames().forEach((name) -> autoChoice.addOption(name, name));*/
+			autoChoice = new SendableChooser<String>();
+			AutoBuilder.getAllAutoNames().forEach((name) -> autoChoice.addOption(name, name));
 			SmartDashboard.putData("Auto Choice", autoChoice);
+
+			autoChoice.onChange((choice) -> {
+				swerve.resetGyro();
+				auto = AutoBuilder.buildAuto(choice);
+			});
 		} catch (RuntimeException e) {
 			DataLogManager.log("Error while initializing: " + RobotUtils.processError(e));
 		}
@@ -197,8 +202,7 @@ public class RobotContainer {
 		multiCommands = new MultiCommands(arm,elevator,wrist,swerve, swerveCommands, intakeCommands, hangCommands,robotPublisherCommands);
 
 		driver.triangle().and(driver.R2().negate()).onTrue(multiCommands.getCoralFromSource());
-		driver.circle().and(driver.R2().negate())
-		.onTrue(multiCommands.getAlgae());
+		driver.circle().and(driver.R2().negate()).onTrue(multiCommands.getAlgae());
 
 		driver.triangle().and(driver.R2()).onTrue(multiCommands.placeCoral(3));
 		driver.square().and(driver.R2()).onTrue(multiCommands.placeCoral(2));
@@ -230,19 +234,16 @@ public class RobotContainer {
 		robotPublisherCommands = new RobotPublisherCommands(robotPublisher);
 	}
 
-	public void resetGyro() {
-		if (swerve != null) {
-			swerve.resetGyro();
-		}
-	}
-
 	/**
 	 * Returns the autonomous command to be executed.
 	 *
 	 * @return The autonomous command
 	 */
 	public Command getAutonomousCommand() {
-		swerve.resetGyro();
-		return AutoBuilder.buildAuto(autoChoice.getSelected());
+		if (auto != null) {
+			return auto;
+		} else {
+			return AutoBuilder.buildAuto("Leave");
+		}
 	}
 }

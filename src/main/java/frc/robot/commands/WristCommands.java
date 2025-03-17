@@ -43,7 +43,7 @@ public class WristCommands{
         return new FunctionalCommand(
             () -> {},
             () -> wrist.setGoal(wrist.getGoal() + change.getAsDouble()),
-            (Boolean onEnd) -> {},
+            (interrupted) -> {},
             () -> {return false;},
             wrist);
     }

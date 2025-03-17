@@ -3,7 +3,9 @@ package frc.robot.commands;
 import java.util.function.Supplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
@@ -25,6 +27,7 @@ import frc.robot.subsystems.Wrist;
  * The MultiCommands class is responsible for creating complex commands that involve multiple subsystems.
  * These commands are typically composed of several simpler commands that run in parallel or sequence.
  */
+@SuppressWarnings("unused")
 public class MultiCommands {
     // Subsystems
     private final Arm arm;
@@ -34,13 +37,13 @@ public class MultiCommands {
     
     // Command groups for each subsystem
     private IntakeCommands intakeCommands;
-    @SuppressWarnings("unused")
     private SwerveCommands swerveCommands;
-    @SuppressWarnings("unused")
     private HangCommands hangCommands;
     
     // Reference to RobotPublisher for simulation
     private RobotPublisherCommands robotPublisherCommands;
+
+    private Timer timer;
 
     /**
      * Constructor for MultiCommands.
@@ -56,6 +59,7 @@ public class MultiCommands {
         this.intakeCommands = intakeCommands;
         this.hangCommands = hangCommands;
         this.robotPublisherCommands = robotPublisherCommands;
+        timer = new Timer();
     }
 
     /**
@@ -73,8 +77,8 @@ public class MultiCommands {
         if (wrist != null && state.wristPosition!=null) {
             wrist.setGoal(state.wristPosition);
         }
-        if (swerve != null && state.robotPosition != null) {
-            swerve.setTargetPose(state.robotPosition.alliancePos());
+        if (swerve != null && state.robotPath != null) {
+            swerve.followPath(state.robotPath);
         }
     }
 
@@ -119,12 +123,15 @@ public class MultiCommands {
      * @return A command that moves the robot to the specified state
      */
     public Command moveToState(Supplier<RobotState> state, double timeout) {
-        return new ParallelRaceGroup(
-            new RepeatCommand(
-                new InstantCommand(()->setTargetState(state.get()),arm,elevator,wrist,swerve)
-            ),
-        new WaitCommand(timeout),
-        new WaitUntilCommand(()->atSetpoint()));
+        return new FunctionalCommand(
+            () -> { 
+                timer.restart(); 
+                setTargetState(state.get());
+            },
+            () -> {},
+            (interrupted) -> {},
+            () -> { return atSetpoint() || timer.hasElapsed(timeout); },
+            elevator, arm, wrist);
     }
     
     /**
@@ -138,13 +145,13 @@ public class MultiCommands {
     public Command moveToStateSequenced(Supplier<RobotState> state, Supplier<RobotState> preState) {
         if (preState.get() != RobotState.NULL) {
             return new SequentialCommandGroup(
-                moveToState(() -> preState.get().withPosition(state.get().robotPosition), 5),
+                moveToState(() -> preState.get().withPath(state.get().robotPath), 5),
                 moveToState(() -> state.get().stageOne()),
                 moveToState(() -> state.get().stageTwo())
             );
         } else {
             return new SequentialCommandGroup(
-                moveToState(() -> preState.get().withPosition(state.get().robotPosition), 5),
+                moveToState(() -> preState.get().withPath(state.get().robotPath), 5),
                 moveToState(() -> state.get())
             );
         }
@@ -154,7 +161,7 @@ public class MultiCommands {
      * Command to move to the source position.
      */
     public Command moveToSource() {
-        return moveToState(()->getClosestState(RobotPositions.sourceStates));
+        return moveToState(() -> RobotPositions.sourceStates[0]);
     }
 
     /**
@@ -175,27 +182,24 @@ public class MultiCommands {
      * Command to move to the default algae intake position.
      */
     public Command moveToAlgae() {
-        return moveToStateSequenced(
-            () -> getClosestState(RobotPositions.algaeStates),
-            () -> RobotState.NULL
-        );
+        return moveToState(() -> getClosestState(RobotPositions.algaeStates));
     }
 
     /**
      * Command to move to a specific branch for scoring.
      */
     public Command moveToBranch(Supplier<Integer> level, Supplier<Integer> branch) {
-        return moveToState(() -> RobotPositions.scoringStates[level.get()][branch.get()]);
+        return moveToStateSequenced(
+            () -> RobotPositions.scoringStates[level.get()][branch.get()],
+            () -> RobotState.NULL
+        );
     }
 
     /**
      * Command to move to the processor position.
      */
     public Command moveToProcessor() {
-        return moveToStateSequenced(
-            () -> RobotPositions.processorState,
-            () -> RobotState.NULL
-        );
+        return moveToState(() -> RobotPositions.processorState);
     }
 
     /**
@@ -221,7 +225,7 @@ public class MultiCommands {
     public Command moveToLevel(int level) {
         return moveToStateSequenced(
             () -> getClosestState(RobotPositions.scoringStates[level]),
-            () -> RobotState.NULL
+            () -> RobotPositions.preScoringState
         );
     }
 
@@ -289,7 +293,7 @@ public class MultiCommands {
     public Command placeCoral(Supplier<Integer> level, Supplier<Integer> branch) {
         return new SequentialCommandGroup(
             moveToBranch(level, branch),
-            new WaitCommand(0.5),
+            intakeCommands.intake(() -> 0.05),
             new ParallelCommandGroup(
                 intakeCommands.outtake(),
                 simCoralOuttake()
@@ -303,6 +307,7 @@ public class MultiCommands {
     public Command placeCoral(int level) {
         return new SequentialCommandGroup(
             moveToLevel(level),
+            intakeCommands.intake(() -> 0.05),
             new ParallelCommandGroup(
                 intakeCommands.outtake(),
                 simCoralOuttake()

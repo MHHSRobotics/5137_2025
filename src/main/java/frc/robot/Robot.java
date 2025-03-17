@@ -52,7 +52,6 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void teleopInit() {
-		robotContainer.resetGyro();
 		if (autonomousCommand != null) {
 			autonomousCommand.cancel();
 		}

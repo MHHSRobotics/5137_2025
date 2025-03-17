@@ -27,7 +27,6 @@ import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -70,9 +69,9 @@ public class Swerve extends SubsystemBase {
 
     private Command currentAuto;
 
-    private PIDController xController;
-    private PIDController yController;
-    private PIDController rotController;
+    //private PIDController xController;
+    //private PIDController yController;
+    //private PIDController rotController;
     /**
      * Constructor for the Swerve subsystem.
      *
@@ -140,9 +139,9 @@ public class Swerve extends SubsystemBase {
         Pathfinding.setPathfinder(new LocalADStar());
         PathfindingCommand.warmupCommand().schedule();
 
-        xController=new PIDController(SwerveConstants.translationKP, 0, SwerveConstants.translationKD);
-        yController=new PIDController(SwerveConstants.translationKP, 0, SwerveConstants.translationKD);
-        rotController=new PIDController(SwerveConstants.rotationKP, 0, SwerveConstants.rotationKD);
+        //xController=new PIDController(SwerveConstants.translationKP, 0, SwerveConstants.translationKD);
+        //yController=new PIDController(SwerveConstants.translationKP, 0, SwerveConstants.translationKD);
+        //rotController=new PIDController(SwerveConstants.rotationKP, 0, SwerveConstants.rotationKD);
     }
 
     /**
@@ -200,6 +199,7 @@ public class Swerve extends SubsystemBase {
     private void startAuto(Command auto){
         cancelAuto();
         auto=new ParallelRaceGroup(auto,new WaitCommand(SwerveConstants.moveTimeout));
+        auto.addRequirements(this);
         auto.schedule();
         currentAuto=auto;
     }
@@ -259,10 +259,10 @@ public class Swerve extends SubsystemBase {
         return getPose();
     }
 
-    public void setTargetPose(Pose2d target){
-        //targetPose = target;
-        //startAuto(AutoBuilder.pathfindToPose(target, SwerveConstants.constraints, 0.0));
-    }
+    /*public void setTargetPose(Pose2d target){
+        targetPose = target;
+        startAuto(AutoBuilder.pathfindToPose(target, SwerveConstants.constraints, 0.0));
+    }*/
 
     public void followPath(PathPlannerPath path) {
         try {
@@ -316,12 +316,12 @@ public class Swerve extends SubsystemBase {
                     vision.updateSim(this.getPose());
                 }
             }
-            if(targetPath!=null){
+            /*if(targetPath!=null){
                 double xDrive=xController.calculate(getPose().getX(),getTargetPose().getX());
                 double yDrive=yController.calculate(getPose().getY(),getTargetPose().getY());
                 double rotDrive=rotController.calculate(getPose().getRotation().getRadians(),getTargetPose().getRotation().getRadians());
                 setPercentDrive(xDrive, yDrive, rotDrive, true);
-            }
+            }*/
             
         }catch(RuntimeException e){
             DataLogManager.log("Periodic error: "+RobotUtils.processError(e));

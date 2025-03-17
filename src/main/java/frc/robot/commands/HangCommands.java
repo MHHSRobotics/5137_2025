@@ -29,7 +29,7 @@ public class HangCommands {
         return new FunctionalCommand(
             () -> {},
             () -> hang.setSpeed(speed.getAsDouble()),
-            (Boolean onEnd) -> hang.stop(),
+            (interrupted) -> hang.stop(),
             () -> false,
             hang);
     }
