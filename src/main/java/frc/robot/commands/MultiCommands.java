@@ -1,5 +1,6 @@
 package frc.robot.commands;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -144,16 +145,31 @@ public class MultiCommands {
      */
     public Command moveToStateSequenced(Supplier<RobotState> state, Supplier<RobotState> preState) {
         if (preState.get() != RobotState.NULL) {
-            return new SequentialCommandGroup(
-                moveToState(() -> preState.get().withPath(state.get().robotPath), 5),
-                moveToState(() -> state.get().stageOne()),
-                moveToState(() -> state.get().stageTwo())
-            );
+            if (state.get().robotPath != null) {
+                return new SequentialCommandGroup(
+                    moveToState(() -> preState.get().withPath(state.get().robotPath), 5),
+                    moveToState(() -> state.get().stageOne()),
+                    moveToState(() -> state.get().stageTwo())
+                );
+            } else {
+                return new SequentialCommandGroup(
+                    moveToState(() -> preState.get()),
+                    moveToState(() -> state.get().stageOne()),
+                    moveToState(() -> state.get().stageTwo())
+                );
+            }
         } else {
-            return new SequentialCommandGroup(
-                moveToState(() -> preState.get().withPath(state.get().robotPath), 5),
-                moveToState(() -> state.get())
-            );
+            if (state.get().robotPath != null) {
+                return new SequentialCommandGroup(
+                    moveToState(() -> preState.get().withPath(state.get().robotPath), 5),
+                    moveToState(() -> state.get())
+                );
+            } else {
+                return new SequentialCommandGroup(
+                    moveToState(() -> state.get().stageOne()),
+                    moveToState(() -> state.get().stageTwo())
+                );
+            }
         }
     }
 
@@ -225,6 +241,16 @@ public class MultiCommands {
     public Command moveToLevel(int level) {
         return moveToStateSequenced(
             () -> getClosestState(RobotPositions.scoringStates[level]),
+            () -> RobotPositions.preScoringState
+        );
+    }
+
+    /**
+     * Command to move to a specific level for scoring.
+     */
+    public Command moveToLevelNoPath(int level) {
+        return moveToStateSequenced(
+            () -> RobotPositions.scoringStates[level][0].withPath(null),
             () -> RobotPositions.preScoringState
         );
     }
@@ -313,6 +339,24 @@ public class MultiCommands {
                 simCoralOuttake()
             )
         );
+    }
+
+    /**
+     * Command to place coral at a specific level.
+     */
+    public Command placeCoral(int level, BooleanSupplier noPath) {
+        if (noPath.getAsBoolean()) {
+            return new SequentialCommandGroup(
+                moveToLevelNoPath(level),
+                intakeCommands.intake(() -> 0.05),
+                new ParallelCommandGroup(
+                    intakeCommands.outtake(),
+                    simCoralOuttake()
+                )
+            );
+        } else {
+            return placeCoral(level);
+        }
     }
 
     /**

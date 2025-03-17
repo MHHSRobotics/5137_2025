@@ -61,6 +61,7 @@ public class RobotContainer {
 
 	private SendableChooser<String> autoChoice;
 	private Command auto;
+	private boolean autoAlignDisabled;
 
 	private RobotPublisher robotPublisher;
 	private RobotPublisherCommands robotPublisherCommands;
@@ -106,6 +107,8 @@ public class RobotContainer {
 				swerve.resetGyro();
 				auto = AutoBuilder.buildAuto(choice);
 			});
+
+			autoAlignDisabled = false;
 		} catch (RuntimeException e) {
 			DataLogManager.log("Error while initializing: " + RobotUtils.processError(e));
 		}
@@ -204,10 +207,12 @@ public class RobotContainer {
 		driver.triangle().and(driver.R2().negate()).onTrue(multiCommands.getCoralFromSource());
 		driver.circle().and(driver.R2().negate()).onTrue(multiCommands.getAlgae());
 
-		driver.triangle().and(driver.R2()).onTrue(multiCommands.placeCoral(3));
-		driver.square().and(driver.R2()).onTrue(multiCommands.placeCoral(2));
-		driver.circle().and(driver.R2()).onTrue(multiCommands.placeCoral(1));
-		driver.cross().and(driver.R2()).onTrue(multiCommands.placeCoral(0));
+		driver.triangle().and(driver.R2()).onTrue(multiCommands.placeCoral(3, () -> autoAlignDisabled));
+		driver.square().and(driver.R2()).onTrue(multiCommands.placeCoral(2, () -> autoAlignDisabled));
+		driver.circle().and(driver.R2()).onTrue(multiCommands.placeCoral(1, () -> autoAlignDisabled));
+		driver.cross().and(driver.R2()).onTrue(multiCommands.placeCoral(0, () -> autoAlignDisabled));
+
+		driver.create().onTrue(new InstantCommand(() -> {autoAlignDisabled = !autoAlignDisabled;}));
 
 		driver.triangle().negate()
 		.and(driver.square().negate())
@@ -220,6 +225,7 @@ public class RobotContainer {
 
 		NamedCommands.registerCommand("Default", multiCommands.moveToDefault());
 		NamedCommands.registerCommand("SourceCoral", multiCommands.getCoralFromSource());
+		NamedCommands.registerCommand("L4", multiCommands.placeCoral(3, () -> true));
 
 		driver.L1()
 		.toggleOnTrue(intakeCommands.pulseIntake())
