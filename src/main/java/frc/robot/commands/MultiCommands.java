@@ -130,7 +130,7 @@ public class MultiCommands {
             },
             () -> {},
             (interrupted) -> {},
-            () -> { return atSetpoint() || timer.hasElapsed(timeout); },
+            () -> (atSetpoint() || timer.hasElapsed(timeout)) && timer.hasElapsed(0.2),
             elevator, arm, wrist);
     }
     

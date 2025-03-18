@@ -173,7 +173,7 @@ public class Elevator extends SubsystemBase {
      *         false otherwise.
      */
     public boolean atSetpoint() {
-        return controller.getPositionError()<ElevatorConstants.elevatorTolerance;
+        return Math.abs(controller.getPositionError())<ElevatorConstants.elevatorTolerance;
     }
 
     /**
