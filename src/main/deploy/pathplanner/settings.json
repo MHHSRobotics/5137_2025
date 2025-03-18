@@ -6,8 +6,7 @@
     "Auto Align"
   ],
   "autoFolders": [
-    "Active",
-    "Inactive"
+    "Active"
   ],
   "defaultMaxVel": 2.0,
   "defaultMaxAccel": 2.0,
