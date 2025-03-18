@@ -274,7 +274,7 @@ public class Wrist extends SubsystemBase {
      *         false otherwise.
      */
     public boolean atSetpoint() {
-        return getError()<WristConstants.wristTolerance*5; // Wrist does not reach setpoint -- greater tolerance than PID
+        return getError()<WristConstants.wristTolerance*10; // Wrist does not reach setpoint -- greater tolerance than PID
     }
 
     /**
