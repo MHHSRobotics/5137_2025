@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "S-G"
+            "pathName": "SM-G"
           }
         },
         {
@@ -44,6 +44,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Active",
+  "folder": "Center Autos",
   "choreoAuto": false
 }

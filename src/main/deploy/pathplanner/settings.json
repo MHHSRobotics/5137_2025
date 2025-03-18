@@ -3,13 +3,18 @@
   "robotLength": 0.889,
   "holonomicMode": true,
   "pathFolders": [
-    "Reef Auto Align"
+    "Left Paths",
+    "Center Paths",
+    "Reef Auto Align",
+    "Right Paths"
   ],
   "autoFolders": [
-    "Active"
+    "Left Autos",
+    "Center Autos",
+    "Right Autos"
   ],
-  "defaultMaxVel": 2.0,
-  "defaultMaxAccel": 2.0,
+  "defaultMaxVel": 5.0,
+  "defaultMaxAccel": 3.0,
   "defaultMaxAngVel": 270.0,
   "defaultMaxAngAccel": 360.0,
   "defaultNominalVoltage": 13.0,

@@ -1,0 +1,73 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "ST-J"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "L4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "SourceIntake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "J-SL"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "SL-K"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "L4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "SourceIntake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "K-SL"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "SL-L"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "L4"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "Left Autos",
+  "choreoAuto": false
+}

@@ -15,17 +15,11 @@
           "data": {
             "name": "L4"
           }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Default"
-          }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "Active",
+  "folder": "Right Autos",
   "choreoAuto": false
 }

@@ -1,0 +1,73 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "SB-E"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "L4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "SourceIntake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "E-SR"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "SR-D"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "L4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "SourceIntake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "D-SR"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "SR-C"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "L4"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "Right Autos",
+  "choreoAuto": false
+}
