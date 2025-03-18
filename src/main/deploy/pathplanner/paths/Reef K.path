@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.675,
-        "y": 5.226
+        "x": 3.685,
+        "y": 5.288
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.8000000000000016,
-        "y": 5.0094936490538915
+        "x": 3.810000000000002,
+        "y": 5.071493649053892
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 3.7752174424247507,
-        "y": 5.053487340072913
+        "x": 3.785179381193937,
+        "y": 5.114667881153248
       },
       "prevControl": {
-        "x": 3.6502174424247507,
-        "y": 5.269993691019022
+        "x": 3.660179381193937,
+        "y": 5.331174232099357
       },
       "nextControl": null,
       "isLocked": false,
@@ -45,7 +45,7 @@
     "rotation": 119.99999999999999
   },
   "reversed": false,
-  "folder": "Auto Align",
+  "folder": "Reef Auto Align",
   "idealStartingState": {
     "velocity": 0.0,
     "rotation": 119.99999999999999

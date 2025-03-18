@@ -3,7 +3,7 @@
   "robotLength": 0.889,
   "holonomicMode": true,
   "pathFolders": [
-    "Auto Align"
+    "Reef Auto Align"
   ],
   "autoFolders": [
     "Active",
