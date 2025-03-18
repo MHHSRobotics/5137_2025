@@ -2,8 +2,13 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.HangConstants;
+import frc.robot.motorSystem.EnhancedEncoder;
 import frc.robot.motorSystem.EnhancedTalonFX;
+import frc.robot.motorSystem.MotorSystem;
 import frc.robot.other.RobotUtils;
+
+import java.util.List;
+
 import edu.wpi.first.wpilibj.DataLogManager;
 
 /**
@@ -13,34 +18,50 @@ import edu.wpi.first.wpilibj.DataLogManager;
  */
 public class Hang extends SubsystemBase {
     
-    private EnhancedTalonFX hangMotor;
+    private MotorSystem motorSystem;
 
     /**
      * Constructs a new Hang subsystem.
      */
     public Hang() {
-        hangMotor = new EnhancedTalonFX(
-            HangConstants.motorId,
-            "rio",
-            1,
-            true,
-            true
+       // Create motor and encoder
+        EnhancedTalonFX hangMotor = new EnhancedTalonFX(
+            HangConstants.motorId, 
+            "rio", 
+            1, 
+            false, 
+            true  // Use brake mode for better position holding
         );
+        EnhancedEncoder hangEncoder = new EnhancedEncoder(
+            HangConstants.encoderId, 
+            2*Math.PI,
+            HangConstants.encoderOffset
+        );
+
+        // Create motor system
+        motorSystem = new MotorSystem(List.of(hangMotor), hangEncoder);
     }
     
     public void setSpeed(double speed){
-        hangMotor.set(speed);
+        motorSystem.set(speed);
     }
 
     public void stop(){
-        hangMotor.stopMotor();
+        motorSystem.set(0);
+    }
+
+    public void setSpeedWithMax(double speed){
+        if(motorSystem.getMeasurement()<HangConstants.maxAngle){
+            motorSystem.set(speed);
+        }else{
+            motorSystem.set(0);
+        }
     }
 
     private void telemetry(){
-        hangMotor.log("hang/motor");
+        motorSystem.log("hang");
     }
 
-    
     @Override
     public void periodic() {
         try{
