@@ -188,19 +188,19 @@ public final class RobotPositions {
             0.66,   // L1
             0.34,   // L2
             0.34,   // L3
-            0.36    // L4
+            0.225    // L4
         };
         double[] elevatorHeights = {
             0.01,   // L1
-            0.125,  // L2
-            0.51,   // L3
+            0.1,  // L2
+            0.47,   // L3
             1.2     // L4
         };
         double[] wristAngles = {
             0.15,   // L1
             0.18,   // L2
             0.18,   // L3
-            0.32    // L4
+            0.54    // L4
         };
         PathPlannerPath[] paths = new PathPlannerPath[12];
         for (int i = 0; i < 12; i++) {

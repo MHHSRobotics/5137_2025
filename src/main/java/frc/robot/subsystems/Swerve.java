@@ -8,7 +8,6 @@ import frc.robot.other.SwerveFactory;
 
 import java.io.File;
 import java.util.List;
-import java.util.Optional;
 
 import org.photonvision.EstimatedRobotPose;
 
@@ -251,10 +250,8 @@ public class Swerve extends SubsystemBase {
 
     public Pose2d getTargetPose() {
         if (targetPath != null) {
-            Optional<Pose2d> targetPose = targetPath.getStartingHolonomicPose();
-            if (targetPose.isPresent()) {
-                return RobotUtils.invertToAlliance(targetPose.get());
-            }
+            var pathPoses = targetPath.getPathPoses();
+            return RobotUtils.invertToAlliance(pathPoses.get(pathPoses.size() - 1));
         }
         return getPose();
     }
