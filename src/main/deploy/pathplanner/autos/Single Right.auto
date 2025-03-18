@@ -5,9 +5,22 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "SB-F"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "SB-E"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Prescore"
+                }
+              }
+            ]
           }
         },
         {

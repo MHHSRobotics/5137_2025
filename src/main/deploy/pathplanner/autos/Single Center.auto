@@ -5,39 +5,28 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "SM-G"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "SM-G"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Prescore"
+                }
+              }
+            ]
           }
         },
         {
           "type": "named",
           "data": {
             "name": "L4"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 1.5
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Outtake"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 1.0
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Default"
           }
         }
       ]

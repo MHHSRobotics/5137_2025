@@ -236,6 +236,16 @@ public class MultiCommands {
     }
 
     /**
+     * Command to move to the prescoring state
+    */
+    public Command moveToPreScoringState() {
+        return new ParallelCommandGroup(
+            moveToState(() -> RobotPositions.preScoringState),
+            intakeCommands.stop()
+        );
+    }
+
+    /**
      * Command to move to a specific level for scoring.
      */
     public Command moveToLevel(int level) {
@@ -337,7 +347,8 @@ public class MultiCommands {
             new ParallelCommandGroup(
                 intakeCommands.outtake(),
                 simCoralOuttake()
-            )
+            ),
+            moveToDefault()
         );
     }
 
@@ -352,7 +363,8 @@ public class MultiCommands {
                 new ParallelCommandGroup(
                     intakeCommands.outtake(),
                     simCoralOuttake()
-                )
+                ),
+                moveToDefault()
             );
         } else {
             return placeCoral(level);

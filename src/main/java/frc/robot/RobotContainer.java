@@ -226,6 +226,7 @@ public class RobotContainer {
 		NamedCommands.registerCommand("Default", multiCommands.moveToDefault());
 		NamedCommands.registerCommand("SourceCoral", multiCommands.getCoralFromSource());
 		NamedCommands.registerCommand("L4", multiCommands.placeCoral(3, () -> true));
+		NamedCommands.registerCommand("Prescore", multiCommands.moveToPreScoringState());
 
 		driver.L1()
 		.toggleOnTrue(intakeCommands.pulseIntake())

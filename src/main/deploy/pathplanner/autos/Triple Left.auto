@@ -5,9 +5,22 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "ST-J"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "ST-J"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Prescore"
+                }
+              }
+            ]
           }
         },
         {
@@ -17,51 +30,105 @@
           }
         },
         {
-          "type": "named",
+          "type": "sequential",
           "data": {
-            "name": "SourceIntake"
+            "commands": [
+              {
+                "type": "parallel",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "J-SL"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "SourceIntake"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "parallel",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "SL-K"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Prescore"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "L4"
+                }
+              }
+            ]
           }
         },
         {
-          "type": "path",
+          "type": "sequential",
           "data": {
-            "pathName": "J-SL"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "SL-K"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "L4"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "SourceIntake"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "K-SL"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "SL-L"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "L4"
+            "commands": [
+              {
+                "type": "parallel",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "K-SL"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "SourceIntake"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "parallel",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "SL-L"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Prescore"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "L4"
+                }
+              }
+            ]
           }
         }
       ]

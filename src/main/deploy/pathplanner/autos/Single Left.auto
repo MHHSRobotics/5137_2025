@@ -5,9 +5,22 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "ST-J"
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Prescore"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "ST-J"
+                }
+              }
+            ]
           }
         },
         {
