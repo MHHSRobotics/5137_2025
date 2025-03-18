@@ -20,6 +20,8 @@ public class Hang extends SubsystemBase {
     
     private MotorSystem motorSystem;
 
+    private boolean hitMin;
+
     /**
      * Constructs a new Hang subsystem.
      */
@@ -43,29 +45,32 @@ public class Hang extends SubsystemBase {
     }
     
     public void setSpeed(double speed){
-        motorSystem.set(speed);
+        if(hitMin && getMeasurement()>HangConstants.maxAngle){
+            motorSystem.set(0);
+        }else{
+            motorSystem.set(speed);
+        }
     }
 
     public void stop(){
         motorSystem.set(0);
     }
 
-    public void setSpeedWithMax(double speed){
-        if(motorSystem.getMeasurement()<HangConstants.maxAngle){
-            motorSystem.set(speed);
-        }else{
-            motorSystem.set(0);
-        }
-    }
-
     private void telemetry(){
         motorSystem.log("hang");
+    }
+
+    public double getMeasurement(){
+        return motorSystem.getMeasurement();
     }
 
     @Override
     public void periodic() {
         try{
             telemetry();
+            if(getMeasurement()<HangConstants.minAngle){
+                hitMin=true;
+            }
         }catch(RuntimeException e){
             DataLogManager.log("Periodic error: "+RobotUtils.processError(e));
         }

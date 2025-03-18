@@ -8,4 +8,5 @@ public class HangConstants {
     public static final int motorId=Robot.isSimulation()?25:5;
     public static final double hangSpeed=0.75;
     public static final double maxAngle=100; // TODO change
+    public static final double minAngle=-100; // TODO change
 }

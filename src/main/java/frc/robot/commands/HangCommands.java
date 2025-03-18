@@ -29,10 +29,6 @@ public class HangCommands {
         return new RepeatCommand(new InstantCommand(()->hang.setSpeed(speed.getAsDouble())));
     }
 
-    public Command setSpeedWithMax(DoubleSupplier speed){
-        return new RepeatCommand(new InstantCommand(()->hang.setSpeedWithMax(speed.getAsDouble())));
-    }
-
     public Command stop(){
         return new InstantCommand(()->hang.stop(),hang);
     }

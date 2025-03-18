@@ -195,7 +195,7 @@ public class RobotContainer {
 		hang = new Hang();
 		hangCommands = new HangCommands(hang);
 		
-		driver.povUp().whileTrue(hangCommands.setSpeedWithMax(() -> -driver.getRightY()*HangConstants.hangSpeed));
+		driver.povUp().whileTrue(hangCommands.setSpeed(() -> -driver.getRightY()*HangConstants.hangSpeed));
 	}
 
 	private void initMultiCommands() {
