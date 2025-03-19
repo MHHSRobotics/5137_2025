@@ -4,6 +4,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Robot;
+import frc.robot.other.PIDFConstants;
 
 public class WristConstants {
     // Motor ID
@@ -22,7 +23,7 @@ public class WristConstants {
     public static final double feedOffset = Units.degreesToRadians(90);
 
     // PID constants
-    public static final double kP = 3;
+    public static final double kP = 30;
     public static final double kI = 0;
     public static final double kD = 0.2;    
     
@@ -39,6 +40,15 @@ public class WristConstants {
     public static final double kG = Robot.isSimulation()?0.0:0.47;
     public static final double kV = 0.25757;
     public static final double kA = 0.050664;
+
+    public static final PIDFConstants constants = new PIDFConstants()
+        .withKP(kP)
+        .withKI(kI)
+        .withKD(kD)
+        .withKS(kS)
+        .withKG(kG)
+        .withKV(kV)
+        .withKA(kA);
 
     // Motion Profile constants
     public static final Constraints pidConstraints=new Constraints(Units.degreesToRadians(360),Units.degreesToRadians(360));

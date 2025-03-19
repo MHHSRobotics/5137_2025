@@ -11,7 +11,7 @@ public class ElevatorConstants {
 
     // Encoder ID
     public static final int encoderId = 2;
-    public static final double encoderRatio = -0.5;  // Negate multiplier since encoder was inverted before
+    public static final double encoderRatio = -0.5;  // TODO: BROKEN (No conversion from angle to linear motion)
     public static final double encoderOffset = 0.256;
 
     // PID constants

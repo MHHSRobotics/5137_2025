@@ -14,6 +14,8 @@ import frc.robot.motorSystem.EnhancedTalonFX;
 import frc.robot.motorSystem.EnhancedEncoder;
 import frc.robot.motorSystem.MotorSystem;
 import frc.robot.motorSystem.ArmMechanismSim;
+import frc.robot.motorSystem.BetterTalonFX;
+import frc.robot.motorSystem.SyncedEncoder;
 import frc.robot.other.RobotUtils;
 import frc.robot.positions.RobotPositions;
 import frc.robot.constants.ArmConstants;
@@ -47,7 +49,10 @@ import java.util.List;
 public class Wrist extends SubsystemBase {
     
     /** Motor system that handles both the motor and encoder */
-    private final MotorSystem motorSystem;
+    //private final MotorSystem motorSystem;
+
+    private final BetterTalonFX motor;
+    private final SyncedEncoder encoder;
 
     /** PID controller for wrist position control */
     private final ProfiledPIDController controller;
@@ -87,18 +92,13 @@ public class Wrist extends SubsystemBase {
         this.arm = arm;
 
         // Create motor and encoder
-        EnhancedTalonFX wristMotor = new EnhancedTalonFX(
-            WristConstants.motorId,
-            "rio",
-            (2*Math.PI)/WristConstants.gearRatio,
-            false,
-            true  // Use brake mode for better position holding
-        );
-        EnhancedEncoder wristEncoder = new EnhancedEncoder(
-            WristConstants.encoderId,
-            (2*Math.PI)/WristConstants.encoderRatio,
-            WristConstants.encoderOffset
-        );
+        motor = new BetterTalonFX(WristConstants.motorId, "rio");
+        motor.setMotorOutputConfigs(false, true);
+        motor.setRatioConfigs(WristConstants.gearRatio, 1.0);
+        motor.setPIDFConfigs(WristConstants.constants, true);
+        motor.setMotionMagicConfigs(Units.degreesToRadians(90), Units.degreesToRadians(90));
+        
+        encoder = new SyncedEncoder(motor, WristConstants.encoderId, WristConstants.encoderRatio, WristConstants.encoderOffset);
         
         // Create the plant, simulates the wrist movement
         /*LinearSystem<N2,N1,N2> plant = LinearSystemId.createSingleJointedArmSystem(
@@ -108,7 +108,7 @@ public class Wrist extends SubsystemBase {
         );*/
 
         // Create motor system
-        motorSystem = new MotorSystem(List.of(wristMotor), wristEncoder);
+        //motorSystem = new MotorSystem(List.of(wristMotor), wristEncoder);
                 
         // Initialize PID controller
         controller = new ProfiledPIDController(
@@ -168,7 +168,7 @@ public class Wrist extends SubsystemBase {
      *         positive is down, and negative is up.
      */
     public double getMeasurement() {
-        return motorSystem.getMeasurement();
+        return motor.getPositionAsDouble();
     }
     
     /**
@@ -178,7 +178,8 @@ public class Wrist extends SubsystemBase {
      *                WristConstants.minAngle and WristConstants.maxAngle.
      */
     public void setGoal(double newGoal) {
-        desiredGoal = RobotUtils.clamp(newGoal, WristConstants.minAngle, WristConstants.maxAngle);
+        //desiredGoal = RobotUtils.clamp(newGoal, WristConstants.minAngle, WristConstants.maxAngle);
+        motor.setTargetPosition(newGoal);
     }
 
     /**
@@ -196,7 +197,8 @@ public class Wrist extends SubsystemBase {
      * @return The current goal position in radians.
      */
     public double getGoal() {
-        return goal;
+        //return goal;
+        return motor.getTargetPosition();
     }
 
     /**
@@ -205,7 +207,7 @@ public class Wrist extends SubsystemBase {
      * @param v The voltage to apply to the motor.
      */
     public void setVoltage(Voltage v) {
-        motorSystem.setVoltage(v);
+        //motorSystem.setVoltage(v);
     }
 
     /**
@@ -214,7 +216,8 @@ public class Wrist extends SubsystemBase {
      * @return The current angular velocity in radians per second.
      */
     public double getVelocity() {
-        return motorSystem.getVelocity();
+        //return motorSystem.getVelocity();
+        return motor.getVelocityAsDouble();
     }
 
     /**
@@ -223,7 +226,7 @@ public class Wrist extends SubsystemBase {
      * @return The voltage currently being applied to the motor.
      */
     public Voltage getVolts() {
-        return motorSystem.getVolts();
+        return motor.getMotorVoltage().getValue();
     }
 
     /**
@@ -232,7 +235,8 @@ public class Wrist extends SubsystemBase {
      * @return The current angular acceleration in radians per second squared.
      */
     public double getAcceleration() {
-        return motorSystem.getAcceleration();
+        //return motorSystem.getAcceleration();
+        return motor.getAccelerationAsDouble();
     }
 
     /**
@@ -291,7 +295,8 @@ public class Wrist extends SubsystemBase {
         SmartDashboard.putNumber("wrist/profileError", getProfileError());
         SmartDashboard.putNumber("wrist/profileAngle",goalState.position);
         SmartDashboard.putNumber("wrist/profileVelocity",goalState.velocity);
-        motorSystem.log("wrist");
+        motor.log("wrist");
+        encoder.log("wrist");
     }
 
     /**
@@ -303,7 +308,7 @@ public class Wrist extends SubsystemBase {
     @Override
     public void periodic() {
         try {
-            motorSystem.periodic();
+            //motorSystem.periodic();
 
             double measurement = getMeasurement();
             @SuppressWarnings("unused")
@@ -352,6 +357,6 @@ public class Wrist extends SubsystemBase {
      */
     @Override
     public void simulationPeriodic() {
-        motorSystem.simulationPeriodic(mechanismSim, GeneralConstants.simPeriod);
+        //encoder.simulationPeriodic(mechanismSim, GeneralConstants.simPeriod);
     }
 }
