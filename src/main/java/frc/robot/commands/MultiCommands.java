@@ -148,13 +148,19 @@ public class MultiCommands {
             if (state.get().robotPath != null) {
                 return new SequentialCommandGroup(
                     moveToState(() -> preState.get().withPath(state.get().robotPath), 5),
-                    moveToState(() -> state.get().stageOne()),
+                    new ParallelCommandGroup(
+                        intakeCommands.intake(() -> 0.1),
+                        moveToState(() -> state.get().stageOne())
+                    ),
                     moveToState(() -> state.get().stageTwo())
                 );
             } else {
                 return new SequentialCommandGroup(
                     moveToState(() -> preState.get()),
-                    moveToState(() -> state.get().stageOne()),
+                    new ParallelCommandGroup(
+                        intakeCommands.intake(() -> 0.1),
+                        moveToState(() -> state.get().stageOne())
+                    ),
                     moveToState(() -> state.get().stageTwo())
                 );
             }
@@ -343,6 +349,7 @@ public class MultiCommands {
     public Command placeCoral(int level) {
         return new SequentialCommandGroup(
             moveToLevel(level),
+            new WaitCommand(0.2),
             intakeCommands.intake(() -> 0.05),
             new ParallelCommandGroup(
                 intakeCommands.outtake(),
@@ -359,6 +366,7 @@ public class MultiCommands {
         if (noPath.getAsBoolean()) {
             return new SequentialCommandGroup(
                 moveToLevelNoPath(level),
+                new WaitCommand(0.2),
                 intakeCommands.intake(() -> 0.05),
                 new ParallelCommandGroup(
                     intakeCommands.outtake(),

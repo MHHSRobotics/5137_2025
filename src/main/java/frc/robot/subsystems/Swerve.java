@@ -281,10 +281,10 @@ public class Swerve extends SubsystemBase {
             if(dist>SwerveConstants.transTol){
                 return false;
             }
-            double rotDist=currentPose.getRotation().minus(targetPose.getRotation()).getRadians();
+            /*double rotDist=currentPose.getRotation().minus(targetPose.getRotation()).getRadians();
             if(rotDist>SwerveConstants.rotTol){
                 return false;
-            }
+            }*/
         }
         return true;
     }

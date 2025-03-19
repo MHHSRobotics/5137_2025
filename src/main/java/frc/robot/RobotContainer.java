@@ -190,8 +190,8 @@ public class RobotContainer {
 			.onTrue(intakeCommands.setSpeed(()->-IntakeConstants.intakeSpeed))
 			.onFalse(intakeCommands.stop());
 		
-		NamedCommands.registerCommand("Intake", intakeCommands.setSpeed(()->IntakeConstants.intakeSpeed));
-		NamedCommands.registerCommand("Outtake", intakeCommands.setSpeed(()->-IntakeConstants.intakeSpeed));
+		NamedCommands.registerCommand("Intake", intakeCommands.intake(() -> 0.1));
+		NamedCommands.registerCommand("Outtake", intakeCommands.outtake());
 	}
 
 	private void initHang() {
@@ -224,7 +224,7 @@ public class RobotContainer {
 		.onTrue(multiCommands.moveToDefault());
 
 		NamedCommands.registerCommand("Default", multiCommands.moveToDefault());
-		NamedCommands.registerCommand("SourceCoral", multiCommands.getCoralFromSource());
+		NamedCommands.registerCommand("SourceIntake", multiCommands.getCoralFromSource());
 		NamedCommands.registerCommand("L4", multiCommands.placeCoral(3, () -> true));
 		NamedCommands.registerCommand("Prescore", multiCommands.moveToPreScoringState());
 
