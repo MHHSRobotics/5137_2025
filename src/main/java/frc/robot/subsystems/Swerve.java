@@ -8,6 +8,7 @@ import frc.robot.other.SwerveFactory;
 
 import java.io.File;
 import java.util.List;
+import java.util.Optional;
 
 import org.photonvision.EstimatedRobotPose;
 
@@ -27,7 +28,9 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -57,7 +60,7 @@ public class Swerve extends SubsystemBase {
 
     // Swerve control requests
     private SwerveRequest.FieldCentric fieldOrientedDrive; // Field-oriented driving request
-    private SwerveRequest.RobotCentric robotOrientedDrive; // Robot-oriented driving request
+    private SwerveRequest.FieldCentricFacingAngle facingAngleDrive; // Robot-oriented driving request
     private SwerveRequest.ApplyRobotSpeeds setChassisSpeeds; // Request to set chassis speeds directly
     private SwerveRequest.SwerveDriveBrake lock; // Request to lock the swerve modules in place
 
@@ -91,10 +94,12 @@ public class Swerve extends SubsystemBase {
             .withRotationalDeadband(maxAngularSpeed * SwerveConstants.rotationalDeadband)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
-        robotOrientedDrive = new SwerveRequest.RobotCentric()
+        facingAngleDrive = new SwerveRequest.FieldCentricFacingAngle()
             .withDeadband(maxSpeed * SwerveConstants.translationalDeadband)
             .withRotationalDeadband(maxAngularSpeed * SwerveConstants.rotationalDeadband)
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
+            .withHeadingPID(SwerveConstants.rotationKP, SwerveConstants.rotationKI, SwerveConstants.rotationKD)
+            .withMaxAbsRotationalRate(Units.degreesToRadians(360));
 
         setChassisSpeeds = new SwerveRequest.ApplyRobotSpeeds(); // Request to set chassis speeds
         lock = new SwerveRequest.SwerveDriveBrake(); // Request to lock the swerve modules
@@ -210,21 +215,21 @@ public class Swerve extends SubsystemBase {
      * @param dtheta      The percentage of maximum angular speed.
      * @param fieldRelative Whether the drive is field-relative or robot-relative.
      */
-    public void setPercentDrive(double dx, double dy, double dtheta, boolean fieldRelative) {
+    public void setPercentDrive(double dx, double dy, double dtheta, Optional<Rotation2d> rotationTarget) {
         double absSpeedX = dx*maxSpeed;
         double absSpeedY = dy*maxSpeed;
         double absRot = dtheta*maxAngularSpeed;
-        if (fieldRelative) {
+        if (rotationTarget.isEmpty()) {
             setControl(fieldOrientedDrive
                 .withVelocityX(absSpeedX)
                 .withVelocityY(absSpeedY)
                 .withRotationalRate(absRot)
             );
         } else {
-            setControl(robotOrientedDrive
+            setControl(facingAngleDrive
                 .withVelocityX(absSpeedX)
                 .withVelocityY(absSpeedY)
-                .withRotationalRate(absRot)
+                .withTargetDirection(rotationTarget.get())
             );
         }
     }

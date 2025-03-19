@@ -136,7 +136,7 @@ public class RobotContainer {
 			() -> -Math.pow(MathUtil.applyDeadband(driver.getLeftY(), 0.05), 1), 
 			() -> -Math.pow(MathUtil.applyDeadband(driver.getLeftX(), 0.05), 1), 
 			() -> -Math.pow(MathUtil.applyDeadband(driver.getRightX(), 0.05), 1),
-			() -> true)
+			() -> driver.triangle().getAsBoolean())
 		);
 
 		driver.L3().whileTrue(swerveCommands.lock());
