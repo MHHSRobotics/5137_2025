@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.constants.SwerveConstants;
 import frc.robot.subsystems.Swerve;
 import frc.robot.positions.FieldPositions;
+import frc.robot.other.RobotUtils;
 
 /**
  * This class encapsulates all the commands related to the Swerve subsystem.
@@ -45,7 +46,7 @@ public class SwerveCommands {
             () -> {},
             () -> {
                 if(dx!=null||dy!=null||dtheta!=null){
-                    swerve.setPercentDrive(dx.getAsDouble(), dy.getAsDouble(), dtheta.getAsDouble(), facingStation.getAsBoolean() ? Optional.of(swerve.getPose().getY() <= FieldPositions.fieldWidth/2 ? FieldPositions.rightStation : FieldPositions.leftStation) : Optional.empty());
+                    swerve.setPercentDrive(dx.getAsDouble(), dy.getAsDouble(), dtheta.getAsDouble(), facingStation.getAsBoolean() ? Optional.of(swerve.getPose().getY() <= FieldPositions.fieldWidth/2 ? RobotUtils.onRedAlliance() ? FieldPositions.leftStation : FieldPositions.rightStation : RobotUtils.onRedAlliance() ? FieldPositions.rightStation : FieldPositions.leftStation) : Optional.empty());
                 }
             },
             (interrupted) -> {},
