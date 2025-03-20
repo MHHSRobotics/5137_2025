@@ -12,7 +12,7 @@ public class ElevatorConstants {
     // Encoder ID
     public static final int encoderId = 2;
     public static final double encoderRatio = -0.5;  // Negate multiplier since encoder was inverted before
-    public static final double encoderOffset = 0.256;
+    public static final double encoderOffset = 0.2405;
 
     // PID constants
     public static final double kP = 20;

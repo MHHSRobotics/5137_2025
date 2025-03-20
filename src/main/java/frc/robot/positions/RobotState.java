@@ -66,12 +66,20 @@ public class RobotState {
         this.robotPath = null;
     }
 
-    public RobotState stageOne() {
+    public RobotState noElevator() {
+        return new RobotState(armPosition, null, wristPosition, (RobotPosition) null);
+    }
+
+    public RobotState onlyElevator() {
         return new RobotState(null, elevatorPosition, null, (RobotPosition) null);
     }
 
-    public RobotState stageTwo() {
-        return new RobotState(armPosition, null, wristPosition, (RobotPosition) null);
+    public RobotState noWrist() {
+        return new RobotState(armPosition, elevatorPosition, null, (RobotPosition) null);
+    }
+
+    public RobotState onlyWrist() {
+        return new RobotState(null, null, wristPosition, (RobotPosition) null);
     }
 
     /**

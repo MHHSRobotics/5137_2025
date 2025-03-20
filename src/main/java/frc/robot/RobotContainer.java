@@ -61,6 +61,7 @@ public class RobotContainer {
 
 	private SendableChooser<String> autoChoice;
 	private Command auto;
+	private boolean autoAlignDisabled;
 
 	private RobotPublisher robotPublisher;
 	private RobotPublisherCommands robotPublisherCommands;
@@ -106,6 +107,8 @@ public class RobotContainer {
 				swerve.resetGyro();
 				auto = AutoBuilder.buildAuto(choice);
 			});
+
+			autoAlignDisabled = false;
 		} catch (RuntimeException e) {
 			DataLogManager.log("Error while initializing: " + RobotUtils.processError(e));
 		}
@@ -133,10 +136,10 @@ public class RobotContainer {
 			() -> -Math.pow(MathUtil.applyDeadband(driver.getLeftY(), 0.05), 1), 
 			() -> -Math.pow(MathUtil.applyDeadband(driver.getLeftX(), 0.05), 1), 
 			() -> -Math.pow(MathUtil.applyDeadband(driver.getRightX(), 0.05), 1),
-			() -> true)
+			() -> driver.triangle().getAsBoolean() && driver.R2().negate().getAsBoolean())
 		);
 
-		driver.L3().whileTrue(swerveCommands.lock());
+		//driver.L3().whileTrue(swerveCommands.lock());
 		driver.options().onTrue(swerveCommands.resetGyro());
 	}
 
@@ -166,7 +169,7 @@ public class RobotContainer {
 	}
 
 	private void initWrist() {
-		wrist = new Wrist(arm);
+		wrist = new Wrist();
 		wristCommands = new WristCommands(wrist);
 
 		// Configure wrist bindings
@@ -179,16 +182,16 @@ public class RobotContainer {
 		intakeCommands = new IntakeCommands(intake);
 
 		// Configure intake bindings
-		operator.L2().or(driver.L2().and(driver.R2().negate())).or(driver.R1().and(driver.R2()))
+		operator.L2().or(driver.L2())
 			.onTrue(intakeCommands.setSpeed(()->IntakeConstants.intakeSpeed))
 			.onFalse(intakeCommands.stop());
 
-		operator.R2().or(driver.L2().and(driver.R2())).or(driver.R1().and(driver.R2().negate()))
+		operator.R2().or(driver.R1())
 			.onTrue(intakeCommands.setSpeed(()->-IntakeConstants.intakeSpeed))
 			.onFalse(intakeCommands.stop());
 		
-		NamedCommands.registerCommand("Intake", intakeCommands.setSpeed(()->IntakeConstants.intakeSpeed));
-		NamedCommands.registerCommand("Outtake", intakeCommands.setSpeed(()->-IntakeConstants.intakeSpeed));
+		NamedCommands.registerCommand("Intake", intakeCommands.intake(() -> 0.1));
+		NamedCommands.registerCommand("Outtake", intakeCommands.outtake());
 	}
 
 	private void initHang() {
@@ -202,12 +205,18 @@ public class RobotContainer {
 		multiCommands = new MultiCommands(arm,elevator,wrist,swerve, swerveCommands, intakeCommands, hangCommands,robotPublisherCommands);
 
 		driver.triangle().and(driver.R2().negate()).onTrue(multiCommands.getCoralFromSource());
-		driver.circle().and(driver.R2().negate()).onTrue(multiCommands.getAlgae());
+		driver.circle().and(driver.R2().negate()).and(driver.L3().negate()).onTrue(multiCommands.getHighAlgae());
+		driver.circle().and(driver.R2().negate()).and(driver.L3()).onTrue(multiCommands.getLowAlgae());
+		driver.R3().onTrue(multiCommands.getAlgaeFromGround());
 
-		driver.triangle().and(driver.R2()).onTrue(multiCommands.placeCoral(3));
-		driver.square().and(driver.R2()).onTrue(multiCommands.placeCoral(2));
-		driver.circle().and(driver.R2()).onTrue(multiCommands.placeCoral(1));
-		driver.cross().and(driver.R2()).onTrue(multiCommands.placeCoral(0));
+		driver.triangle().and(driver.R2()).onTrue(multiCommands.placeCoral(3, () -> autoAlignDisabled));
+		driver.square().and(driver.R2()).onTrue(multiCommands.placeCoral(2, () -> autoAlignDisabled));
+		driver.circle().and(driver.R2()).onTrue(multiCommands.placeCoral(1, () -> autoAlignDisabled));
+		driver.cross().and(driver.R2()).onTrue(multiCommands.placeCoral(0, () -> autoAlignDisabled));
+
+		driver.create().whileTrue(new SequentialCommandGroup(
+			new WaitCommand(3),
+			new InstantCommand(() -> {autoAlignDisabled = !autoAlignDisabled;})));
 
 		driver.triangle().negate()
 		.and(driver.square().negate())
@@ -219,7 +228,9 @@ public class RobotContainer {
 		.onTrue(multiCommands.moveToDefault());
 
 		NamedCommands.registerCommand("Default", multiCommands.moveToDefault());
-		NamedCommands.registerCommand("SourceCoral", multiCommands.getCoralFromSource());
+		NamedCommands.registerCommand("SourceIntake", multiCommands.getCoralFromSource());
+		NamedCommands.registerCommand("L4", multiCommands.placeCoral(3, () -> true));
+		NamedCommands.registerCommand("Prescore", multiCommands.moveToPreScoringState());
 
 		driver.L1()
 		.toggleOnTrue(intakeCommands.pulseIntake())
@@ -240,10 +251,18 @@ public class RobotContainer {
 	 * @return The autonomous command
 	 */
 	public Command getAutonomousCommand() {
-		if (auto != null) {
+		/*if (auto != null) {
 			return auto;
 		} else {
 			return AutoBuilder.buildAuto("Leave");
-		}
+		}*/
+		return new SequentialCommandGroup(
+			multiCommands.placeCoral(()->3, ()->9),
+			multiCommands.getCoralFromSource(0),
+			new WaitCommand(2),
+			intakeCommands.stop(),
+			multiCommands.placeCoral(()->3, ()->10),
+			multiCommands.moveToDefault()
+		);
 	}
 }

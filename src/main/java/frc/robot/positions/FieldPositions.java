@@ -5,6 +5,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import frc.robot.other.RobotUtils;
 
 public final class FieldPositions {
@@ -50,6 +51,10 @@ public final class FieldPositions {
     private static final double algaed1 = 0.66;
     private static final double algaeLowHeight = 0.88;
     private static final double algaeHighHeight = 1.28;
+
+    // Station geometry
+    public static final Rotation2d leftStation = new Rotation2d(Units.degreesToRadians(126));
+    public static final Rotation2d rightStation = new Rotation2d(Units.degreesToRadians(-126));
 
     // Static field elements
     public static final FieldPosition[][] coralPositions = generateCoralPositions();

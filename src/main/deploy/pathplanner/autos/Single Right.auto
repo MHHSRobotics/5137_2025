@@ -5,9 +5,22 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "SB-F"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "SB-E"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              }
+            ]
           }
         },
         {
@@ -15,35 +28,11 @@
           "data": {
             "name": "L4"
           }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 1.5
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Outtake"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 1.0
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Default"
-          }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "Active",
+  "folder": "Right Autos",
   "choreoAuto": false
 }

@@ -73,15 +73,22 @@ public final class RobotPositions {
     public static final RobotState processorState = new RobotState(
         Units.degreesToRadians(-95),
         0.65,
-        Units.degreesToRadians(-45),
+        Units.degreesToRadians(-115),
         (RobotPosition)null
     );
 
     public static final RobotState bargeState = new RobotState(
         Units.degreesToRadians(0),
-        1.11,
+        1.2,
         Units.degreesToRadians(-45),
         (RobotPosition)null
+    );
+
+    public static final RobotState groundAlgaeState = new RobotState(
+        Units.degreesToRadians(-100),
+        0.3,
+        Units.degreesToRadians(-115),
+        (RobotPosition) null
     );
 
     public static final RobotState preScoringState = new RobotState(
@@ -157,24 +164,38 @@ public final class RobotPositions {
     // ===== State Generators =====
     
     private static RobotState[] generateSourceStates() {
-        RobotState[] states = new RobotState[stations.length];
-        for (int i = 0; i < states.length; i++) {
-            states[i] = new RobotState(
+        RobotState[] states = new RobotState[1];
+        try {
+            states[0] = new RobotState(
                 -0.43,
                 0.17,
                 Units.degreesToRadians(-113.6),
-                (RobotPosition) null
+                PathPlannerPath.fromPathFile("Source Left")
             );
+        } catch (FileVersionException | IOException | ParseException e) {
+            throw new RuntimeException(e);
         }
         return states;
     }
+
+    public static final RobotState algaeHighState = new RobotState(
+        Units.degreesToRadians(-45),
+        0.45,
+        Units.degreesToRadians(-90),
+        (RobotPosition) null);
+    
+    public static final RobotState algaeLowState = new RobotState(
+        Units.degreesToRadians(-45),
+        0.1,
+        Units.degreesToRadians(-90),
+        (RobotPosition) null);
     
     private static RobotState[] generateAlgaeStates() {
         RobotState[] states = new RobotState[FieldPositions.reefSides];
         for (int i = 0; i < states.length; i++) {
             states[i] = new RobotState(
-                Units.degreesToRadians(-55),
-                (i%2==0) ? 0.43 : 0.9,
+                Units.degreesToRadians(-65),
+                (i%2==0) ? 0.43 : 1.0,
                 Units.degreesToRadians(-115),
                 centerReef[i]
             );
