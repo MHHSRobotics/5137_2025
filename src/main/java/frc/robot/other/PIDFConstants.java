@@ -1,5 +1,8 @@
 package frc.robot.other;
 
+import com.ctre.phoenix6.configs.SlotConfigs;
+import com.ctre.phoenix6.signals.GravityTypeValue;
+
 public class PIDFConstants {
     public double kP;
     public double kI;
@@ -8,6 +11,7 @@ public class PIDFConstants {
     public double kG;
     public double kV;
     public double kA;
+    public boolean isArm;
 
     public PIDFConstants() {}
 
@@ -44,5 +48,22 @@ public class PIDFConstants {
     public PIDFConstants withKA(double kA) {
         this.kA = kA;
         return this;
+    }
+
+    public PIDFConstants withIsArm(boolean isArm) {
+        this.isArm=isArm;
+        return this;
+    }
+
+    public SlotConfigs slotConfigs(){
+        return new SlotConfigs()
+            .withKP(kP)
+            .withKI(kI)
+            .withKD(kD)
+            .withKS(kS)
+            .withKG(kG)
+            .withKV(kV)
+            .withKA(kA)
+            .withGravityType(isArm ? GravityTypeValue.Arm_Cosine : GravityTypeValue.Elevator_Static);
     }
 }

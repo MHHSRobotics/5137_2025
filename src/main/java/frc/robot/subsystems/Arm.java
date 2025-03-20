@@ -11,11 +11,11 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DataLogManager;
-import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.ArmConstants;
 import frc.robot.motorSystem.EnhancedTalonFX;
+import frc.robot.motorSystem.MechanismSim;
 import frc.robot.motorSystem.EnhancedEncoder;
 import frc.robot.motorSystem.MotorSystem;
 import frc.robot.motorSystem.ArmMechanismSim;
@@ -63,10 +63,7 @@ public class Arm extends SubsystemBase {
     private double goal;
 
     /** Simulation model for the arm's physics */
-    private final SingleJointedArmSim armSim;
-
-    /** Adapter to make SingleJointedArmSim compatible with MotorSystem */
-    private final ArmMechanismSim mechanismSim;
+    private final MechanismSim armSim;
 
     // linear quadratic regulator
     // first N2 = dimension of state space of the arm, position and velocity
@@ -122,7 +119,7 @@ public class Arm extends SubsystemBase {
         goal = RobotPositions.defaultState.armPosition;
 
         // Initialize simulation components
-        armSim = new SingleJointedArmSim(
+        armSim = new ArmMechanismSim(
             ArmConstants.motorSim, 
             ArmConstants.gearRatio, 
             ArmConstants.momentOfInertia,
@@ -132,7 +129,6 @@ public class Arm extends SubsystemBase {
             false,
             RobotPositions.defaultState.armPosition
         );
-        mechanismSim = new ArmMechanismSim(armSim);
 
         // Initializes the linear-quadratic regulator
         lqr=new LinearQuadraticRegulator<N2,N1,N2>(plant,VecBuilder.fill(ArmConstants.posWeight,ArmConstants.velWeight),VecBuilder.fill(ArmConstants.volWeight),GeneralConstants.simPeriod);
@@ -301,6 +297,6 @@ public class Arm extends SubsystemBase {
      */
     @Override
     public void simulationPeriodic() {
-        motorSystem.simulationPeriodic(mechanismSim, GeneralConstants.simPeriod);
+        motorSystem.simulationPeriodic(armSim, GeneralConstants.simPeriod);
     }
 }

@@ -166,7 +166,7 @@ public class RobotContainer {
 	}
 
 	private void initWrist() {
-		wrist = new Wrist(arm);
+		wrist = new Wrist();
 		wristCommands = new WristCommands(wrist);
 
 		// Configure wrist bindings

@@ -4,33 +4,38 @@ import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
-import com.ctre.phoenix6.configs.SlotConfigs;
-import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.sim.ChassisReference;
+import com.ctre.phoenix6.sim.TalonFXSimState;
 
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.other.PIDFConstants;
 
 public class BetterTalonFX extends TalonFX {
-    private MotionMagicTorqueCurrentFOC request;
+    private MotionMagicVoltage request;
+    private TalonFXSimState sim;
 
     public BetterTalonFX(int port, String bus) {
         super(port, bus);
-        request = new MotionMagicTorqueCurrentFOC(0.0).withUpdateFreqHz(1000);
+        request = new MotionMagicVoltage(0.0).withUpdateFreqHz(1000);
+        sim=new TalonFXSimState(this);
     }
 
-    public void setMotorOutputConfigs(boolean inverted, boolean braked) {
+    public BetterTalonFX withMotorOutputConfigs(boolean inverted, boolean braked) {
         this.getConfigurator().apply(
             new MotorOutputConfigs()
             .withNeutralMode(braked ? NeutralModeValue.Brake : NeutralModeValue.Coast)
             .withInverted(inverted ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive)
         );
+        sim.Orientation=inverted?ChassisReference.Clockwise_Positive:ChassisReference.CounterClockwise_Positive;
+        return this;
     }
 
-    public void setCurrentConfigs(double statorLimit, double supplyLimit) {
+    public BetterTalonFX withCurrentConfigs(double statorLimit, double supplyLimit) {
         this.getConfigurator().apply(
             new CurrentLimitsConfigs()
             .withStatorCurrentLimit(statorLimit)
@@ -38,47 +43,41 @@ public class BetterTalonFX extends TalonFX {
             .withSupplyCurrentLimit(supplyLimit)
             .withSupplyCurrentLimitEnable(true)
         );
+        return this;
     }
 
-    public void setRatioConfigs(double motorToSensorRatio, double sensorToMechanismRatio) {
+    public BetterTalonFX withRatioConfigs(double sensorToMechanismRatio) {
         this.getConfigurator().apply(
             new FeedbackConfigs()
-            .withRotorToSensorRatio(motorToSensorRatio)
+            .withRotorToSensorRatio(1)
             .withSensorToMechanismRatio(sensorToMechanismRatio)
         );
+        return this;
     }
 
-    public void setPIDFConfigs(PIDFConstants constants, boolean isArm) {
-        this.getConfigurator().apply(
-            new SlotConfigs()
-            .withKP(constants.kP)
-            .withKI(constants.kI)
-            .withKD(constants.kD)
-            .withKS(constants.kS)
-            .withKG(constants.kG)
-            .withKV(constants.kV)
-            .withKA(constants.kA)
-            .withGravityType(isArm ? GravityTypeValue.Arm_Cosine : GravityTypeValue.Elevator_Static)
-        );
+    public BetterTalonFX withPIDFConfigs(PIDFConstants constants) {
+        this.getConfigurator().apply(constants.slotConfigs());
+        return this;
     }
 
-    public void setMotionMagicConfigs(double maxVelocity, double maxAcceleration) {
+    public BetterTalonFX withMotionMagicConfigs(double maxVelocity, double maxAcceleration) {
         this.getConfigurator().apply(
             new MotionMagicConfigs()
             .withMotionMagicCruiseVelocity(maxVelocity)
             .withMotionMagicAcceleration(maxAcceleration)
         );
+        return this;
     }
 
-    public double getPositionAsDouble() {
+    public double getPos() {
         return this.getPosition().getValueAsDouble();
     }
 
-    public double getVelocityAsDouble() {
+    public double getVel() {
         return this.getVelocity().getValueAsDouble();
     }
 
-    public double getAccelerationAsDouble() {
+    public double getAcc() {
         return this.getAcceleration().getValueAsDouble();
     }
 
@@ -90,17 +89,39 @@ public class BetterTalonFX extends TalonFX {
         return request.Position;
     }
 
+    public double getError(){
+        return getPos()-getTargetPosition();
+    }
+
+    public void setSimVel(double vel){
+        sim.setRotorVelocity(vel);
+    }
+
+    public void setSimAcc(double acc){
+        sim.setRotorAcceleration(acc);
+    }
+
+    public void refreshSimVoltage(){
+        sim.setSupplyVoltage(RobotController.getBatteryVoltage());
+    }
+
+    public double getSimVoltage(){
+        return sim.getMotorVoltage();
+    }
+
     public void log(String path){
         SmartDashboard.putNumber(path+"/output",get());
-        SmartDashboard.putNumber(path+"/position", getPositionAsDouble());
-        SmartDashboard.putNumber(path+"/velocity", getVelocityAsDouble());
-        SmartDashboard.putNumber(path+"/acceleration", getAccelerationAsDouble());
+        SmartDashboard.putNumber(path+"/position", getPos());
+        SmartDashboard.putNumber(path+"/targetPosition", getTargetPosition());
+        SmartDashboard.putNumber(path+"/error", getError());
+        SmartDashboard.putNumber(path+"/velocity", getVel());
+        SmartDashboard.putNumber(path+"/acceleration", getAcc());
         SmartDashboard.putNumber(path+"/temp", getDeviceTemp().getValueAsDouble());
         SmartDashboard.putNumber(path+"/fault", getFaultField().asSupplier().get());
         SmartDashboard.putNumber(path+"/supplyCurrent", getSupplyCurrent().getValueAsDouble());
         SmartDashboard.putNumber(path+"/statorCurrent", getStatorCurrent().getValueAsDouble());
         SmartDashboard.putNumber(path+"/voltage", getMotorVoltage().getValueAsDouble());
         SmartDashboard.putNumber(path+"/supplyVoltage", getSupplyVoltage().getValueAsDouble());
-        SmartDashboard.putNumber(path+"/running", this.getMotionMagicIsRunning().getValueAsDouble());
+        SmartDashboard.putNumber(path+"/running", getMotionMagicIsRunning().getValueAsDouble());
     }
 }

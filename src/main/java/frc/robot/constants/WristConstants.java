@@ -54,7 +54,7 @@ public class WristConstants {
     public static final Constraints pidConstraints=new Constraints(Units.degreesToRadians(360),Units.degreesToRadians(360));
 
     // Tolerance
-    public static final double wristTolerance = Units.degreesToRadians(1);
+    public static final double wristTolerance = Units.degreesToRadians(10);
 
     // Simulation constants
     public static final double momentOfInertia = 0.5219;
