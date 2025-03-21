@@ -8,6 +8,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
@@ -50,6 +51,8 @@ public class MultiCommands {
 
     private BooleanSupplier armInDangerZone;
 
+    private boolean algae = false;
+
     /**
      * Constructor for MultiCommands.
      */
@@ -84,6 +87,9 @@ public class MultiCommands {
         }
         if (swerve != null && state.robotPath != null) {
             swerve.followPath(state.robotPath);
+        }
+        else if (swerve != null && state.robotPosition != null) {
+            swerve.setRotationTarget(state.robotPosition.bluePos().getRotation());
         }
     }
 
@@ -200,12 +206,18 @@ public class MultiCommands {
     /**
      * Command to move to the source position.
      */
-    public Command moveToSource(int source) {
-        if (source != -1) {
-            return moveToState(() -> RobotPositions.sourceStates[source], 5);
-        } else {
-            return moveToState(() -> RobotPositions.sourceStates[0].withPath(null), 2);
-        }
+    public Command moveToSource() {
+        return moveToState(() -> getClosestState(RobotPositions.sourceStates), 5);
+    }
+
+    /**
+     * Command to rotate to the source position.
+     */
+    public Command rotateToSource() {
+        return moveToState(() -> {
+            RobotState state = getClosestState(RobotPositions.sourceStates);
+            return state.withPose(state.getPoseFromPath());
+        }, 2);
     }
 
     /**
@@ -225,12 +237,8 @@ public class MultiCommands {
     /**
      * Command to move to the default algae intake position.
      */
-    public Command moveToHighAlgae() {
-        return moveToStateSequenced(() -> RobotPositions.algaeHighState, true);
-    }
-
-    public Command moveToLowAlgae() {
-        return moveToStateSequenced(() -> RobotPositions.algaeLowState, true);
+    public Command moveToAlgae() {
+        return moveToStateSequenced(() -> getClosestState(RobotPositions.algaeStates), true);
     }
 
     public Command moveToGroundAlgae() {
@@ -264,11 +272,10 @@ public class MultiCommands {
     /**
      * Command to move to the default position.
      */
-    private boolean cat;
     public Command moveToDefault() {
             return new ParallelCommandGroup(
-                new SequentialCommandGroup(new InstantCommand(()->cat=arm.getMeasurement() < Units.degreesToRadians(-45)),cat?moveToStateSequenced(() -> RobotPositions.defaultState, false) : moveToState(() -> RobotPositions.defaultState)),
-                intakeCommands.stop()
+                moveToState(() -> algae ? RobotPositions.defaultState.withWrist(Units.degreesToRadians(-45)) : RobotPositions.defaultState),
+                new ConditionalCommand(intakeCommands.pulseIntake(), intakeCommands.stop(), () -> algae)
             );
     }
 
@@ -337,20 +344,20 @@ public class MultiCommands {
     /**
      * Command to retrieve coral from the source.
      */
-    public Command getCoralFromSource() {
-        return new ParallelCommandGroup(
-            moveToSource(-1),
-            intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),
-            simCoralIntake()
-        );
-    }
-
-    public Command getCoralFromSource(int source) {
-        return new ParallelCommandGroup(
-            moveToSource(source),
-            intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),
-            simCoralIntake()
-        );
+    public Command getCoralFromSource(boolean auto) {
+        if (auto) {
+            return new ParallelCommandGroup(
+                moveToSource(),
+                intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),
+                simCoralIntake()
+            );
+        } else {
+            return new ParallelCommandGroup(
+                rotateToSource(),
+                intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),
+                simCoralIntake()
+            );
+        }
     }
 
     /**
@@ -424,7 +431,8 @@ public class MultiCommands {
             moveToAlgae(side),
             new ParallelCommandGroup(
                 intakeCommands.intake(),
-                simAlgaeIntake()
+                simAlgaeIntake(),
+                new InstantCommand(()->algae=true)
             )
             //,swerveCommands.driveBack()
         );
@@ -438,7 +446,8 @@ public class MultiCommands {
             moveToGroundAlgae(),
             new ParallelCommandGroup(
                 intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),
-                simAlgaeIntake()
+                simAlgaeIntake(),
+                new InstantCommand(()->algae=true)
             )
             //,swerveCommands.driveBack()
         );
@@ -447,23 +456,13 @@ public class MultiCommands {
     /**
      * Command to retrieve algae from the default position.
      */
-    public Command getHighAlgae() {
+    public Command getAlgae() {
         return new SequentialCommandGroup(
-            moveToHighAlgae(),
+            moveToAlgae(),
             new ParallelCommandGroup(
                 intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),
-                simAlgaeIntake()
-            )
-            //,swerveCommands.driveBack()
-        );
-    }
-
-    public Command getLowAlgae() {
-        return new SequentialCommandGroup(
-            moveToLowAlgae(),
-            new ParallelCommandGroup(
-                intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),
-                simAlgaeIntake()
+                simAlgaeIntake(),
+                new InstantCommand(()->algae=true)
             )
             //,swerveCommands.driveBack()
         );

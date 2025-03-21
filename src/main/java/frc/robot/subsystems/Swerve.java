@@ -8,7 +8,6 @@ import frc.robot.other.SwerveFactory;
 
 import java.io.File;
 import java.util.List;
-import java.util.Optional;
 
 import org.photonvision.EstimatedRobotPose;
 
@@ -66,10 +65,13 @@ public class Swerve extends SubsystemBase {
 
     // Target pose
     private PathPlannerPath targetPath=null;
+    private Rotation2d rotationTarget=null;
 
     private StructArrayPublisher<Pose2d> estPosePublisher = NetworkTableInstance.getDefault().getStructArrayTopic("SmartDashboard/estimatedPoses",Pose2d.struct).publish();
 
     private Command currentAuto;
+
+    private boolean autoAlignEnabled = true;
 
     //private PIDController xController;
     //private PIDController yController;
@@ -215,23 +217,31 @@ public class Swerve extends SubsystemBase {
      * @param dtheta      The percentage of maximum angular speed.
      * @param fieldRelative Whether the drive is field-relative or robot-relative.
      */
-    public void setPercentDrive(double dx, double dy, double dtheta, Optional<Rotation2d> rotationTarget) {
+    public void setPercentDrive(double dx, double dy, double dtheta, boolean autoRotate) {
         double absSpeedX = dx*maxSpeed;
         double absSpeedY = dy*maxSpeed;
         double absRot = dtheta*maxAngularSpeed;
-        if (rotationTarget.isEmpty()) {
+        if (autoRotate && autoAlignEnabled && getRotationTarget() != null) {
+            setControl(facingAngleDrive
+                .withVelocityX(absSpeedX)
+                .withVelocityY(absSpeedY)
+                .withTargetDirection(getRotationTarget())
+            );
+        } else {
             setControl(fieldOrientedDrive
                 .withVelocityX(absSpeedX)
                 .withVelocityY(absSpeedY)
                 .withRotationalRate(absRot)
             );
-        } else {
-            setControl(facingAngleDrive
-                .withVelocityX(absSpeedX)
-                .withVelocityY(absSpeedY)
-                .withTargetDirection(rotationTarget.get())
-            );
         }
+    }
+
+    public Rotation2d getRotationTarget() {
+        return rotationTarget;
+    }
+
+    public void setRotationTarget(Rotation2d rotationTarget) {
+        this.rotationTarget = rotationTarget;
     }
 
     /**
@@ -267,16 +277,18 @@ public class Swerve extends SubsystemBase {
     }*/
 
     public void followPath(PathPlannerPath path) {
-        try {
-            targetPath = path;
-            startAuto(AutoBuilder.pathfindThenFollowPath(path, SwerveConstants.constraints));
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (autoAlignEnabled) {
+            try {
+                targetPath = path;
+                startAuto(AutoBuilder.pathfindThenFollowPath(path, SwerveConstants.constraints));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
     public boolean atTarget(){
-        if(targetPath==null){
+        if(targetPath==null || !autoAlignEnabled){
             return true;
         }
         Pose2d currentPose=getPose();
@@ -292,6 +304,10 @@ public class Swerve extends SubsystemBase {
             }*/
         }
         return true;
+    }
+
+    public void toggleAutoAlign() {
+        autoAlignEnabled = !autoAlignEnabled;
     }
 
     /**
@@ -338,6 +354,7 @@ public class Swerve extends SubsystemBase {
             SmartDashboard.putNumberArray("driveState/module"+i+"/target", new double[]{state.ModuleTargets[i].speedMetersPerSecond,state.ModuleStates[i].angle.getRadians()});
             swerve.getModule(i).getDriveMotor().log("driveState/module"+i+"/driveMotor");
             swerve.getModule(i).getSteerMotor().log("driveState/module"+i+"/steerMotor");
+            SmartDashboard.putBoolean("AutoAlignEnabled", autoAlignEnabled);
         }
     }
 

@@ -1,6 +1,5 @@
 package frc.robot.commands;
 
-import java.util.Optional;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
@@ -10,10 +9,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import frc.robot.constants.SwerveConstants;
 import frc.robot.subsystems.Swerve;
-import frc.robot.positions.FieldPositions;
-import frc.robot.other.RobotUtils;
 
 /**
  * This class encapsulates all the commands related to the Swerve subsystem.
@@ -41,12 +37,12 @@ public class SwerveCommands {
      * @param fieldOriented The supplier for whether the drive should be field-oriented.
      * @return A command that drives the swerve subsystem.
      */
-    public Command drive(DoubleSupplier dx, DoubleSupplier dy, DoubleSupplier dtheta, BooleanSupplier facingStation) {
+    public Command drive(DoubleSupplier dx, DoubleSupplier dy, DoubleSupplier dtheta, BooleanSupplier autoRotate) {
         return new FunctionalCommand(
             () -> {},
             () -> {
                 if(dx!=null||dy!=null||dtheta!=null){
-                    swerve.setPercentDrive(dx.getAsDouble(), dy.getAsDouble(), dtheta.getAsDouble(), facingStation.getAsBoolean() ? Optional.of(swerve.getPose().getY() <= FieldPositions.fieldWidth/2 ? RobotUtils.onRedAlliance() ? FieldPositions.leftStation : FieldPositions.rightStation : RobotUtils.onRedAlliance() ? FieldPositions.rightStation : FieldPositions.leftStation) : Optional.empty());
+                    swerve.setPercentDrive(dx.getAsDouble(), dy.getAsDouble(), dtheta.getAsDouble(), autoRotate.getAsBoolean());
                 }
             },
             (interrupted) -> {},
@@ -55,16 +51,17 @@ public class SwerveCommands {
         );
     }
 
-    public Command overrideDrive(DoubleSupplier dx, DoubleSupplier dy, DoubleSupplier dtheta, BooleanSupplier facingStation, double time) {        
+    public Command overrideDrive(DoubleSupplier dx, DoubleSupplier dy, DoubleSupplier dtheta, BooleanSupplier autoRotate, double time) {        
         return new ParallelRaceGroup(
-            new RepeatCommand(drive(dx,dy,dtheta,facingStation)),
+            new RepeatCommand(drive(dx,dy,dtheta,autoRotate)),
             new WaitCommand(time)
         );
     }
 
+    /*
     public Command driveBack(){
         return overrideDrive(()->-SwerveConstants.driveBackPower, ()->0, ()->0, ()->false, SwerveConstants.driveBackTime);
-    }
+    }*/
 
     /**
      * Creates a command to lock the swerve subsystem in place.

@@ -49,7 +49,14 @@ public final class RobotPositions {
 
     public static final RobotPosition[] stations = generateStations();
     public static final RobotPosition[] pickups = generatePickups();
-    public static final RobotPosition[] centerReef = generateCenterReef();
+    public static final RobotPosition[] centerReef = {
+        new RobotPosition(new Pose2d(new Translation2d(2.87, 4.03), new Rotation2d(Units.degreesToRadians(0)))),
+        new RobotPosition(new Pose2d(new Translation2d(3.69, 2.63), new Rotation2d(Units.degreesToRadians(60)))),
+        new RobotPosition(new Pose2d(new Translation2d(5.28, 2.63), new Rotation2d(Units.degreesToRadians(120)))),
+        new RobotPosition(new Pose2d(new Translation2d(6.1, 4.03), new Rotation2d(Units.degreesToRadians(180)))),
+        new RobotPosition(new Pose2d(new Translation2d(5.28, 5.43), new Rotation2d(Units.degreesToRadians(240)))),
+        new RobotPosition(new Pose2d(new Translation2d(3.69, 5.43), new Rotation2d(Units.degreesToRadians(300))))
+    };
     public static final RobotPosition[] branchReef = generateBranchReef();
 
     // ===== Robot States =====
@@ -74,14 +81,14 @@ public final class RobotPositions {
         Units.degreesToRadians(-95),
         0.65,
         Units.degreesToRadians(-115),
-        (RobotPosition)null
+        new RobotPosition(new Pose2d(new Translation2d(), new Rotation2d(Units.degreesToRadians(-90))))
     );
 
     public static final RobotState bargeState = new RobotState(
         Units.degreesToRadians(0),
         1.2,
         Units.degreesToRadians(-45),
-        (RobotPosition)null
+        new RobotPosition(new Pose2d(new Translation2d(), new Rotation2d(Units.degreesToRadians(180))))
     );
 
     public static final RobotState groundAlgaeState = new RobotState(
@@ -128,20 +135,6 @@ public final class RobotPositions {
         };
     }
 
-    private static RobotPosition[] generateCenterReef() {
-        RobotPosition[] positions = new RobotPosition[FieldPositions.reefSides];
-        
-        for(int i = 0; i < FieldPositions.reefSides; i++) {
-            Rotation2d forward = new Rotation2d(2*i*Math.PI/FieldPositions.reefSides).rotateBy(Rotation2d.k180deg);
-            Translation2d outer = FieldPositions.reefCenter.plus(new Translation2d(d1, forward));
-            Rotation2d sidewaysAngle = forward.rotateBy(Rotation2d.kCW_90deg);
-            Translation2d algae = outer.plus(new Translation2d(dShift, sidewaysAngle));
-            positions[i] = new RobotPosition(new Pose2d(algae, forward));
-        }
-        
-        return positions;
-    }
-
     private static RobotPosition[] generateBranchReef() {
         RobotPosition[] positions = new RobotPosition[FieldPositions.reefSides * 2];
         
@@ -164,13 +157,19 @@ public final class RobotPositions {
     // ===== State Generators =====
     
     private static RobotState[] generateSourceStates() {
-        RobotState[] states = new RobotState[1];
+        RobotState[] states = new RobotState[2];
         try {
             states[0] = new RobotState(
                 -0.43,
                 0.17,
                 Units.degreesToRadians(-113.6),
                 PathPlannerPath.fromPathFile("Source Left")
+            );
+            states[1] = new RobotState(
+                -0.43,
+                0.17,
+                Units.degreesToRadians(-113.6),
+                PathPlannerPath.fromPathFile("Source Right")
             );
         } catch (FileVersionException | IOException | ParseException e) {
             throw new RuntimeException(e);
@@ -194,9 +193,9 @@ public final class RobotPositions {
         RobotState[] states = new RobotState[FieldPositions.reefSides];
         for (int i = 0; i < states.length; i++) {
             states[i] = new RobotState(
-                Units.degreesToRadians(-65),
-                (i%2==0) ? 0.43 : 1.0,
-                Units.degreesToRadians(-115),
+                Units.degreesToRadians(-45),
+                (i%2==0) ? 0.45 : 0.1,
+                Units.degreesToRadians(-90),
                 centerReef[i]
             );
         }

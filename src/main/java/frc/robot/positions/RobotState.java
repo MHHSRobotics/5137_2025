@@ -75,11 +75,20 @@ public class RobotState {
     }
 
     public RobotState noWrist() {
-        return new RobotState(armPosition, elevatorPosition, null, (RobotPosition) null);
+        return new RobotState(armPosition, elevatorPosition, null, robotPosition);
     }
 
     public RobotState onlyWrist() {
-        return new RobotState(null, null, wristPosition, (RobotPosition) null);
+        return new RobotState(null, null, wristPosition, robotPosition);
+    }
+
+    public RobotState withWrist(double angle) {
+        return new RobotState(armPosition, elevatorPosition, angle, robotPosition);
+    }
+
+    public Pose2d getPoseFromPath() {
+        var pathPoses = robotPath.getPathPoses();
+        return new Pose2d(pathPoses.get(pathPoses.size() - 1).getTranslation(), robotPath.getGoalEndState().rotation());
     }
 
     /**

@@ -105,9 +105,9 @@ public class RobotUtils {
      * @return The forward direction as a Rotation2d.
      */
     public static Rotation2d getPerspectiveForward() {
-        if (Robot.isSimulation()) {
+        /*if (Robot.isSimulation()) {
             return Rotation2d.kCCW_90deg;
-        } else if (onRedAlliance()) {
+        } else*/ if (onRedAlliance()) {
             return Rotation2d.k180deg;
         } else {
             return Rotation2d.kZero;
