@@ -63,6 +63,8 @@ public class RobotContainer {
 	private Gamepieces gamepieces;
 
 	private SendableChooser<String> autoChoice;
+	private SendableChooser<Integer> autoChoiceOne;
+	private SendableChooser<Integer> autoChoiceTwo;
 	private Command auto;
 
 	private RobotPublisher robotPublisher;
@@ -103,12 +105,25 @@ public class RobotContainer {
 
 			autoChoice = new SendableChooser<String>();
 			AutoBuilder.getAllAutoNames().forEach((name) -> autoChoice.addOption(name, name));
-			SmartDashboard.putData("Auto Choice", autoChoice);
+			autoChoice.setDefaultOption("Dynamic", "Dynamic");
+
+			autoChoiceOne = new SendableChooser<Integer>();
+			autoChoiceTwo = new SendableChooser<Integer>();
+			for (int i = 0; i < 12; i++) {
+				autoChoiceOne.addOption("Reef " + (char)('A' + i), i);
+				autoChoiceTwo.addOption("Reef " + (char)('A' + i), i);
+			}
 
 			autoChoice.onChange((choice) -> {
 				swerve.resetGyro();
-				auto = AutoBuilder.buildAuto(choice);
+				if (choice != "Dynamic") {
+					auto = AutoBuilder.buildAuto(choice);
+				}
 			});
+
+			SmartDashboard.putData("Auto Choice", autoChoice);
+			SmartDashboard.putData("Auto Choice One", autoChoiceOne);
+			SmartDashboard.putData("Auto Choice Two", autoChoiceTwo);
 
 		} catch (RuntimeException e) {
 			DataLogManager.log("Error while initializing: " + RobotUtils.processError(e));
@@ -247,18 +262,17 @@ public class RobotContainer {
 	 * @return The autonomous command
 	 */
 	public Command getAutonomousCommand() {
-		/*if (auto != null) {
+		if (auto != null && autoChoice.getSelected() != "Dynamic") {
 			return auto;
 		} else {
-			return AutoBuilder.buildAuto("Leave");
-		}*/
-		return new SequentialCommandGroup(
-			multiCommands.placeCoral(()->3, ()->9),
-			multiCommands.getCoralFromSource(true),
-			new WaitCommand(2),
-			intakeCommands.stop(),
-			multiCommands.placeCoral(()->3, ()->10),
-			multiCommands.moveToDefault()
-		);
+			return new SequentialCommandGroup(
+				multiCommands.placeCoral(()->3, ()->autoChoiceOne.getSelected()),
+				multiCommands.getCoralFromSource(true),
+				new WaitCommand(2),
+				intakeCommands.stop(),
+				multiCommands.placeCoral(()->3, ()->autoChoiceTwo.getSelected()),
+				multiCommands.moveToDefault()
+			);
+		}
 	}
 }
