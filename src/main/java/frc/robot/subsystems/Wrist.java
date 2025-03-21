@@ -1,13 +1,7 @@
 package frc.robot.subsystems;
 
-import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.ArmFeedforward;
-import edu.wpi.first.math.controller.LinearQuadraticRegulator;
 import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N2;
-import edu.wpi.first.math.system.LinearSystem;
-import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Voltage;
@@ -60,9 +54,6 @@ public class Wrist extends SubsystemBase {
     
     /** Feedforward controller for gravity compensation and dynamics */
     private final ArmFeedforward feedforward;
-    
-    /** Desired goal position (may be different from the true goal) */
-    private double desiredGoal;
 
     /** Current goal position for the wrist in radians */
     private double goal;
@@ -72,9 +63,6 @@ public class Wrist extends SubsystemBase {
 
     /** Adapter to make SingleJointedArmSim compatible with MotorSystem */
     private final ArmMechanismSim mechanismSim;
-
-    /** Reference to the main arm this wrist is attached to */
-    private final Arm arm;
 
     // Linear quadratic regulator
     //private LinearQuadraticRegulator<N2,N1,N2> lqr;
@@ -89,9 +77,7 @@ public class Wrist extends SubsystemBase {
      * @param arm The arm subsystem that this wrist is attached to. Used for
      *            coordinating positions and gravity compensation.
      */
-    public Wrist(Arm arm) {
-        this.arm = arm;
-
+    public Wrist() {
         // Create motor and encoder
         EnhancedTalonFX wristMotor = new EnhancedTalonFX(
             WristConstants.motorId,
@@ -125,6 +111,8 @@ public class Wrist extends SubsystemBase {
         );
         controller.setTolerance(WristConstants.wristTolerance);
 
+        goal = RobotPositions.defaultState.wristPosition;
+
         
         // Initialize feedforward controller
         feedforward = new ArmFeedforward(
@@ -132,9 +120,6 @@ public class Wrist extends SubsystemBase {
             WristConstants.kG,
             WristConstants.kV
         );
-        
-        // Set initial goal position
-        desiredGoal = RobotPositions.defaultState.wristPosition;
 
         // Initialize simulation components
         wristSim = new SingleJointedArmSim(
@@ -184,16 +169,7 @@ public class Wrist extends SubsystemBase {
      *                WristConstants.minAngle and WristConstants.maxAngle.
      */
     public void setGoal(double newGoal) {
-        desiredGoal = RobotUtils.clamp(newGoal, WristConstants.minAngle, WristConstants.maxAngle);
-    }
-
-    /**
-     * Get the current goal position.
-     * 
-     * @return The current goal position in radians.
-     */
-    public double getDesiredGoal() {
-        return desiredGoal;
+        goal = RobotUtils.clamp(newGoal, WristConstants.minAngle, WristConstants.maxAngle);
     }
 
     /**
@@ -241,30 +217,6 @@ public class Wrist extends SubsystemBase {
         return motorSystem.getAcceleration();
     }
 
-    /**
-     * Determines if the arm's path will intersect the danger zone.
-     * 
-     * @param currentArmAngle Current angle of the arm in radians
-     * @param goalArmAngle Goal angle of the arm in radians
-     * @return true if the path intersects the danger zone
-     */
-    private boolean willArmPathIntersectDangerZone(double currentArmAngle, double goalArmAngle) {
-        return (currentArmAngle >= WristConstants.armDangerMin && goalArmAngle <= WristConstants.armDangerMax) ||
-            (goalArmAngle >= WristConstants.armDangerMin && currentArmAngle <= WristConstants.armDangerMax);
-    }
-
-    /**
-     * Determines the safe wrist position based on arm's current and goal positions.
-     * Retracts wrist if arm is moving through danger zone.
-     */
-    // 
-    private double getSafeGoal(double armAngle, double armGoal) {
-        if (willArmPathIntersectDangerZone(armAngle, armGoal) || Math.abs(armAngle-armGoal)>0.5) {
-            return WristConstants.minAngle;
-        }
-        return desiredGoal;
-    }
-
     public double getError(){
         return Math.abs(getMeasurement()-getGoal());
     }
@@ -280,7 +232,7 @@ public class Wrist extends SubsystemBase {
      *         false otherwise.
      */
     public boolean atSetpoint() {
-        return getError()<ArmConstants.armTolerance;
+        return getError()<WristConstants.wristTolerance*10; // Wrist does not reach setpoint -- greater tolerance than PID
     }
 
     /**
@@ -312,23 +264,20 @@ public class Wrist extends SubsystemBase {
             motorSystem.periodic();
 
             double measurement = getMeasurement();
+            @SuppressWarnings("unused")
             double velocity = getVelocity();
 
             // Update telemetry
             telemetry();
-        
-            // Calculate arm compensation
-            double armRotation = arm != null ? arm.getMeasurement() : 0;
             
-            // Update goal based on arm's current position and goal
-            goal = getSafeGoal(armRotation, arm.getGoal());
-
              // Generate smooth goal trajectory
              goalState = goalProfile.calculate(
                 GeneralConstants.simPeriod,
                 goalState,
                 new TrapezoidProfile.State(goal, 0)  // Target state
             );
+
+            goal = getGoal();
             
             // Use profile state as the goal for LQR
             /*double voltage = lqr.calculate(

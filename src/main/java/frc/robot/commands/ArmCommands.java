@@ -45,7 +45,7 @@ public class ArmCommands{
         return new FunctionalCommand(
             () -> {},
             () -> arm.setGoal(arm.getGoal() + change.getAsDouble()),
-            (Boolean onEnd) -> {},
+            (interrupted) -> {},
             () -> {return false;},
             arm);
     }

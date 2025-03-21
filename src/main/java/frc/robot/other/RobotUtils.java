@@ -105,9 +105,9 @@ public class RobotUtils {
      * @return The forward direction as a Rotation2d.
      */
     public static Rotation2d getPerspectiveForward() {
-        if (Robot.isSimulation()) {
+        /*if (Robot.isSimulation()) {
             return Rotation2d.kCCW_90deg;
-        } else if (onRedAlliance()) {
+        } else*/ if (onRedAlliance()) {
             return Rotation2d.k180deg;
         } else {
             return Rotation2d.kZero;
@@ -148,14 +148,24 @@ public class RobotUtils {
         RobotState closest = null;
         double closestDistance = Double.MAX_VALUE;
         for (RobotState other : others) {
-            if(other.robotPosition!=null){
-                Transform2d transform = other.robotPosition.alliancePos().minus(pose);
+                Transform2d transform;
+                if (other.robotPosition != null) {
+                    transform = other.robotPosition.alliancePos().minus(pose);
+                } else if (other.robotPath != null) {
+                    var pathPose = other.robotPath.getStartingHolonomicPose();
+                    if (pathPose.isPresent()) {
+                        transform = invertToAlliance(pathPose.get()).minus(pose);
+                    } else {
+                        continue;
+                    }
+                } else {
+                    continue;
+                }
                 double distance = Math.hypot(transform.getX(), transform.getY());
                 if (distance < closestDistance) {
                     closestDistance = distance;
                     closest = other;
                 }
-            }
         }
         return closest;
     }
@@ -163,8 +173,8 @@ public class RobotUtils {
     public static SendableChooser<Boolean> testing;
     static{
         testing=new SendableChooser<>();
-        testing.setDefaultOption("Testing", true);
-        testing.addOption("Production",false);
+        testing.setDefaultOption("Production",false);
+        testing.addOption("Testing", true);
         SmartDashboard.putData("Test Mode",testing);
     }
     // Converts an exception to an error string, or throws it if testing

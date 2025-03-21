@@ -9,7 +9,6 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import frc.robot.constants.SwerveConstants;
 import frc.robot.subsystems.Swerve;
 
 /**
@@ -38,31 +37,31 @@ public class SwerveCommands {
      * @param fieldOriented The supplier for whether the drive should be field-oriented.
      * @return A command that drives the swerve subsystem.
      */
-    public Command drive(DoubleSupplier dx, DoubleSupplier dy, DoubleSupplier dtheta, BooleanSupplier fieldOriented) {
+    public Command drive(DoubleSupplier dx, DoubleSupplier dy, DoubleSupplier dtheta, BooleanSupplier autoRotate) {
         return new FunctionalCommand(
             () -> {},
             () -> {
                 if(dx!=null||dy!=null||dtheta!=null){
-                    swerve.setTargetPose(null);
-                    swerve.setPercentDrive(dx.getAsDouble(), dy.getAsDouble(), dtheta.getAsDouble(), fieldOriented.getAsBoolean());
+                    swerve.setPercentDrive(dx.getAsDouble(), dy.getAsDouble(), dtheta.getAsDouble(), autoRotate.getAsBoolean());
                 }
             },
-            (Boolean onEnd) -> {},
+            (interrupted) -> {},
             () -> false,
             swerve
         );
     }
 
-    public Command overrideDrive(DoubleSupplier dx, DoubleSupplier dy, DoubleSupplier dtheta, BooleanSupplier fieldOriented, double time) {
+    public Command overrideDrive(DoubleSupplier dx, DoubleSupplier dy, DoubleSupplier dtheta, BooleanSupplier autoRotate, double time) {        
         return new ParallelRaceGroup(
-            new RepeatCommand(drive(dx,dy,dtheta,fieldOriented)),
+            new RepeatCommand(drive(dx,dy,dtheta,autoRotate)),
             new WaitCommand(time)
         );
     }
 
+    /*
     public Command driveBack(){
         return overrideDrive(()->-SwerveConstants.driveBackPower, ()->0, ()->0, ()->false, SwerveConstants.driveBackTime);
-    }
+    }*/
 
     /**
      * Creates a command to lock the swerve subsystem in place.

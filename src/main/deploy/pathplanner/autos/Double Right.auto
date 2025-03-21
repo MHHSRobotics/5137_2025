@@ -5,46 +5,28 @@
     "data": {
       "commands": [
         {
-          "type": "path",
-          "data": {
-            "pathName": "SB-F"
-          }
-        },
-        {
-          "type": "sequential",
+          "type": "parallel",
           "data": {
             "commands": [
               {
-                "type": "named",
+                "type": "path",
                 "data": {
-                  "name": "L4"
-                }
-              },
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 1.0
+                  "pathName": "SB-E"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "Default"
-                }
-              },
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 0.5
+                  "name": "Prescore"
                 }
               }
             ]
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "F-SL"
+            "name": "L4"
           }
         },
         {
@@ -52,64 +34,47 @@
           "data": {
             "commands": [
               {
-                "type": "named",
+                "type": "parallel",
                 "data": {
-                  "name": "SourceIntake"
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "E-SR"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "SourceIntake"
+                      }
+                    }
+                  ]
                 }
               },
               {
-                "type": "wait",
+                "type": "parallel",
                 "data": {
-                  "waitTime": 1.0
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "SR-D"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Prescore"
+                      }
+                    }
+                  ]
                 }
               },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Default"
-                }
-              },
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 0.5
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "SL-D"
-          }
-        },
-        {
-          "type": "sequential",
-          "data": {
-            "commands": [
               {
                 "type": "named",
                 "data": {
                   "name": "L4"
-                }
-              },
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 1.0
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Default"
-                }
-              },
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 0.5
                 }
               }
             ]
@@ -119,6 +84,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Active",
+  "folder": "Right Autos",
   "choreoAuto": false
 }

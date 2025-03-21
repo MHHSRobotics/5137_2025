@@ -1,0 +1,140 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "SB-E"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Prescore"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "L4"
+          }
+        },
+        {
+          "type": "sequential",
+          "data": {
+            "commands": [
+              {
+                "type": "parallel",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "E-SR"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "SourceIntake"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "parallel",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "SR-D"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Prescore"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "L4"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "sequential",
+          "data": {
+            "commands": [
+              {
+                "type": "parallel",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "D-SR"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "SourceIntake"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "parallel",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "SR-C"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Prescore"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "L4"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "Right Autos",
+  "choreoAuto": false
+}

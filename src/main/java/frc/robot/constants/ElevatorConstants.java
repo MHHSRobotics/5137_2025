@@ -12,7 +12,7 @@ public class ElevatorConstants {
     // Encoder ID
     public static final int encoderId = 2;
     public static final double encoderRatio = -0.5;  // Negate multiplier since encoder was inverted before
-    public static final double encoderOffset = 0.256;
+    public static final double encoderOffset = 0.2405;
 
     // PID constants
     public static final double kP = 20;
@@ -26,7 +26,7 @@ public class ElevatorConstants {
     public static final double kA = 0.02;
 
     // Elevator tolerance
-    public static final double elevatorTolerance = 0.01;
+    public static final double elevatorTolerance = 0.05;
 
     // Simulation constants
     public static final double gearRatio = 8; // gear ratio

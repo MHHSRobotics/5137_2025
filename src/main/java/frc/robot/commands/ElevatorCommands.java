@@ -43,8 +43,16 @@ public class ElevatorCommands{
         return new FunctionalCommand(
             () -> {},
             () -> elevator.setGoal(elevator.getGoal() + change.getAsDouble()),
-            (Boolean onEnd) -> {},
+            (interrupted) -> {},
             () -> {return false;},
             elevator);
+    }
+
+    public Command upShift() {
+        return new InstantCommand(() -> elevator.upShift());
+    }
+
+    public Command downShift() {
+        return new InstantCommand(() -> elevator.downShift());
     }
 }

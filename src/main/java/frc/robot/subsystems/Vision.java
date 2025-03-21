@@ -35,8 +35,8 @@ public class Vision extends SubsystemBase {
         // Initialize AprilTag cameras with their respective positions and the field layout
         AprilTagCamera blatCamera = new AprilTagCamera("BackLeft_AT", VisionConstants.robotToBLATCamera, fieldLayout);
         AprilTagCamera bratCamera = new AprilTagCamera("BackRight_AT", VisionConstants.robotToBRATCamera, fieldLayout);
-        AprilTagCamera flatCamera = new AprilTagCamera("FrontLeft_AT", VisionConstants.robotToFLATCamera, fieldLayout);
-        aprilTagCameras = new AprilTagCamera[]{blatCamera, flatCamera};
+        //AprilTagCamera flatCamera = new AprilTagCamera("FrontLeft_AT", VisionConstants.robotToFLATCamera, fieldLayout);
+        aprilTagCameras = new AprilTagCamera[]{blatCamera, bratCamera};
 
         // Initialize the vision system simulation and add AprilTags to it
         visionSim = new VisionSystemSim("main");

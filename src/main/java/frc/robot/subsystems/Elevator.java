@@ -173,7 +173,7 @@ public class Elevator extends SubsystemBase {
      *         false otherwise.
      */
     public boolean atSetpoint() {
-        return controller.atSetpoint();
+        return Math.abs(controller.getPositionError())<ElevatorConstants.elevatorTolerance;
     }
 
     /**
@@ -192,6 +192,15 @@ public class Elevator extends SubsystemBase {
      */
     public void setVoltage(Voltage v) {
         motorSystem.setVoltage(v);
+    }
+
+    public void downShift() {
+        motorSystem.getEncoder().downShift();
+    }
+
+
+    public void upShift() {
+        motorSystem.getEncoder().upShift();
     }
 
     /**

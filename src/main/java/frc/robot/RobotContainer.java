@@ -1,6 +1,7 @@
 package frc.robot;
 
 import java.io.File;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -8,7 +9,9 @@ import com.pathplanner.lib.auto.NamedCommands;
 
 import choreo.auto.AutoFactory;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.util.datalog.StringLogEntry;
@@ -60,6 +63,9 @@ public class RobotContainer {
 	private Gamepieces gamepieces;
 
 	private SendableChooser<String> autoChoice;
+	private SendableChooser<Integer> autoChoiceOne;
+	private SendableChooser<Integer> autoChoiceTwo;
+	private Command auto;
 
 	private RobotPublisher robotPublisher;
 	private RobotPublisherCommands robotPublisherCommands;
@@ -98,9 +104,27 @@ public class RobotContainer {
 			initMultiCommands();
 
 			autoChoice = new SendableChooser<String>();
-			autoChoice.setDefaultOption("Single Center", "Single Center");
 			AutoBuilder.getAllAutoNames().forEach((name) -> autoChoice.addOption(name, name));
+			autoChoice.setDefaultOption("Dynamic", "Dynamic");
+
+			autoChoiceOne = new SendableChooser<Integer>();
+			autoChoiceTwo = new SendableChooser<Integer>();
+			for (int i = 0; i < 12; i++) {
+				autoChoiceOne.addOption("Reef " + (char)('A' + i), i);
+				autoChoiceTwo.addOption("Reef " + (char)('A' + i), i);
+			}
+
+			autoChoice.onChange((choice) -> {
+				swerve.resetGyro();
+				if (choice != "Dynamic") {
+					auto = AutoBuilder.buildAuto(choice);
+				}
+			});
+
 			SmartDashboard.putData("Auto Choice", autoChoice);
+			SmartDashboard.putData("Auto Choice One", autoChoiceOne);
+			SmartDashboard.putData("Auto Choice Two", autoChoiceTwo);
+
 		} catch (RuntimeException e) {
 			DataLogManager.log("Error while initializing: " + RobotUtils.processError(e));
 		}
@@ -123,16 +147,21 @@ public class RobotContainer {
 		swerve = new Swerve(new File(Filesystem.getDeployDirectory(), "swerve.json"), vision);
 		swerveCommands = new SwerveCommands(swerve);
 
+		// () -> swerve.getPose().getY() <= FieldPositions.fieldWidth/2 ? RobotUtils.onRedAlliance() ? FieldPositions.leftStation : FieldPositions.rightStation : RobotUtils.onRedAlliance() ? FieldPositions.rightStation : FieldPositions.leftStation))
+
 		// Configure swerve bindings
 		swerve.setDefaultCommand(swerveCommands.drive(
 			() -> -Math.pow(MathUtil.applyDeadband(driver.getLeftY(), 0.05), 1), 
 			() -> -Math.pow(MathUtil.applyDeadband(driver.getLeftX(), 0.05), 1), 
 			() -> -Math.pow(MathUtil.applyDeadband(driver.getRightX(), 0.05), 1),
-			() -> true)
+			() -> (driver.triangle().or(driver.square()).or(driver.circle()).or(driver.cross())).and(driver.R2().negate()).getAsBoolean())
 		);
 
-		driver.L3().whileTrue(swerveCommands.lock());
+		//driver.L3().whileTrue(swerveCommands.lock());
 		driver.options().onTrue(swerveCommands.resetGyro());
+		driver.create().whileTrue(new SequentialCommandGroup(
+			new WaitCommand(3),
+			new InstantCommand(() -> swerve.toggleAutoAlign())));
 	}
 
 	private void initElevator() {
@@ -141,6 +170,15 @@ public class RobotContainer {
 
 		// Configure elevator bindings
 		elevator.setDefaultCommand(elevatorCommands.changeGoal(() -> -MathUtil.applyDeadband(operator.getLeftY(),0.1) / 50));
+
+		driver.povLeft().whileTrue(
+			new SequentialCommandGroup(
+				new WaitCommand(3),
+				elevatorCommands.downShift()));
+		driver.povRight().whileTrue(
+			new SequentialCommandGroup(
+				new WaitCommand(3),
+				elevatorCommands.upShift()));
 	}
 
 	private void initArm() {
@@ -152,7 +190,7 @@ public class RobotContainer {
 	}
 
 	private void initWrist() {
-		wrist = new Wrist(arm);
+		wrist = new Wrist();
 		wristCommands = new WristCommands(wrist);
 
 		// Configure wrist bindings
@@ -165,16 +203,16 @@ public class RobotContainer {
 		intakeCommands = new IntakeCommands(intake);
 
 		// Configure intake bindings
-		operator.L2().or(driver.L2().and(driver.R2().negate())).or(driver.R1().and(driver.R2()))
+		operator.L2().or(driver.L1())
 			.onTrue(intakeCommands.setSpeed(()->IntakeConstants.intakeSpeed))
 			.onFalse(intakeCommands.stop());
 
-		operator.R2().or(driver.L2().and(driver.R2())).or(driver.R1().and(driver.R2().negate()))
+		operator.R2().or(driver.R1())
 			.onTrue(intakeCommands.setSpeed(()->-IntakeConstants.intakeSpeed))
 			.onFalse(intakeCommands.stop());
 		
-		NamedCommands.registerCommand("Intake", intakeCommands.setSpeed(()->IntakeConstants.intakeSpeed));
-		NamedCommands.registerCommand("Outtake", intakeCommands.setSpeed(()->-IntakeConstants.intakeSpeed));
+		NamedCommands.registerCommand("Intake", intakeCommands.intake(() -> 0.1));
+		NamedCommands.registerCommand("Outtake", intakeCommands.outtake());
 	}
 
 	private void initHang() {
@@ -187,9 +225,11 @@ public class RobotContainer {
 	private void initMultiCommands() {
 		multiCommands = new MultiCommands(arm,elevator,wrist,swerve, swerveCommands, intakeCommands, hangCommands,robotPublisherCommands);
 
-		driver.triangle().and(driver.R2().negate()).onTrue(multiCommands.getCoralFromSource());
-		driver.circle().and(driver.R2().negate())
-		.onTrue(multiCommands.getAlgae());
+		driver.triangle().and(driver.R2().negate()).onTrue(multiCommands.getCoralFromSource(false));
+		driver.square().and(driver.R2().negate()).onTrue(multiCommands.moveToProcessor());
+		driver.circle().and(driver.R2().negate()).onTrue(multiCommands.getAlgae());
+		driver.cross().and(driver.R2().negate()).onTrue(multiCommands.moveToBarge());
+		driver.L2().onTrue(multiCommands.getAlgaeFromGround());
 
 		driver.triangle().and(driver.R2()).onTrue(multiCommands.placeCoral(3));
 		driver.square().and(driver.R2()).onTrue(multiCommands.placeCoral(2));
@@ -206,14 +246,9 @@ public class RobotContainer {
 		.onTrue(multiCommands.moveToDefault());
 
 		NamedCommands.registerCommand("Default", multiCommands.moveToDefault());
-		NamedCommands.registerCommand("SourceCoral", multiCommands.getCoralFromSource());
-
-		driver.L1()
-		.toggleOnTrue(intakeCommands.pulseIntake())
-		.onTrue(wristCommands.setGoal(() -> Units.degreesToRadians(-45)));
-
-		driver.square().and(driver.R2().negate()).onTrue(multiCommands.moveToProcessor());
-		driver.cross().and(driver.R2().negate()).onTrue(multiCommands.moveToBarge());
+		NamedCommands.registerCommand("SourceIntake", multiCommands.getCoralFromSource(true));
+		NamedCommands.registerCommand("L4", multiCommands.placeCoral(3, () -> true));
+		NamedCommands.registerCommand("Prescore", multiCommands.moveToPreScoringState());
 	}
 
 	private void initRobotPublisher() {
@@ -227,7 +262,17 @@ public class RobotContainer {
 	 * @return The autonomous command
 	 */
 	public Command getAutonomousCommand() {
-		swerve.resetGyro();
-		return AutoBuilder.buildAuto(autoChoice.getSelected());
+		if (auto != null && autoChoice.getSelected() != "Dynamic") {
+			return auto;
+		} else {
+			return new SequentialCommandGroup(
+				multiCommands.placeCoral(()->3, ()->autoChoiceOne.getSelected()),
+				multiCommands.getCoralFromSource(true),
+				new WaitCommand(2),
+				intakeCommands.stop(),
+				multiCommands.placeCoral(()->3, ()->autoChoiceTwo.getSelected()),
+				multiCommands.moveToDefault()
+			);
+		}
 	}
 }
