@@ -216,6 +216,7 @@ public class Elevator extends SubsystemBase {
         SmartDashboard.putNumber("elevator/velocity", getVelocity());
         SmartDashboard.putNumber("elevator/error", controller.getPositionError());
         SmartDashboard.putData("elevator/controller", controller);
+        SmartDashboard.putBoolean("elevator/atTarget", atSetpoint());
         motorSystem.log("elevator");
     }
 

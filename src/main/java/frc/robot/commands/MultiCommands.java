@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import frc.robot.constants.IntakeConstants;
 import frc.robot.constants.SwerveConstants;
 import frc.robot.other.RobotUtils;
@@ -51,7 +52,7 @@ public class MultiCommands {
 
     private BooleanSupplier armInDangerZone;
 
-    private boolean algae = false;
+    private boolean cat = false;
 
     /**
      * Constructor for MultiCommands.
@@ -125,6 +126,12 @@ public class MultiCommands {
     public Command moveToState(Supplier<RobotState> state) {
         return moveToState(state,Double.MAX_VALUE);
     }
+
+    private boolean targetSet(RobotState target) {
+        return (target.armPosition == null || arm.getGoal() == target.armPosition) &&
+        (target.elevatorPosition == null || elevator.getGoal() == target.elevatorPosition) &&
+        (target.wristPosition == null || wrist.getGoal() == target.wristPosition);
+    }
     
     /**
      * Move the robot to a specific state with a timeout.
@@ -134,15 +141,14 @@ public class MultiCommands {
      * @return A command that moves the robot to the specified state
      */
     public Command moveToState(Supplier<RobotState> state, double timeout) {
-        return new FunctionalCommand(
-            () -> { 
-                timer.restart(); 
+        return new ParallelRaceGroup(new WaitCommand(timeout),new FunctionalCommand(
+            () -> {
+                timer.restart();
                 setTargetState(state.get());
             },
             () -> {},
             (interrupted) -> {},
-            () -> (atSetpoint() || timer.hasElapsed(timeout)) && timer.hasElapsed(0.2),
-            arm, wrist);
+            () -> atSetpoint() && timer.hasElapsed(0.2)));
     }
 
     public Command moveToStateSequenced(Supplier<RobotState> state, boolean wristFirst) {
@@ -174,30 +180,30 @@ public class MultiCommands {
                     moveToState(() -> preState.get().withPath(state.get().robotPath), 5),
                     new ParallelCommandGroup(
                         intakeCommands.intake(() -> 0.1),
-                        moveToState(() -> state.get().onlyElevator())
+                        moveToState(() -> state.get().onlyElevator(), 1)
                     ),
-                    moveToState(() -> state.get().noElevator())
+                    moveToState(() -> state.get().noElevator(), 1)
                 );
             } else {
                 return new SequentialCommandGroup(
                     moveToState(() -> preState.get()),
                     new ParallelCommandGroup(
                         intakeCommands.intake(() -> 0.1),
-                        moveToState(() -> state.get().onlyElevator())
+                        moveToState(() -> state.get().onlyElevator(), 1)
                     ),
-                    moveToState(() -> state.get().noElevator())
+                    moveToState(() -> state.get().noElevator(), 1)
                 );
             }
         } else {
             if (state.get().robotPath != null) {
                 return new SequentialCommandGroup(
                     moveToState(() -> preState.get().withPath(state.get().robotPath), 5),
-                    moveToState(() -> state.get())
+                    moveToState(() -> state.get(), 1)
                 );
             } else {
                 return new SequentialCommandGroup(
-                    moveToState(() -> state.get().onlyElevator()),
-                    moveToState(() -> state.get().noElevator())
+                    moveToState(() -> state.get().onlyElevator(), 1),
+                    moveToState(() -> state.get().noElevator(), 1)
                 );
             }
         }
@@ -251,7 +257,7 @@ public class MultiCommands {
     public Command moveToBranch(Supplier<Integer> level, Supplier<Integer> branch) {
         return moveToStateSequenced(
             () -> RobotPositions.scoringStates[level.get()][branch.get()],
-            () -> RobotState.NULL
+            () -> RobotPositions.preScoringState
         );
     }
 
@@ -273,10 +279,15 @@ public class MultiCommands {
      * Command to move to the default position.
      */
     public Command moveToDefault() {
-            return new ParallelCommandGroup(
-                moveToState(() -> algae ? RobotPositions.defaultState.withWrist(Units.degreesToRadians(-45)) : RobotPositions.defaultState),
-                new ConditionalCommand(intakeCommands.pulseIntake(), intakeCommands.stop(), () -> algae)
-            );
+        return new ConditionalCommand(
+            new ParallelCommandGroup(
+                moveToState(() -> RobotPositions.defaultState.withWrist(Units.degreesToRadians(-45))),
+                intakeCommands.pulseIntake(),
+                new InstantCommand(() -> cat = false)),
+            new ParallelCommandGroup(
+                moveToState(() -> RobotPositions.defaultState),
+                intakeCommands.stop()),
+            () -> cat);
     }
 
     /**
@@ -432,7 +443,7 @@ public class MultiCommands {
             new ParallelCommandGroup(
                 intakeCommands.intake(),
                 simAlgaeIntake(),
-                new InstantCommand(()->algae=true)
+                new InstantCommand(()->cat=true)
             )
             //,swerveCommands.driveBack()
         );
@@ -442,14 +453,11 @@ public class MultiCommands {
      * Command to retrieve algae from a specific side.
      */
     public Command getAlgaeFromGround() {
-        return new SequentialCommandGroup(
+        return new ParallelCommandGroup(
             moveToGroundAlgae(),
-            new ParallelCommandGroup(
-                intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),
-                simAlgaeIntake(),
-                new InstantCommand(()->algae=true)
-            )
-            //,swerveCommands.driveBack()
+            intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),
+            simAlgaeIntake(),
+            new InstantCommand(()->cat=true)
         );
     }
 
@@ -457,14 +465,11 @@ public class MultiCommands {
      * Command to retrieve algae from the default position.
      */
     public Command getAlgae() {
-        return new SequentialCommandGroup(
+        return new ParallelCommandGroup(
             moveToAlgae(),
-            new ParallelCommandGroup(
-                intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),
-                simAlgaeIntake(),
-                new InstantCommand(()->algae=true)
-            )
-            //,swerveCommands.driveBack()
+            intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),
+            simAlgaeIntake(),
+            new InstantCommand(()->cat=true)
         );
     }
 

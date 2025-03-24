@@ -287,23 +287,21 @@ public class Swerve extends SubsystemBase {
         }
     }
 
-    public boolean atTarget(){
+    public double getError() {
         if(targetPath==null || !autoAlignEnabled){
-            return true;
+            return 0;
         }
         Pose2d currentPose=getPose();
         Pose2d targetPose = getTargetPose();
         if (targetPose != null) {
-            double dist=currentPose.getTranslation().getDistance(targetPose.getTranslation());
-            if(dist>SwerveConstants.transTol){
-                return false;
-            }
-            /*double rotDist=currentPose.getRotation().minus(targetPose.getRotation()).getRadians();
-            if(rotDist>SwerveConstants.rotTol){
-                return false;
-            }*/
+            return currentPose.getTranslation().getDistance(targetPose.getTranslation());
+        } else {
+            return 0;
         }
-        return true;
+    }
+
+    public boolean atTarget(){
+        return getError()<SwerveConstants.transTol;
     }
 
     public void toggleAutoAlign() {
@@ -355,6 +353,8 @@ public class Swerve extends SubsystemBase {
             swerve.getModule(i).getDriveMotor().log("driveState/module"+i+"/driveMotor");
             swerve.getModule(i).getSteerMotor().log("driveState/module"+i+"/steerMotor");
             SmartDashboard.putBoolean("AutoAlignEnabled", autoAlignEnabled);
+            SmartDashboard.putNumber("driveState/error", getError());
+            SmartDashboard.putBoolean("driveState/atTarget", atTarget());
         }
     }
 

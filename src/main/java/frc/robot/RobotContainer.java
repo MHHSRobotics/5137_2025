@@ -220,6 +220,22 @@ public class RobotContainer {
 		hangCommands = new HangCommands(hang);
 		
 		driver.povUp().whileTrue(hangCommands.setSpeed(() -> -driver.getRightY()*HangConstants.hangSpeed));
+		operator.povUp().whileTrue(hangCommands.setSpeed(()->HangConstants.hangSpeed));
+		operator.povDown().whileTrue(hangCommands.setSpeed(()->-HangConstants.hangSpeed));
+
+		/*driver.create().and(driver.R3()).onTrue(
+			new ParallelDeadlineGroup(
+				new WaitCommand(3.0),
+				new InstantCommand(() -> hangCommands.setSpeed(() -> 1.0))));
+
+		driver.create().and(driver.L3()).onTrue(
+			new SequentialCommandGroup(
+			new ParallelDeadlineGroup(
+				new WaitCommand(0.5),
+				new InstantCommand(() -> hangCommands.setSpeed(() -> -1.0))),
+			new ParallelDeadlineGroup(
+				new WaitCommand(0.5),
+				new InstantCommand(() -> hangCommands.setSpeed(() -> 1.0)))));*/
 	}
 
 	private void initMultiCommands() {
@@ -240,10 +256,14 @@ public class RobotContainer {
 		.and(driver.square().negate())
 		.and(driver.circle().negate())
 		.and(driver.cross().negate())
+		.and(driver.L2().negate())
 		.onTrue(multiCommands.moveToDefault());
 
 		driver.povDown()
 		.onTrue(multiCommands.moveToDefault());
+
+		driver.povUp()
+		.onTrue(armCommands.setGoal(() -> Units.degreesToRadians(35)));
 
 		NamedCommands.registerCommand("Default", multiCommands.moveToDefault());
 		NamedCommands.registerCommand("SourceIntake", multiCommands.getCoralFromSource(true));
@@ -264,15 +284,26 @@ public class RobotContainer {
 	public Command getAutonomousCommand() {
 		if (auto != null && autoChoice.getSelected() != "Dynamic") {
 			return auto;
+		} else if (autoChoiceOne.getSelected() != null) {
+			if (autoChoiceTwo.getSelected() != null) {
+				return new SequentialCommandGroup(
+					intakeCommands.intake(() -> 0.05),
+					multiCommands.placeCoral(()->3, ()->autoChoiceOne.getSelected()),
+					multiCommands.getCoralFromSource(true),
+					new WaitCommand(0.5),
+					intakeCommands.stop(),
+					multiCommands.placeCoral(()->3, ()->autoChoiceTwo.getSelected()),
+					multiCommands.moveToDefault()
+				);
+			} else {
+				return new SequentialCommandGroup(
+					intakeCommands.intake(() -> 0.05),
+					multiCommands.placeCoral(()->3, ()->autoChoiceOne.getSelected()),
+					multiCommands.moveToDefault()
+				);
+			}
 		} else {
-			return new SequentialCommandGroup(
-				multiCommands.placeCoral(()->3, ()->autoChoiceOne.getSelected()),
-				multiCommands.getCoralFromSource(true),
-				new WaitCommand(2),
-				intakeCommands.stop(),
-				multiCommands.placeCoral(()->3, ()->autoChoiceTwo.getSelected()),
-				multiCommands.moveToDefault()
-			);
+			return AutoBuilder.buildAuto("Leave");
 		}
 	}
 }

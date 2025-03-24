@@ -94,7 +94,7 @@ public class IntakeCommands {
                 setSpeed(() -> IntakeConstants.intakeSpeed),
                 new WaitCommand(0.1),
                 stop(),
-                new WaitCommand(0.4)
+                new WaitCommand(0.15)
             )                                                          // Stop the intake
         );
         command.addRequirements(intake);
