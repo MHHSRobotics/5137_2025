@@ -79,7 +79,7 @@ public final class RobotPositions {
     // Processor state
     public static final RobotState processorState = new RobotState(
         Units.degreesToRadians(-95),
-        0.65,
+        0.5,
         Units.degreesToRadians(-115),
         new RobotPosition(new Pose2d(new Translation2d(), new Rotation2d(Units.degreesToRadians(-90))))
     );

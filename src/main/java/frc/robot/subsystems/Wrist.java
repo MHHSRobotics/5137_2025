@@ -249,6 +249,7 @@ public class Wrist extends SubsystemBase {
         SmartDashboard.putNumber("wrist/profileError", getProfileError());
         SmartDashboard.putNumber("wrist/profileAngle",goalState.position);
         SmartDashboard.putNumber("wrist/profileVelocity",goalState.velocity);
+        SmartDashboard.putBoolean("wrist/atTarget", atSetpoint());
         motorSystem.log("wrist");
     }
 

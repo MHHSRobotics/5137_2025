@@ -243,6 +243,7 @@ public class Arm extends SubsystemBase {
         SmartDashboard.putNumber("arm/profileError", getProfileError());
         SmartDashboard.putNumber("arm/profileAngle",goalState.position);
         SmartDashboard.putNumber("arm/profileVelocity",goalState.velocity);
+        SmartDashboard.putBoolean("arm/atTarget", atSetpoint());
         motorSystem.log("arm");
     }
 
