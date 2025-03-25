@@ -102,6 +102,7 @@ public class Swerve extends SubsystemBase {
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
             .withHeadingPID(SwerveConstants.rotationKP, SwerveConstants.rotationKI, SwerveConstants.rotationKD)
             .withMaxAbsRotationalRate(Units.degreesToRadians(360));
+        facingAngleDrive.HeadingController.setTolerance(0.01);
 
         setChassisSpeeds = new SwerveRequest.ApplyRobotSpeeds(); // Request to set chassis speeds
         lock = new SwerveRequest.SwerveDriveBrake(); // Request to lock the swerve modules
@@ -331,6 +332,7 @@ public class Swerve extends SubsystemBase {
                 if(Robot.isSimulation()){
                     vision.updateSim(this.getPose());
                 }
+                System.out.println(facingAngleDrive.HeadingController.getPositionError());
             }
             /*if(targetPath!=null){
                 double xDrive=xController.calculate(getPose().getX(),getTargetPose().getX());

@@ -158,10 +158,8 @@ public class RobotContainer {
 		);
 
 		//driver.L3().whileTrue(swerveCommands.lock());
-		driver.options().onTrue(swerveCommands.resetGyro());
-		driver.create().whileTrue(new SequentialCommandGroup(
-			new WaitCommand(3),
-			new InstantCommand(() -> swerve.toggleAutoAlign())));
+		driver.options().debounce(1).onTrue(swerveCommands.resetGyro());
+		driver.create().debounce(1).onTrue(new InstantCommand(() -> swerve.toggleAutoAlign()));
 	}
 
 	private void initElevator() {
@@ -171,14 +169,8 @@ public class RobotContainer {
 		// Configure elevator bindings
 		elevator.setDefaultCommand(elevatorCommands.changeGoal(() -> -MathUtil.applyDeadband(operator.getLeftY(),0.1) / 50));
 
-		driver.povLeft().whileTrue(
-			new SequentialCommandGroup(
-				new WaitCommand(3),
-				elevatorCommands.downShift()));
-		driver.povRight().whileTrue(
-			new SequentialCommandGroup(
-				new WaitCommand(3),
-				elevatorCommands.upShift()));
+		driver.povLeft().debounce(1).onTrue(elevatorCommands.downShift());
+		driver.povRight().debounce(1).onTrue(elevatorCommands.upShift());
 	}
 
 	private void initArm() {
@@ -203,7 +195,7 @@ public class RobotContainer {
 		intakeCommands = new IntakeCommands(intake);
 
 		// Configure intake bindings
-		operator.L2().or(driver.L1())
+		operator.L2().or(driver.L2())
 			.onTrue(intakeCommands.setSpeed(()->IntakeConstants.intakeSpeed))
 			.onFalse(intakeCommands.stop());
 
@@ -245,7 +237,7 @@ public class RobotContainer {
 		driver.square().and(driver.R2().negate()).onTrue(multiCommands.moveToProcessor());
 		driver.circle().and(driver.R2().negate()).onTrue(multiCommands.getAlgae());
 		driver.cross().and(driver.R2().negate()).onTrue(multiCommands.moveToBarge());
-		driver.L2().onTrue(multiCommands.getAlgaeFromGround());
+		driver.L1().onTrue(multiCommands.getAlgaeFromGround());
 
 		driver.triangle().and(driver.R2()).onTrue(multiCommands.placeCoral(3));
 		driver.square().and(driver.R2()).onTrue(multiCommands.placeCoral(2));

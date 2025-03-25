@@ -19,7 +19,7 @@ public class SwerveConstants {
 
     public static final double translationKP = 5.0;
     public static final double translationKI = 0.0;
-    public static final double translationKD = 0.1;
+    public static final double translationKD = 0.0;
     public static final double rotationKP = 5.0;
     public static final double rotationKI = 0.0;
     public static final double rotationKD = 0.0;
