@@ -46,7 +46,8 @@ public class ArmCommands{
             () -> {},
             () -> arm.setGoal(arm.getGoal() + change.getAsDouble()),
             (interrupted) -> {},
-            () -> {return false;},
-            arm);
+            () ->  false,
+            arm)
+            .withName("ArmDefault");
     }
 }

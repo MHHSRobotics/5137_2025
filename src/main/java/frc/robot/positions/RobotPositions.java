@@ -7,6 +7,7 @@ import org.json.simple.parser.ParseException;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.FileVersionException;
 
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -62,33 +63,25 @@ public final class RobotPositions {
     // ===== Robot States =====
     
     // Basic states without specific robot positions
-    public static final RobotState groundIntake = new RobotState(
-        -2.0,
-        0.41,
-        -1.39,
-        (RobotPosition)null  // Robot position determined at runtime
-    );   
-
     public static final RobotState defaultState = new RobotState(
         Units.degreesToRadians(0),
         0.,
         Units.degreesToRadians(90),
-        (RobotPosition)null  // Robot position determined at runtime
-    );
-    
-    // Processor state
-    public static final RobotState processorState = new RobotState(
-        Units.degreesToRadians(-95),
-        0.5,
-        Units.degreesToRadians(-115),
-        new RobotPosition(new Pose2d(new Translation2d(), new Rotation2d(Units.degreesToRadians(-90))))
+        (RobotPosition) null
     );
 
-    public static final RobotState bargeState = new RobotState(
-        Units.degreesToRadians(0),
-        1.2,
-        Units.degreesToRadians(-45),
-        new RobotPosition(new Pose2d(new Translation2d(), new Rotation2d(Units.degreesToRadians(180))))
+    public static final RobotState groundCoralTeleop = new RobotState(
+        -2.0,
+        0.41,
+        -1.39,
+        (RobotPosition) null
+    );
+
+    public static final RobotState groundCoralAuto = new RobotState(
+        Units.degreesToRadians(-100),
+        0.22,
+        Units.degreesToRadians(-80),
+        (RobotPosition) null
     );
 
     public static final RobotState groundAlgaeState = new RobotState(
@@ -97,6 +90,27 @@ public final class RobotPositions {
         Units.degreesToRadians(-115),
         (RobotPosition) null
     );
+    
+    public static final RobotState processorState = new RobotState(
+        Units.degreesToRadians(-95),
+        0.5,
+        Units.degreesToRadians(-115),
+        new RobotPosition(new Pose2d(new Translation2d(), new Rotation2d(Units.degreesToRadians(-90))))
+    );
+
+    public static final RobotState[] bargeStates = {
+        new RobotState(
+            Units.degreesToRadians(-25),
+            1.2,
+            Units.degreesToRadians(-45),
+            (RobotPosition) null),
+            //new RobotPosition(new Pose2d(new Translation2d(), new Rotation2d(Units.degreesToRadians(180))))),
+        new RobotState(
+            Units.degreesToRadians(25),
+            null,
+            null,
+            (RobotPosition) null)
+    };
 
     public static final RobotState preScoringState = new RobotState(
         Units.degreesToRadians(0),
@@ -112,7 +126,9 @@ public final class RobotPositions {
     public static final RobotState[] algaeStates = generateAlgaeStates();
     
     // Scoring states
-    public static final RobotState[][] scoringStates = generateScoringStates();
+    private static final Pair<RobotState[][],RobotState[][]> scoringStates = generateScoringStates();
+    public static final RobotState[][] scoringStatesVertical = scoringStates.getFirst();
+    public static final RobotState[][] scoringStatesHorizontal = scoringStates.getSecond();
     
     
 
@@ -176,18 +192,6 @@ public final class RobotPositions {
         }
         return states;
     }
-
-    public static final RobotState algaeHighState = new RobotState(
-        Units.degreesToRadians(-45),
-        0.45,
-        Units.degreesToRadians(-90),
-        (RobotPosition) null);
-    
-    public static final RobotState algaeLowState = new RobotState(
-        Units.degreesToRadians(-45),
-        0.1,
-        Units.degreesToRadians(-90),
-        (RobotPosition) null);
     
     private static RobotState[] generateAlgaeStates() {
         RobotState[] states = new RobotState[FieldPositions.reefSides];
@@ -202,25 +206,20 @@ public final class RobotPositions {
         return states;
     }
     
-    private static RobotState[][] generateScoringStates() {
-        RobotState[][] states = new RobotState[4][12];
+    private static Pair<RobotState[][], RobotState[][]> generateScoringStates() {
+        RobotState[][] verticalStates = new RobotState[4][12];
+        RobotState[][] horizontalStates = new RobotState[4][12];
         double[] armAngles = {
-            0.66,   // L1
-            0.34,   // L2
-            0.34,   // L3
-            0.225    // L4
+            0.61, 0.34, 0.34, 0.225, // Vertical Coral Scoring
+            0.61, 0.34, 0.34, 0.75 // Horizontal Coral Scoring
         };
         double[] elevatorHeights = {
-            0.01,   // L1
-            0.1,  // L2
-            0.47,   // L3
-            1.2     // L4
+            0.01, 0.1, 0.47, 1.2, // Vertical Coral Scoring
+            0.05, 0.1, 0.47, 0.97 // Horizontal Coral Scoring
         };
         double[] wristAngles = {
-            0.15,   // L1
-            0.18,   // L2
-            0.18,   // L3
-            0.54    // L4
+            -0.61, 0.18, 0.18, 0.54, // Vertical Coral Scoring
+            0.1, 0.18, 0.18, -0.95 // Horizontal Coral Scoring
         };
         PathPlannerPath[] paths = new PathPlannerPath[12];
         for (int i = 0; i < 12; i++) {
@@ -231,16 +230,22 @@ public final class RobotPositions {
             }
         }
 
-        for (int level = 0; level < states.length; level++) {
-            for (int pos = 0; pos < states[level].length; pos++) {
-                states[level][pos] = new RobotState(
+        for (int level = 0; level < 4; level++) {
+            for (int pos = 0; pos < 12; pos++) {
+                verticalStates[level][pos] = new RobotState(
                     armAngles[level],
                     elevatorHeights[level],
                     wristAngles[level],
-                    paths[pos]
+                    (level == 0) ? (PathPlannerPath) null : paths[pos]
+                );
+                horizontalStates[level][pos] = new RobotState(
+                    armAngles[level+4],
+                    elevatorHeights[level+4],
+                    wristAngles[level+4],
+                    (level == 0) ? (PathPlannerPath) null : paths[pos]
                 );
             }
         }
-        return states;
+        return new Pair<RobotState[][],RobotState[][]>(verticalStates, horizontalStates);
     }
 } 

@@ -172,7 +172,7 @@ public class RobotUtils {
     public static SendableChooser<Boolean> testing;
     static{
         testing=new SendableChooser<>();
-        testing.setDefaultOption("Production",false);
+        testing.setDefaultOption("Production",true);
         testing.addOption("Testing", true);
         SmartDashboard.putData("Test Mode",testing);
     }

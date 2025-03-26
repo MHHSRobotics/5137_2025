@@ -44,7 +44,8 @@ public class WristCommands{
             () -> {},
             () -> wrist.setGoal(wrist.getGoal() + change.getAsDouble()),
             (interrupted) -> {},
-            () -> {return false;},
-            wrist);
+            () -> false,
+            wrist)
+            .withName("WristDefault");
     }
 }

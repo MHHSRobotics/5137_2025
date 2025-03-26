@@ -82,6 +82,16 @@ public class IntakeCommands {
         return command;
     }
 
+    public Command setSpeed(DoubleSupplier time, DoubleSupplier speed) {
+        Command command = new SequentialCommandGroup(
+            new InstantCommand(() -> intake.setSpeed(speed.getAsDouble())), // Start the intake
+            new WaitCommand(time.getAsDouble()),                                                   // Wait for 1 second
+            stop()                                                                // Stop the intake
+        );
+        command.addRequirements(intake);
+        return command;
+    }
+
     /**
      * Creates a command that will pulse the intake.
      * The command will pulse the intake until overriden.
@@ -111,6 +121,16 @@ public class IntakeCommands {
         Command command = new SequentialCommandGroup(
             new InstantCommand(() -> intake.setSpeed(-IntakeConstants.intakeSpeed)), // Start the intake
             new WaitCommand(IntakeConstants.outtakeTime),                                                   // Wait for 1 second
+            stop()                                                                // Stop the intake
+        );
+        command.addRequirements(intake);
+        return command;
+    }
+
+    public Command outtake(DoubleSupplier time) {
+        Command command = new SequentialCommandGroup(
+            new InstantCommand(() -> intake.setSpeed(-IntakeConstants.intakeSpeed)), // Start the intake
+            new WaitCommand(time.getAsDouble()),                                                   // Wait for 1 second
             stop()                                                                // Stop the intake
         );
         command.addRequirements(intake);

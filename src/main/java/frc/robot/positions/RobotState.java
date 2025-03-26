@@ -67,11 +67,11 @@ public class RobotState {
     }
 
     public RobotState noElevator() {
-        return new RobotState(armPosition, null, wristPosition, (RobotPosition) null);
+        return new RobotState(armPosition, null, wristPosition, robotPosition);
     }
 
     public RobotState onlyElevator() {
-        return new RobotState(null, elevatorPosition, null, (RobotPosition) null);
+        return new RobotState(null, elevatorPosition, null, robotPosition);
     }
 
     public RobotState noWrist() {
@@ -86,9 +86,21 @@ public class RobotState {
         return new RobotState(armPosition, elevatorPosition, angle, robotPosition);
     }
 
+    public RobotState onlyPath() {
+        return new RobotState(null, null, null, robotPath);
+    }
+
+    public RobotState noPosition() {
+        return new RobotState(armPosition, elevatorPosition, wristPosition, (RobotPosition) null);
+    }
+
     public Pose2d getPoseFromPath() {
         var pathPoses = robotPath.getPathPoses();
         return new Pose2d(pathPoses.get(pathPoses.size() - 1).getTranslation(), robotPath.getGoalEndState().rotation());
+    }
+
+    public RobotState withElevator(double height) {
+        return new RobotState(armPosition, height, wristPosition, (RobotPosition) null);
     }
 
     /**

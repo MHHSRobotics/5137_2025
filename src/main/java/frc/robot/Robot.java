@@ -1,5 +1,6 @@
 package frc.robot;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -11,11 +12,11 @@ public class Robot extends TimedRobot {
 
 	private final RobotContainer robotContainer;
 	
-	private Timer timer = new Timer();
 	public Robot() {
 		robotContainer = new RobotContainer();
-		timer.start();
 	}
+
+	public Command prev = new Command() {};
 
 	@Override
 	public void robotPeriodic() {
@@ -24,6 +25,9 @@ public class Robot extends TimedRobot {
 		SmartDashboard.putNumber("mem/total",r.totalMemory());
 		SmartDashboard.putNumber("mem/free",r.freeMemory());
 		SmartDashboard.putNumber("mem/max",r.maxMemory());
+		CommandScheduler.getInstance().onCommandInitialize((command) -> {
+			System.out.println("Command initialized: " + command.getName());
+		});
 	}
 
 	@Override
@@ -58,7 +62,11 @@ public class Robot extends TimedRobot {
 	}
 
 	@Override
-	public void teleopPeriodic() {}
+	public void teleopPeriodic() {
+		if (MathUtil.isNear(120.0, Timer.getMatchTime(), 0.1)) {
+			robotContainer.vibrateControllers();
+		}
+	}
 
 	@Override
 	public void teleopExit() {}

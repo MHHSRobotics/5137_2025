@@ -18,10 +18,12 @@ import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.gamepieces.Gamepieces;
@@ -154,7 +156,7 @@ public class RobotContainer {
 			() -> -Math.pow(MathUtil.applyDeadband(driver.getLeftY(), 0.05), 1), 
 			() -> -Math.pow(MathUtil.applyDeadband(driver.getLeftX(), 0.05), 1), 
 			() -> -Math.pow(MathUtil.applyDeadband(driver.getRightX(), 0.05), 1),
-			() -> (driver.triangle().or(driver.square()).or(driver.circle()).or(driver.cross())).and(driver.R2().negate()).getAsBoolean())
+			(driver.triangle().and(driver.L1().negate()).or(driver.square()).or(driver.circle().and(driver.L1().negate()))).and(driver.R2().negate()))
 		);
 
 		//driver.L3().whileTrue(swerveCommands.lock());
@@ -203,6 +205,8 @@ public class RobotContainer {
 			.onTrue(intakeCommands.setSpeed(()->-IntakeConstants.intakeSpeed))
 			.onFalse(intakeCommands.stop());
 		
+		operator.cross().onTrue(intakeCommands.setSpeed(() -> 0.2, () -> 0.5));
+		
 		NamedCommands.registerCommand("Intake", intakeCommands.intake(() -> 0.1));
 		NamedCommands.registerCommand("Outtake", intakeCommands.outtake());
 	}
@@ -233,22 +237,29 @@ public class RobotContainer {
 	private void initMultiCommands() {
 		multiCommands = new MultiCommands(arm,elevator,wrist,swerve, swerveCommands, intakeCommands, hangCommands,robotPublisherCommands);
 
-		driver.triangle().and(driver.R2().negate()).onTrue(multiCommands.getCoralFromSource(false));
+		driver.triangle().and(driver.R2().negate()).and(driver.L1().negate()).onTrue(multiCommands.getCoralFromSource(false));
 		driver.square().and(driver.R2().negate()).onTrue(multiCommands.moveToProcessor());
-		driver.circle().and(driver.R2().negate()).onTrue(multiCommands.getAlgae());
-		driver.cross().and(driver.R2().negate()).onTrue(multiCommands.moveToBarge());
-		driver.L1().onTrue(multiCommands.getAlgaeFromGround());
+		driver.circle().and(driver.R2().negate()).and(driver.L1().negate()).onTrue(multiCommands.getAlgaeFromReef());
+		driver.cross().and(driver.R2().negate()).onTrue(multiCommands.scoreBarge());
 
-		driver.triangle().and(driver.R2()).onTrue(multiCommands.placeCoral(3));
-		driver.square().and(driver.R2()).onTrue(multiCommands.placeCoral(2));
-		driver.circle().and(driver.R2()).onTrue(multiCommands.placeCoral(1));
-		driver.cross().and(driver.R2()).onTrue(multiCommands.placeCoral(0));
+		driver.triangle().and(driver.R2().negate()).and(driver.L1()).onTrue(multiCommands.getCoralFromGround(true));
+		driver.circle().and(driver.R2().negate()).and(driver.L1()).onTrue(multiCommands.getAlgaeFromGround());
+
+		driver.triangle().and(driver.R2()).and(driver.L1().negate()).onTrue(multiCommands.placeCoral(3, false));
+		driver.square().and(driver.R2()).and(driver.L1().negate()).onTrue(multiCommands.placeCoral(2, false));
+		driver.circle().and(driver.R2()).and(driver.L1().negate()).onTrue(multiCommands.placeCoral(1, false));
+		driver.cross().and(driver.R2()).and(driver.L1().negate()).onTrue(multiCommands.placeCoral(0, false));
+
+		driver.triangle().and(driver.R2()).and(driver.L1()).onTrue(multiCommands.placeCoral(3, true));
+		driver.square().and(driver.R2()).and(driver.L1()).onTrue(multiCommands.placeCoral(2, true));
+		driver.circle().and(driver.R2()).and(driver.L1()).onTrue(multiCommands.placeCoral(1, true));
+		driver.cross().and(driver.R2()).and(driver.L1()).onTrue(multiCommands.placeCoral(0, true));
+
 
 		driver.triangle().negate()
 		.and(driver.square().negate())
 		.and(driver.circle().negate())
 		.and(driver.cross().negate())
-		.and(driver.L2().negate())
 		.onTrue(multiCommands.moveToDefault());
 
 		driver.povDown()
@@ -259,13 +270,31 @@ public class RobotContainer {
 
 		NamedCommands.registerCommand("Default", multiCommands.moveToDefault());
 		NamedCommands.registerCommand("SourceIntake", multiCommands.getCoralFromSource(true));
-		NamedCommands.registerCommand("L4", multiCommands.placeCoral(3, () -> true));
+		NamedCommands.registerCommand("L4", multiCommands.placeCoral(3, true));
 		NamedCommands.registerCommand("Prescore", multiCommands.moveToPreScoringState());
 	}
 
 	private void initRobotPublisher() {
 		robotPublisher = new RobotPublisher(arm, elevator, wrist, swerve, gamepieces);
 		robotPublisherCommands = new RobotPublisherCommands(robotPublisher);
+	}
+
+	public void vibrateControllers() {
+		new Thread(() -> {
+			driver.setRumble(RumbleType.kBothRumble, 1);
+			operator.setRumble(RumbleType.kBothRumble, 1);
+			try {
+				Thread.sleep(1000);
+				stopVibration();
+			} catch (InterruptedException e) {
+				stopVibration();
+			}
+		});
+	}
+
+	public void stopVibration() {
+		driver.setRumble(RumbleType.kBothRumble, 0);
+		operator.setRumble(RumbleType.kBothRumble, 0);
 	}
 
 	/**
@@ -280,17 +309,17 @@ public class RobotContainer {
 			if (autoChoiceTwo.getSelected() != null) {
 				return new SequentialCommandGroup(
 					intakeCommands.intake(() -> 0.05),
-					multiCommands.placeCoral(()->3, ()->autoChoiceOne.getSelected()),
+					multiCommands.placeCoral(()->3, false, ()->autoChoiceOne.getSelected()),
 					multiCommands.getCoralFromSource(true),
 					new WaitCommand(0.5),
 					intakeCommands.stop(),
-					multiCommands.placeCoral(()->3, ()->autoChoiceTwo.getSelected()),
+					multiCommands.placeCoral(()->3, false, ()->autoChoiceTwo.getSelected()),
 					multiCommands.moveToDefault()
 				);
 			} else {
 				return new SequentialCommandGroup(
 					intakeCommands.intake(() -> 0.05),
-					multiCommands.placeCoral(()->3, ()->autoChoiceOne.getSelected()),
+					multiCommands.placeCoral(()->3, false, ()->autoChoiceOne.getSelected()),
 					multiCommands.moveToDefault()
 				);
 			}

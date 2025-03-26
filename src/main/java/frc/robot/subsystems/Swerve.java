@@ -72,6 +72,7 @@ public class Swerve extends SubsystemBase {
     private Command currentAuto;
 
     private boolean autoAlignEnabled = true;
+    public boolean autoAligning = false;
 
     //private PIDController xController;
     //private PIDController yController;
@@ -243,6 +244,7 @@ public class Swerve extends SubsystemBase {
 
     public void setRotationTarget(Rotation2d rotationTarget) {
         this.rotationTarget = rotationTarget;
+        autoAligning = false;
     }
 
     /**
@@ -281,6 +283,7 @@ public class Swerve extends SubsystemBase {
         if (autoAlignEnabled) {
             try {
                 targetPath = path;
+                autoAligning = true;
                 startAuto(AutoBuilder.pathfindThenFollowPath(path, SwerveConstants.constraints));
             } catch (Exception e) {
                 e.printStackTrace();
@@ -302,7 +305,7 @@ public class Swerve extends SubsystemBase {
     }
 
     public boolean atTarget(){
-        return getError()<SwerveConstants.transTol;
+        return getError()<SwerveConstants.transTol || !autoAlignEnabled || !autoAligning;
     }
 
     public void toggleAutoAlign() {
@@ -332,7 +335,6 @@ public class Swerve extends SubsystemBase {
                 if(Robot.isSimulation()){
                     vision.updateSim(this.getPose());
                 }
-                System.out.println(facingAngleDrive.HeadingController.getPositionError());
             }
             /*if(targetPath!=null){
                 double xDrive=xController.calculate(getPose().getX(),getTargetPose().getX());

@@ -48,7 +48,7 @@ public class SwerveCommands {
             (interrupted) -> {},
             () -> false,
             swerve
-        );
+        ).withName("SwerveDefault");
     }
 
     public Command overrideDrive(DoubleSupplier dx, DoubleSupplier dy, DoubleSupplier dtheta, BooleanSupplier autoRotate, double time) {        
