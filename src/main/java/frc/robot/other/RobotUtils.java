@@ -13,6 +13,7 @@ import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Robot;
 import frc.robot.positions.FieldPositions;
 import frc.robot.positions.RobotState;
 
@@ -172,13 +173,13 @@ public class RobotUtils {
     public static SendableChooser<Boolean> testing;
     static{
         testing=new SendableChooser<>();
-        testing.setDefaultOption("Production",true);
+        testing.setDefaultOption("Production",false);
         testing.addOption("Testing", true);
         SmartDashboard.putData("Test Mode",testing);
     }
     // Converts an exception to an error string, or throws it if testing
     public static String processError(RuntimeException e){
-        if(testing.getSelected()){
+        if(testing.getSelected() || Robot.isSimulation()){
             throw e;
         }else{
             StringBuilder sb=new StringBuilder();

@@ -156,7 +156,7 @@ public class RobotContainer {
 			() -> -Math.pow(MathUtil.applyDeadband(driver.getLeftY(), 0.05), 1), 
 			() -> -Math.pow(MathUtil.applyDeadband(driver.getLeftX(), 0.05), 1), 
 			() -> -Math.pow(MathUtil.applyDeadband(driver.getRightX(), 0.05), 1),
-			(driver.triangle().and(driver.L1().negate()).or(driver.square()).or(driver.circle().and(driver.L1().negate()))).and(driver.R2().negate()))
+			(driver.triangle().or(driver.square()).or(driver.circle())).and(driver.R2().negate()))
 		);
 
 		//driver.L3().whileTrue(swerveCommands.lock());
@@ -201,7 +201,7 @@ public class RobotContainer {
 			.onTrue(intakeCommands.setSpeed(()->IntakeConstants.intakeSpeed))
 			.onFalse(intakeCommands.stop());
 
-		operator.R2().or(driver.R1())
+		operator.R2().or(driver.R1().and(driver.L1().and(driver.R2().negate())))
 			.onTrue(intakeCommands.setSpeed(()->-IntakeConstants.intakeSpeed))
 			.onFalse(intakeCommands.stop());
 		
@@ -237,29 +237,31 @@ public class RobotContainer {
 	private void initMultiCommands() {
 		multiCommands = new MultiCommands(arm,elevator,wrist,swerve, swerveCommands, intakeCommands, hangCommands,robotPublisherCommands);
 
-		driver.triangle().and(driver.R2().negate()).and(driver.L1().negate()).onTrue(multiCommands.getCoralFromSource(false));
-		driver.square().and(driver.R2().negate()).onTrue(multiCommands.moveToProcessor());
-		driver.circle().and(driver.R2().negate()).and(driver.L1().negate()).onTrue(multiCommands.getAlgaeFromReef());
-		driver.cross().and(driver.R2().negate()).onTrue(multiCommands.scoreBarge());
+		driver.triangle().debounce(0.05).and(driver.R2().negate()).onTrue(multiCommands.getCoralFromSource(false));
+		driver.square().debounce(0.05).and(driver.R2().negate()).onTrue(multiCommands.moveToProcessor());
+		driver.circle().debounce(0.05).and(driver.R2().negate()).onTrue(multiCommands.getAlgaeFromReef());
+		driver.cross().debounce(0.05).and(driver.R2().negate()).onTrue(multiCommands.scoreBarge());
 
-		driver.triangle().and(driver.R2().negate()).and(driver.L1()).onTrue(multiCommands.getCoralFromGround(true));
-		driver.circle().and(driver.R2().negate()).and(driver.L1()).onTrue(multiCommands.getAlgaeFromGround());
+		driver.L1().and(driver.R1().negate()).and(driver.R2().negate()).debounce(0.05).onTrue(multiCommands.getCoralFromGround(false));
+		driver.R1().and(driver.L1().negate()).and(driver.R2().negate()).debounce(0.05).onTrue(multiCommands.getAlgaeFromGround());
 
-		driver.triangle().and(driver.R2()).and(driver.L1().negate()).onTrue(multiCommands.placeCoral(3, false));
-		driver.square().and(driver.R2()).and(driver.L1().negate()).onTrue(multiCommands.placeCoral(2, false));
-		driver.circle().and(driver.R2()).and(driver.L1().negate()).onTrue(multiCommands.placeCoral(1, false));
-		driver.cross().and(driver.R2()).and(driver.L1().negate()).onTrue(multiCommands.placeCoral(0, false));
+		driver.triangle().debounce(0.05).and(driver.R2()).and(driver.L1().negate()).onTrue(multiCommands.placeCoral(3, false));
+		driver.square().debounce(0.05).and(driver.R2()).and(driver.L1().negate()).onTrue(multiCommands.placeCoral(2, false));
+		driver.circle().debounce(0.05).and(driver.R2()).and(driver.L1().negate()).onTrue(multiCommands.placeCoral(1, false));
+		driver.cross().debounce(0.05).and(driver.R2()).and(driver.L1().negate()).onTrue(multiCommands.placeCoral(0, false));
 
-		driver.triangle().and(driver.R2()).and(driver.L1()).onTrue(multiCommands.placeCoral(3, true));
-		driver.square().and(driver.R2()).and(driver.L1()).onTrue(multiCommands.placeCoral(2, true));
-		driver.circle().and(driver.R2()).and(driver.L1()).onTrue(multiCommands.placeCoral(1, true));
-		driver.cross().and(driver.R2()).and(driver.L1()).onTrue(multiCommands.placeCoral(0, true));
+		driver.triangle().debounce(0.05).and(driver.R2()).and(driver.L1()).onTrue(multiCommands.placeCoral(3, true));
+		driver.square().debounce(0.05).and(driver.R2()).and(driver.L1()).onTrue(multiCommands.placeCoral(2, true));
+		driver.circle().debounce(0.05).and(driver.R2()).and(driver.L1()).onTrue(multiCommands.placeCoral(1, true));
+		driver.cross().debounce(0.05).and(driver.R2()).and(driver.L1()).onTrue(multiCommands.placeCoral(0, true));
 
 
 		driver.triangle().negate()
 		.and(driver.square().negate())
 		.and(driver.circle().negate())
 		.and(driver.cross().negate())
+		.and((driver.L1().and(driver.R1().negate())).negate())
+		.and((driver.R1().and(driver.L1().negate())).negate())
 		.onTrue(multiCommands.moveToDefault());
 
 		driver.povDown()

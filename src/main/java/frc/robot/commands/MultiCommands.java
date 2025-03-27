@@ -54,6 +54,9 @@ public class MultiCommands {
     private BooleanSupplier armInDangerZone;
 
     private boolean cat = false;
+    private boolean cat2 = false;
+
+    private Command activeCommand;
 
     /**
      * Constructor for MultiCommands.
@@ -88,10 +91,11 @@ public class MultiCommands {
             wrist.setGoal(state.wristPosition);
         }
         if (swerve != null && state.robotPath != null) {
-            swerve.followPath(state.robotPath);
+            //swerve.followPath(state.robotPath);
         }
-        else if (swerve != null && state.robotPosition != null) {
-            swerve.setRotationTarget(state.robotPosition.bluePos().getRotation());
+        if (swerve != null && state.robotPosition != null) {
+            swerveCommands.driveToPose(state.robotPosition.alliancePos()).schedule();
+            //swerve.setRotationTarget(state.robotPosition.bluePos().getRotation());
         } else if (swerve != null) {
             swerve.autoAligning = false;
         }
@@ -167,54 +171,6 @@ public class MultiCommands {
             );
         }
     }
-    
-    /**
-     * Move the robot to a specific state in a sequenced manner.
-     * First moves to a pre-state (typically for positioning), then to the final state.
-     * 
-     * @param state The final state to move to
-     * @param preState The pre-state to move to first
-     * @return A command that moves the robot to the specified state in sequence
-     */
-    public Command moveWithPreState(Supplier<RobotState> state, Supplier<RobotState> preState) {
-        if (preState.get() != null) {
-            if (state.get().robotPath != null) {
-                var command = new SequentialCommandGroup(
-                    moveToState(() -> preState.get().withPath(state.get().robotPath), 5),
-                    new ParallelCommandGroup(
-                        intakeCommands.intake(() -> 0.1),
-                        moveToState(() -> preState.get().elevatorPosition != null ? preState.get().onlyElevator().noPosition() : state.get().onlyElevator().noPosition(), 1)
-                    ),
-                    moveToState(() -> state.get().noElevator().noPosition(), 1)
-                );
-                if (preState.get().elevatorPosition != null) {
-                    return command.andThen(moveToState(() -> preState.get().onlyElevator().noPosition(), 1));
-                }
-                return command;
-            } else {
-                return new SequentialCommandGroup(
-                    moveToState(() -> preState.get()),
-                    new ParallelCommandGroup(
-                        intakeCommands.intake(() -> 0.1),
-                        moveToState(() -> state.get().onlyElevator().noPosition(), 1)
-                    ),
-                    moveToState(() -> state.get().noElevator().noPosition(), 1)
-                );
-            }
-        } else {
-            if (state.get().robotPath != null) {
-                return new SequentialCommandGroup(
-                    moveToState(() -> state.get().onlyPath()),
-                    new ParallelCommandGroup(
-                        intakeCommands.intake(() -> 0.1),
-                        moveToState(() -> state.get().noPosition(), 1)
-                    )
-                );
-            } else {
-                return moveToState(() -> state.get());
-            }
-        }
-    }
 
     public Command moveToDefault() {
         return new ConditionalCommand(
@@ -222,66 +178,47 @@ public class MultiCommands {
                 moveToState(() -> RobotPositions.defaultState.withWrist(Units.degreesToRadians(-45))),
                 intakeCommands.pulseIntake(),
                 new InstantCommand(() -> cat = false)),
-            new ParallelCommandGroup(
-                moveToState(() -> RobotPositions.defaultState),
-                intakeCommands.stop()),
+                new ConditionalCommand(
+                    new ParallelCommandGroup(
+                        new SequentialCommandGroup(
+                            moveToState(() -> RobotPositions.defaultState.noElevator()),
+                            moveToState(() -> RobotPositions.defaultState.onlyElevator())
+                        ),
+                        intakeCommands.intake(() -> 1.0),
+                        new InstantCommand(() -> cat2 = false)
+                    ),
+                    new ParallelCommandGroup(
+                        moveToState(() -> RobotPositions.defaultState),
+                        intakeCommands.stop()
+                    ),
+                    () -> cat2
+                ),
             () -> cat)
             .withName("Default");
     }
 
     public Command moveToPreScoringState() {
-        return moveToState(() -> RobotPositions.preScoringState);
+        return moveToState(() -> RobotPositions.preScoringState.noElevator());
     }
 
     public Command moveToProcessor() {
         return moveToStateSequenced(() -> RobotPositions.processorState, true).withName("Processor");
     }
 
-    public Command moveToLevel(int level, boolean isHorizontal) {
-        if (level == 0) {
-            return moveWithPreState(
-                () -> (isHorizontal ? RobotPositions.scoringStatesHorizontal : RobotPositions.scoringStatesVertical)[level][level],
-                () -> isHorizontal ? RobotPositions.preScoringState.withElevator(1.1) : RobotPositions.preScoringState
-            );
-        } else {
-            return moveWithPreState(
-                () -> getClosestState((isHorizontal ? RobotPositions.scoringStatesHorizontal : RobotPositions.scoringStatesVertical)[level]),
-                () -> isHorizontal ? RobotPositions.preScoringState.withElevator(1.1) : RobotPositions.preScoringState
-            );
-        }
-    }
-
-    public Command moveToBranch(Supplier<Integer> level, boolean isHorizontal, Supplier<Integer> branch) {
-        return moveWithPreState(
-            () -> (isHorizontal ? RobotPositions.scoringStatesHorizontal : RobotPositions.scoringStatesVertical)[level.get()][branch.get()],
-            () -> RobotPositions.preScoringState
-        );
-    }
-
     public Command getCoralFromSource(boolean auto) {
-        if (auto) {
-            return new ParallelCommandGroup(
-                moveToState(() -> getClosestState(RobotPositions.sourceStates), 5),
-                intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),
-                simCoralIntake()
-            ).withName("CoralSource");
-        } else {
-            return new ParallelCommandGroup(
-                moveToState(() -> {
-                    RobotState state = getClosestState(RobotPositions.sourceStates);
-                    return state.withPose(state.getPoseFromPath());
-                }, 2),
-                intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),
-                simCoralIntake()
-            ).withName("CoralSource");
-        }
+        return new ParallelCommandGroup(
+            moveToState(() -> RobotPositions.sourceStates[0], 1),
+            intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),
+            simCoralIntake()
+        ).withName("CoralSource");
     }
 
     public Command getCoralFromGround(boolean auto) {
         return new ParallelCommandGroup(
             moveToStateSequenced(() -> auto ? RobotPositions.groundCoralAuto : RobotPositions.groundCoralTeleop, true),
-            intakeCommands.intake(),
-            simCoralIntake()
+            intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),
+            simCoralIntake(),
+            new InstantCommand(()->cat2=true)
         ).withName("CoralGround");
     }
 
@@ -304,19 +241,39 @@ public class MultiCommands {
     }
 
     public Command placeCoral(Supplier<Integer> level, boolean isHorizontal, Supplier<Integer> branch) {
+        Supplier<RobotState> state = () -> (isHorizontal ? RobotPositions.scoringStatesHorizontal : RobotPositions.scoringStatesVertical)[level.get()][branch.get()];
+        Command moveToPosition = new SequentialCommandGroup(
+            moveToState(() -> (state.get().robotPosition != null ? RobotPositions.preScoringState.withPosition(state.get().robotPosition) : RobotPositions.preScoringState).noElevator(), 3),
+            new ParallelCommandGroup(
+                intakeCommands.intake(() -> 0.1),
+                moveToState(() -> isHorizontal && level.get() == 3 ? RobotPositions.preScoringState.onlyElevator().noPosition() : state.get().onlyElevator().noPosition(), 1)
+            ),
+            moveToState(() -> state.get().noElevator().noPosition(), 1)
+        );
+
+        if (isHorizontal && level.get() == 3) {
+            moveToPosition = moveToPosition.andThen(moveToState(() -> state.get().onlyElevator().noPosition(), 1));
+        }
+
         return new SequentialCommandGroup(
-            moveToBranch(level, isHorizontal, branch),
+            moveToPosition,
             intakeCommands.intake(() -> 0.05),
             new ParallelCommandGroup(
-                isHorizontal ? intakeCommands.setSpeed(() -> 0.2, () -> 0.5) : intakeCommands.outtake(),
+                isHorizontal && level.get() != 3 ? level.get() == 0 ? intakeCommands.setSpeed(() -> 0.2, () -> -0.6) : new ParallelCommandGroup(intakeCommands.setSpeed(() -> 0.2, () -> -0.6), moveToState(() -> RobotPositions.preScoringState.noElevator().noPosition())) : intakeCommands.outtake(),
                 simCoralOuttake()
             )
         ).withName("CoralScore");
     }
 
-    public Command placeCoral(int level, boolean isHorizontal) {
+    public Command placeCoralVertical(int level) {
+        Supplier<RobotState> state = level == 0 ? () -> RobotPositions.scoringStatesVertical[level][level] : () -> getClosestState(RobotPositions.scoringStatesVertical[level]);
         return new SequentialCommandGroup(
-            moveToLevel(level, isHorizontal),
+            moveToState(() -> (state.get().robotPosition != null ? RobotPositions.preScoringState.withPosition(state.get().robotPosition) : RobotPositions.preScoringState).noElevator(), 3),
+            new ParallelCommandGroup(
+                intakeCommands.intake(() -> 0.1),
+                moveToState(() -> state.get().onlyElevator().noPosition(), 1)
+            ),
+            moveToState(() -> state.get().noElevator().noPosition(), 1),
             new WaitCommand(0.2),
             intakeCommands.intake(() -> 0.05),
             new ParallelCommandGroup(
@@ -324,7 +281,35 @@ public class MultiCommands {
                 simCoralOuttake()
             ),
             moveToDefault()
-        ).withName("CoralScore");
+        );
+    }
+
+    public Command placeCoralHorizontal(int level) {
+        Supplier<RobotState> state = level == 0 ? () -> RobotPositions.scoringStatesHorizontal[level][level] : () -> getClosestState(RobotPositions.scoringStatesHorizontal[level]);
+        return new SequentialCommandGroup(
+            moveToState(() -> (state.get().robotPosition != null ? RobotPositions.preScoringState.withPosition(state.get().robotPosition) : RobotPositions.preScoringState).noElevator(), 3),
+            new ParallelCommandGroup(
+                intakeCommands.intake(() -> 0.1),
+                moveToState(() -> level == 1 || level == 2 ? state.get().withArm(0.3).noPosition() : (level == 3 ? RobotPositions.preScoringState : state.get()).onlyElevator().noPosition(), 1)
+            ),
+            moveToState(() -> level == 1 || level == 2 ? state.get().onlyArm().noPosition() : state.get().noElevator().noPosition(), 1),
+            moveToState(() -> state.get().onlyElevator().noPosition(), 1).onlyIf(() -> level == 3),
+            new WaitCommand(0.2),
+            intakeCommands.intake(() -> 0.05),
+            new ParallelCommandGroup(
+                new ConditionalCommand(
+                    moveToState(() -> RobotPositions.defaultState.onlyElevator()).onlyIf(() -> level == 2),
+                    moveToState(() -> RobotPositions.preScoringState.noElevator().noPosition()),
+                    () -> (level == 1 || level == 2)),
+                intakeCommands.setSpeed(() -> 1.0, () -> level <= 1 ? -0.3 : -0.6),
+                simCoralOuttake()
+            ),
+            moveToDefault().onlyIf(() -> level != 1)
+        );
+    }
+
+    public Command placeCoral(int level, boolean isHorizontal) {
+        return (isHorizontal ? placeCoralHorizontal(level) : placeCoralVertical(level)).withName("CoralScore");
     }
 
     public Command scoreBarge() {
@@ -336,7 +321,7 @@ public class MultiCommands {
                     new WaitCommand(0.2),
                     moveToState(() -> RobotPositions.bargeStates[1])),
                 new SequentialCommandGroup(
-                    new WaitCommand(0.8),
+                    new WaitCommand(0.7),
                     new ParallelCommandGroup(
                         intakeCommands.outtake(),
                         simAlgaeOuttake()

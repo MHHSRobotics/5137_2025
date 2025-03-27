@@ -3,12 +3,16 @@ package frc.robot.commands;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import frc.robot.other.RobotUtils;
 import frc.robot.subsystems.Swerve;
 
 /**
@@ -19,6 +23,10 @@ import frc.robot.subsystems.Swerve;
 public class SwerveCommands {
     private Swerve swerve;
 
+    private PIDController xController;
+    private PIDController yController;
+    private PIDController rotController;
+
     /**
      * Constructor for SwerveCommands.
      *
@@ -26,6 +34,13 @@ public class SwerveCommands {
      */
     public SwerveCommands(Swerve swerve) {
         this.swerve = swerve;
+        this.xController = new PIDController(0.8, 0, 0);
+        this.yController = new PIDController(0.8, 0, 0);
+        this.rotController = new PIDController(1.0, 0, 0);
+        rotController.enableContinuousInput(-Math.PI, Math.PI);
+        this.xController.setTolerance(0.01);
+        this.yController.setTolerance(0.01);
+        this.rotController.setTolerance(Units.degreesToRadians(1));
     }
 
     /**
@@ -50,6 +65,43 @@ public class SwerveCommands {
             swerve
         ).withName("SwerveDefault");
     }
+
+    public Command driveToPose(Pose2d target) {
+        return new FunctionalCommand(
+            () -> {
+                swerve.setTargetPose(target);
+            },
+            () -> {
+                Pose2d current = swerve.getPose();
+                swerve.autoDrive(
+                    xController.calculate(current.getX(), target.getX()),
+                    yController.calculate(current.getY(), target.getY()),
+                    rotController.calculate(current.getRotation().getRadians(), target.getRotation().getRadians()));
+            },
+            (interrupted) -> {},
+            () -> swerve.atTarget(),
+            swerve
+        ).withName("AutoAlign");
+    }
+
+    public Command autoDriveWithY(Pose2d target, DoubleSupplier dy) {
+        return new FunctionalCommand(
+            () -> {
+                swerve.setTargetPose(target);
+            },
+            () -> {
+                Pose2d current = swerve.getPose();
+                swerve.autoDrive(
+                    xController.calculate(current.getX(), target.getX()),
+                    RobotUtils.onRedAlliance() ? -dy.getAsDouble() : dy.getAsDouble(),
+                    rotController.calculate(current.getRotation().getRadians(), target.getRotation().getRadians()));
+            },
+            (interrupted) -> {},
+            () -> swerve.atTarget(),
+            swerve
+        ).withName("AutoAlign");
+    }
+
 
     public Command overrideDrive(DoubleSupplier dx, DoubleSupplier dy, DoubleSupplier dtheta, BooleanSupplier autoRotate, double time) {        
         return new ParallelRaceGroup(

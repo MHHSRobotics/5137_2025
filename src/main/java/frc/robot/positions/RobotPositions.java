@@ -1,12 +1,5 @@
 package frc.robot.positions;
 
-import java.io.IOException;
-
-import org.json.simple.parser.ParseException;
-
-import com.pathplanner.lib.path.PathPlannerPath;
-import com.pathplanner.lib.util.FileVersionException;
-
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -72,8 +65,8 @@ public final class RobotPositions {
 
     public static final RobotState groundCoralTeleop = new RobotState(
         -2.0,
-        0.41,
-        -1.39,
+        0.35,
+        -2.3,
         (RobotPosition) null
     );
 
@@ -95,7 +88,8 @@ public final class RobotPositions {
         Units.degreesToRadians(-95),
         0.5,
         Units.degreesToRadians(-115),
-        new RobotPosition(new Pose2d(new Translation2d(), new Rotation2d(Units.degreesToRadians(-90))))
+        (RobotPosition) null
+        //new RobotPosition(new Pose2d(new Translation2d(), new Rotation2d(Units.degreesToRadians(-90))))
     );
 
     public static final RobotState[] bargeStates = {
@@ -114,7 +108,7 @@ public final class RobotPositions {
 
     public static final RobotState preScoringState = new RobotState(
         Units.degreesToRadians(0),
-        null,
+        1.1,
         Units.degreesToRadians(0),
         (RobotPosition)null
     );
@@ -174,22 +168,16 @@ public final class RobotPositions {
     
     private static RobotState[] generateSourceStates() {
         RobotState[] states = new RobotState[2];
-        try {
-            states[0] = new RobotState(
-                -0.43,
-                0.17,
-                Units.degreesToRadians(-113.6),
-                PathPlannerPath.fromPathFile("Source Left")
-            );
-            states[1] = new RobotState(
-                -0.43,
-                0.17,
-                Units.degreesToRadians(-113.6),
-                PathPlannerPath.fromPathFile("Source Right")
-            );
-        } catch (FileVersionException | IOException | ParseException e) {
-            throw new RuntimeException(e);
-        }
+        states[0] = new RobotState(
+            -0.43,
+            0.17,
+            Units.degreesToRadians(-113.6),
+            (RobotPosition) null);
+        states[1] = new RobotState(
+            -0.43,
+            0.17,
+            Units.degreesToRadians(-113.6),
+            (RobotPosition) null);
         return states;
     }
     
@@ -211,24 +199,44 @@ public final class RobotPositions {
         RobotState[][] horizontalStates = new RobotState[4][12];
         double[] armAngles = {
             0.61, 0.34, 0.34, 0.225, // Vertical Coral Scoring
-            0.61, 0.34, 0.34, 0.75 // Horizontal Coral Scoring
+            0.61, -0.2, -0.2, 0.75 // Horizontal Coral Scoring
         };
         double[] elevatorHeights = {
             0.01, 0.1, 0.47, 1.2, // Vertical Coral Scoring
-            0.05, 0.1, 0.47, 0.97 // Horizontal Coral Scoring
+            0.0, 0.02, 0.39, 0.9 // Horizontal Coral Scoring
         };
         double[] wristAngles = {
             -0.61, 0.18, 0.18, 0.54, // Vertical Coral Scoring
-            0.1, 0.18, 0.18, -0.95 // Horizontal Coral Scoring
+            0.3, -2.14, -2.14, -0.95 // Horizontal Coral Scoring
         };
-        PathPlannerPath[] paths = new PathPlannerPath[12];
-        for (int i = 0; i < 12; i++) {
-            try {
-                paths[i] = PathPlannerPath.fromPathFile("Reef " + (char) ('A' + i));
-            } catch (FileVersionException | IOException | ParseException e) {
-                throw new RuntimeException(e);
-            }
-        }
+        RobotPosition[] positions = {
+            new RobotPosition(new Pose2d(new Translation2d(3.21, 3.96), new Rotation2d(Units.degreesToRadians(180)))),
+            new RobotPosition(new Pose2d(new Translation2d(3.21, 3.64), new Rotation2d(Units.degreesToRadians(180)))),
+            new RobotPosition(new Pose2d(new Translation2d(3.895, 2.895), new Rotation2d(Units.degreesToRadians(240)))),
+            new RobotPosition(new Pose2d(new Translation2d(4.207, 2.726), new Rotation2d(Units.degreesToRadians(240)))),
+            new RobotPosition(new Pose2d(new Translation2d(5.168, 2.953), new Rotation2d(Units.degreesToRadians(300)))),
+            new RobotPosition(new Pose2d(new Translation2d(5.472, 3.072), new Rotation2d(Units.degreesToRadians(300)))),
+            new RobotPosition(new Pose2d(new Translation2d(5.78, 4.1), new Rotation2d(Units.degreesToRadians(0)))),
+            new RobotPosition(new Pose2d(new Translation2d(5.78, 4.41), new Rotation2d(Units.degreesToRadians(0)))),
+            new RobotPosition(new Pose2d(new Translation2d(5.083, 5.159), new Rotation2d(Units.degreesToRadians(60)))),
+            new RobotPosition(new Pose2d(new Translation2d(4.83, 5.337), new Rotation2d(Units.degreesToRadians(60)))),
+            new RobotPosition(new Pose2d(new Translation2d(3.804, 5.108), new Rotation2d(Units.degreesToRadians(120)))),
+            new RobotPosition(new Pose2d(new Translation2d(3.518, 4.941), new Rotation2d(Units.degreesToRadians(120))))
+        };
+        RobotPosition[] altPositions = {
+            new RobotPosition(new Pose2d(new Translation2d(3.21, 4.4), new Rotation2d(Units.degreesToRadians(0)))),
+            new RobotPosition(new Pose2d(new Translation2d(3.21, 4.08), new Rotation2d(Units.degreesToRadians(0)))),
+            new RobotPosition(new Pose2d(new Translation2d(3.507, 3.091), new Rotation2d(Units.degreesToRadians(60)))),
+            new RobotPosition(new Pose2d(new Translation2d(3.793, 2.955), new Rotation2d(Units.degreesToRadians(60)))),
+            new RobotPosition(new Pose2d(new Translation2d(4.791, 2.716), new Rotation2d(Units.degreesToRadians(120)))),
+            new RobotPosition(new Pose2d(new Translation2d(5.074, 2.866), new Rotation2d(Units.degreesToRadians(120)))),
+            new RobotPosition(new Pose2d(new Translation2d(5.78, 3.65), new Rotation2d(Units.degreesToRadians(180)))),
+            new RobotPosition(new Pose2d(new Translation2d(5.78, 3.96), new Rotation2d(Units.degreesToRadians(180)))),
+            new RobotPosition(new Pose2d(new Translation2d(5.462, 4.954), new Rotation2d(Units.degreesToRadians(240)))),
+            new RobotPosition(new Pose2d(new Translation2d(5.176, 5.099), new Rotation2d(Units.degreesToRadians(240)))),
+            new RobotPosition(new Pose2d(new Translation2d(4.166, 5.317), new Rotation2d(Units.degreesToRadians(300)))),
+            new RobotPosition(new Pose2d(new Translation2d(3.899, 5.171), new Rotation2d(Units.degreesToRadians(300))))
+        };
 
         for (int level = 0; level < 4; level++) {
             for (int pos = 0; pos < 12; pos++) {
@@ -236,13 +244,13 @@ public final class RobotPositions {
                     armAngles[level],
                     elevatorHeights[level],
                     wristAngles[level],
-                    (level == 0) ? (PathPlannerPath) null : paths[pos]
+                    (level == 0) ? (RobotPosition) null : positions[pos]
                 );
                 horizontalStates[level][pos] = new RobotState(
                     armAngles[level+4],
                     elevatorHeights[level+4],
                     wristAngles[level+4],
-                    (level == 0) ? (PathPlannerPath) null : paths[pos]
+                    (level == 0) ? (RobotPosition) null : (level == 3) ? positions[pos] : altPositions[pos]
                 );
             }
         }

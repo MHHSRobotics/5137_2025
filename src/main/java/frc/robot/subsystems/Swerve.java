@@ -25,6 +25,7 @@ import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -59,12 +60,13 @@ public class Swerve extends SubsystemBase {
 
     // Swerve control requests
     private SwerveRequest.FieldCentric fieldOrientedDrive; // Field-oriented driving request
+    private SwerveRequest.FieldCentric autoDrive; // Field-oriented driving request
     private SwerveRequest.FieldCentricFacingAngle facingAngleDrive; // Robot-oriented driving request
     private SwerveRequest.ApplyRobotSpeeds setChassisSpeeds; // Request to set chassis speeds directly
     private SwerveRequest.SwerveDriveBrake lock; // Request to lock the swerve modules in place
 
     // Target pose
-    private PathPlannerPath targetPath=null;
+    private Pose2d targetPose=new Pose2d();
     private Rotation2d rotationTarget=null;
 
     private StructArrayPublisher<Pose2d> estPosePublisher = NetworkTableInstance.getDefault().getStructArrayTopic("SmartDashboard/estimatedPoses",Pose2d.struct).publish();
@@ -96,6 +98,12 @@ public class Swerve extends SubsystemBase {
             .withDeadband(maxSpeed * SwerveConstants.translationalDeadband)
             .withRotationalDeadband(maxAngularSpeed * SwerveConstants.rotationalDeadband)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+        
+        autoDrive = new SwerveRequest.FieldCentric()
+            .withDeadband(maxSpeed * SwerveConstants.translationalDeadband)
+            .withRotationalDeadband(maxAngularSpeed * SwerveConstants.rotationalDeadband)
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
+            .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance);
 
         facingAngleDrive = new SwerveRequest.FieldCentricFacingAngle()
             .withDeadband(maxSpeed * SwerveConstants.translationalDeadband)
@@ -122,8 +130,8 @@ public class Swerve extends SubsystemBase {
                 this::getCurrentSpeeds, // Method to get the current chassis speeds
                 (speeds, feedforwards) -> drive(speeds), // Method to drive the robot
                 new PPHolonomicDriveController(
-                        new PIDConstants(SwerveConstants.translationKP, SwerveConstants.translationKI, SwerveConstants.translationKD),
-                        new PIDConstants(SwerveConstants.rotationKP, SwerveConstants.rotationKI, SwerveConstants.rotationKD)
+                    new PIDConstants(SwerveConstants.translationKP, SwerveConstants.translationKI, SwerveConstants.translationKD),
+                    new PIDConstants(SwerveConstants.rotationKP, SwerveConstants.rotationKI, SwerveConstants.rotationKD)
                 ),
                 config,
                 () -> RobotUtils.onRedAlliance(), // Method to check if the robot is on the red alliance
@@ -238,6 +246,17 @@ public class Swerve extends SubsystemBase {
         }
     }
 
+    public void autoDrive(double dx, double dy, double dtheta) {
+        double absSpeedX = dx*maxSpeed;
+        double absSpeedY = dy*maxSpeed;
+        double absRot = dtheta*maxAngularSpeed;
+        setControl(autoDrive
+            .withVelocityX(absSpeedX)
+            .withVelocityY(absSpeedY)
+            .withRotationalRate(absRot)
+        );
+    }
+
     public Rotation2d getRotationTarget() {
         return rotationTarget;
     }
@@ -262,41 +281,31 @@ public class Swerve extends SubsystemBase {
         this.setControl(lock);
     }
 
-    public PathPlannerPath getTargetPath(){
-        return targetPath;
+    public void setTargetPose(Pose2d pose) {
+        autoAligning = true;
+        targetPose = pose;
     }
 
     public Pose2d getTargetPose() {
-        if (targetPath != null) {
-            var pathPoses = targetPath.getPathPoses();
-            return RobotUtils.invertToAlliance(pathPoses.get(pathPoses.size() - 1));
-        }
-        return getPose();
+        return targetPose;
     }
 
-    /*public void setTargetPose(Pose2d target){
-        targetPose = target;
-        startAuto(AutoBuilder.pathfindToPose(target, SwerveConstants.constraints, 0.0));
-    }*/
-
-    public void followPath(PathPlannerPath path) {
+    /*public void followPath(PathPlannerPath path) {
         if (autoAlignEnabled) {
             try {
                 targetPath = path;
-                autoAligning = true;
                 startAuto(AutoBuilder.pathfindThenFollowPath(path, SwerveConstants.constraints));
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-    }
+    }*/
 
     public double getError() {
-        if(targetPath==null || !autoAlignEnabled){
+        if(!autoAlignEnabled){
             return 0;
         }
-        Pose2d currentPose=getPose();
-        Pose2d targetPose = getTargetPose();
+        Pose2d currentPose = getPose();
         if (targetPose != null) {
             return currentPose.getTranslation().getDistance(targetPose.getTranslation());
         } else {

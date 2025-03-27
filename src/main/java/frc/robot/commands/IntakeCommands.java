@@ -34,7 +34,6 @@ public class IntakeCommands {
      */
     public Command stop() {
         Command command = new InstantCommand(() -> intake.stop());
-        command.addRequirements(intake);
         return command;
     }
 
@@ -88,7 +87,6 @@ public class IntakeCommands {
             new WaitCommand(time.getAsDouble()),                                                   // Wait for 1 second
             stop()                                                                // Stop the intake
         );
-        command.addRequirements(intake);
         return command;
     }
 

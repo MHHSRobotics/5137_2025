@@ -25,9 +25,6 @@ public class Robot extends TimedRobot {
 		SmartDashboard.putNumber("mem/total",r.totalMemory());
 		SmartDashboard.putNumber("mem/free",r.freeMemory());
 		SmartDashboard.putNumber("mem/max",r.maxMemory());
-		CommandScheduler.getInstance().onCommandInitialize((command) -> {
-			System.out.println("Command initialized: " + command.getName());
-		});
 	}
 
 	@Override
