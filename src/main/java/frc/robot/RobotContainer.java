@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
+import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
@@ -24,6 +25,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.gamepieces.Gamepieces;
@@ -38,6 +40,7 @@ public class RobotContainer {
 	// Controllers
 	private CommandPS5Controller driver;
 	private CommandPS5Controller operator;
+	private CommandPS5Controller sysIdController;
 
 	// Subsystems and their commands
 	private Vision vision;
@@ -79,6 +82,7 @@ public class RobotContainer {
 	public RobotContainer() {
 		// Start data logging
 		DataLogManager.start();
+		SignalLogger.start();
 		
 		DriverStation.startDataLog(DataLogManager.getLog());
 
@@ -104,6 +108,7 @@ public class RobotContainer {
 			
 			// Initialize combined systems and commands
 			initMultiCommands();
+			initSysId();
 
 			autoChoice = new SendableChooser<String>();
 			AutoBuilder.getAllAutoNames().forEach((name) -> autoChoice.addOption(name, name));
@@ -135,6 +140,7 @@ public class RobotContainer {
 	private void initControllers() {
 		driver = new CommandPS5Controller(0);
 		operator = new CommandPS5Controller(1);
+		sysIdController = new CommandPS5Controller(2);
 	}
 
 	private void initGamepieces() {
@@ -267,18 +273,25 @@ public class RobotContainer {
 		driver.povDown()
 		.onTrue(multiCommands.moveToDefault());
 
-		driver.povUp()
-		.onTrue(armCommands.setGoal(() -> Units.degreesToRadians(35)));
-
 		NamedCommands.registerCommand("Default", multiCommands.moveToDefault());
 		NamedCommands.registerCommand("SourceIntake", multiCommands.getCoralFromSource(true));
-		NamedCommands.registerCommand("L4", multiCommands.placeCoral(3, true));
+		NamedCommands.registerCommand("GroundIntake", multiCommands.getCoralFromGround(true));
+		NamedCommands.registerCommand("L4", multiCommands.placeCoralAuto(3, false));
+		NamedCommands.registerCommand("L4_Horz", multiCommands.placeCoralAuto(3, true));
 		NamedCommands.registerCommand("Prescore", multiCommands.moveToPreScoringState());
 	}
 
 	private void initRobotPublisher() {
 		robotPublisher = new RobotPublisher(arm, elevator, wrist, swerve, gamepieces);
 		robotPublisherCommands = new RobotPublisherCommands(robotPublisher);
+	}
+
+	private void initSysId(){
+		sysIdController.square().whileTrue(swerve.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+		sysIdController.cross().whileTrue(swerve.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+		sysIdController.triangle().whileTrue(swerve.sysIdDynamic(SysIdRoutine.Direction.kForward));
+		sysIdController.circle().whileTrue(swerve.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+		sysIdController.L1().onTrue(new InstantCommand(()->SignalLogger.stop()));
 	}
 
 	public void vibrateControllers() {

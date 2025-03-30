@@ -210,18 +210,18 @@ public final class RobotPositions {
             0.3, -2.14, -2.14, -0.95 // Horizontal Coral Scoring
         };
         RobotPosition[] positions = {
-            new RobotPosition(new Pose2d(new Translation2d(3.21, 3.96), new Rotation2d(Units.degreesToRadians(180)))),
-            new RobotPosition(new Pose2d(new Translation2d(3.21, 3.64), new Rotation2d(Units.degreesToRadians(180)))),
-            new RobotPosition(new Pose2d(new Translation2d(3.895, 2.895), new Rotation2d(Units.degreesToRadians(240)))),
-            new RobotPosition(new Pose2d(new Translation2d(4.207, 2.726), new Rotation2d(Units.degreesToRadians(240)))),
+            new RobotPosition(new Pose2d(new Translation2d(3.2, 3.96), new Rotation2d(Units.degreesToRadians(180)))),
+            new RobotPosition(new Pose2d(new Translation2d(3.2, 3.64), new Rotation2d(Units.degreesToRadians(180)))),
+            new RobotPosition(new Pose2d(new Translation2d(3.92, 2.873), new Rotation2d(Units.degreesToRadians(240)))),
+            new RobotPosition(new Pose2d(new Translation2d(4.174, 2.713), new Rotation2d(Units.degreesToRadians(240)))),
             new RobotPosition(new Pose2d(new Translation2d(5.168, 2.953), new Rotation2d(Units.degreesToRadians(300)))),
             new RobotPosition(new Pose2d(new Translation2d(5.472, 3.072), new Rotation2d(Units.degreesToRadians(300)))),
-            new RobotPosition(new Pose2d(new Translation2d(5.78, 4.1), new Rotation2d(Units.degreesToRadians(0)))),
-            new RobotPosition(new Pose2d(new Translation2d(5.78, 4.41), new Rotation2d(Units.degreesToRadians(0)))),
-            new RobotPosition(new Pose2d(new Translation2d(5.083, 5.159), new Rotation2d(Units.degreesToRadians(60)))),
-            new RobotPosition(new Pose2d(new Translation2d(4.83, 5.337), new Rotation2d(Units.degreesToRadians(60)))),
-            new RobotPosition(new Pose2d(new Translation2d(3.804, 5.108), new Rotation2d(Units.degreesToRadians(120)))),
-            new RobotPosition(new Pose2d(new Translation2d(3.518, 4.941), new Rotation2d(Units.degreesToRadians(120))))
+            new RobotPosition(new Pose2d(new Translation2d(5.8, 4.1), new Rotation2d(Units.degreesToRadians(0)))),
+            new RobotPosition(new Pose2d(new Translation2d(5.8, 4.41), new Rotation2d(Units.degreesToRadians(0)))),
+            new RobotPosition(new Pose2d(new Translation2d(5.088, 5.169), new Rotation2d(Units.degreesToRadians(60)))),
+            new RobotPosition(new Pose2d(new Translation2d(4.835, 5.347), new Rotation2d(Units.degreesToRadians(60)))),
+            new RobotPosition(new Pose2d(new Translation2d(3.782, 5.137), new Rotation2d(Units.degreesToRadians(120)))),
+            new RobotPosition(new Pose2d(new Translation2d(3.508, 4.976), new Rotation2d(Units.degreesToRadians(120))))
         };
         RobotPosition[] altPositions = {
             new RobotPosition(new Pose2d(new Translation2d(3.21, 4.4), new Rotation2d(Units.degreesToRadians(0)))),

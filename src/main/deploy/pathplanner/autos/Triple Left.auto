@@ -40,13 +40,13 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "J-SL"
+                        "pathName": "J-GL"
                       }
                     },
                     {
                       "type": "named",
                       "data": {
-                        "name": "SourceIntake"
+                        "name": "GroundIntake"
                       }
                     }
                   ]
@@ -59,7 +59,7 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "SL-K"
+                        "pathName": "GL-L"
                       }
                     },
                     {
@@ -74,7 +74,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "L4"
+                  "name": "L4_Horz"
                 }
               }
             ]
@@ -91,13 +91,13 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "K-SL"
+                        "pathName": "L-GM"
                       }
                     },
                     {
                       "type": "named",
                       "data": {
-                        "name": "SourceIntake"
+                        "name": "GroundIntake"
                       }
                     }
                   ]
@@ -110,7 +110,7 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "SL-L"
+                        "pathName": "GM-A"
                       }
                     },
                     {
@@ -125,7 +125,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "L4"
+                  "name": "L4_Horz"
                 }
               }
             ]

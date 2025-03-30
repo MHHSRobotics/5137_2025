@@ -32,8 +32,8 @@ public class SwerveConstants {
 
     public static final double coralExpirationTime = 5;
 
-    public static final double transTol = 0.1; // in meters
-    public static final double rotTol = Units.degreesToRadians(10); // in radians
+    public static final double transTol = 0.01; // in meters
+    public static final double rotTol = Units.degreesToRadians(1); // in radians
 
     public static final double moveTimeout = 10; // seconds
 

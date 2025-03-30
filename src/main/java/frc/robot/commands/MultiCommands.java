@@ -110,7 +110,7 @@ public class MultiCommands {
         return (arm == null || arm.atSetpoint()) &&
                (elevator == null || elevator.atSetpoint()) &&
                (wrist == null || wrist.atSetpoint()) &&
-               (swerve == null || swerve.atTarget()/* || edu.wpi.first.wpilibj.RobotState.isAutonomous()*/);
+               (swerve == null || swerve.atTarget() || edu.wpi.first.wpilibj.RobotState.isAutonomous());
     }
 
     /**
@@ -265,10 +265,10 @@ public class MultiCommands {
         ).withName("CoralScore");
     }
 
-    public Command placeCoralVertical(int level) {
+    public Command placeCoralVertical(int level, boolean autoAlign) {
         Supplier<RobotState> state = level == 0 ? () -> RobotPositions.scoringStatesVertical[level][level] : () -> getClosestState(RobotPositions.scoringStatesVertical[level]);
         return new SequentialCommandGroup(
-            moveToState(() -> (state.get().robotPosition != null ? RobotPositions.preScoringState.withPosition(state.get().robotPosition) : RobotPositions.preScoringState).noElevator(), 3),
+            moveToState(() -> (state.get().robotPosition != null && autoAlign ? RobotPositions.preScoringState.withPosition(state.get().robotPosition) : RobotPositions.preScoringState).noElevator(), 3),
             new ParallelCommandGroup(
                 intakeCommands.intake(() -> 0.1),
                 moveToState(() -> state.get().onlyElevator().noPosition(), 1)
@@ -284,10 +284,10 @@ public class MultiCommands {
         );
     }
 
-    public Command placeCoralHorizontal(int level) {
+    public Command placeCoralHorizontal(int level, boolean autoAlign) {
         Supplier<RobotState> state = level == 0 ? () -> RobotPositions.scoringStatesHorizontal[level][level] : () -> getClosestState(RobotPositions.scoringStatesHorizontal[level]);
         return new SequentialCommandGroup(
-            moveToState(() -> (state.get().robotPosition != null ? RobotPositions.preScoringState.withPosition(state.get().robotPosition) : RobotPositions.preScoringState).noElevator(), 3),
+            moveToState(() -> (state.get().robotPosition != null && autoAlign ? RobotPositions.preScoringState.withPosition(state.get().robotPosition) : RobotPositions.preScoringState).noElevator(), 3),
             new ParallelCommandGroup(
                 intakeCommands.intake(() -> 0.1),
                 moveToState(() -> level == 1 || level == 2 ? state.get().withArm(0.3).noPosition() : (level == 3 ? RobotPositions.preScoringState : state.get()).onlyElevator().noPosition(), 1)
@@ -309,7 +309,11 @@ public class MultiCommands {
     }
 
     public Command placeCoral(int level, boolean isHorizontal) {
-        return (isHorizontal ? placeCoralHorizontal(level) : placeCoralVertical(level)).withName("CoralScore");
+        return (isHorizontal ? placeCoralHorizontal(level, true) : placeCoralVertical(level, true)).withName("CoralScore");
+    }
+
+    public Command placeCoralAuto(int level, boolean isHorizontal) {
+        return (isHorizontal ? placeCoralHorizontal(level, false) : placeCoralVertical(level, false)).withName("CoralScore");
     }
 
     public Command scoreBarge() {
