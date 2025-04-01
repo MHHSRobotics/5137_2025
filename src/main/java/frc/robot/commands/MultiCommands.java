@@ -8,6 +8,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -243,12 +244,12 @@ public class MultiCommands {
     public Command placeCoral(Supplier<Integer> level, boolean isHorizontal, Supplier<Integer> branch) {
         Supplier<RobotState> state = () -> (isHorizontal ? RobotPositions.scoringStatesHorizontal : RobotPositions.scoringStatesVertical)[level.get()][branch.get()];
         Command moveToPosition = new SequentialCommandGroup(
-            moveToState(() -> (state.get().robotPosition != null ? RobotPositions.preScoringState.withPosition(state.get().robotPosition) : RobotPositions.preScoringState).noElevator(), 3),
+            moveToState(() -> (state.get().robotPosition != null ? RobotPositions.preScoringState.withPosition(state.get().robotPosition) : RobotPositions.preScoringState).noElevator()),
             new ParallelCommandGroup(
                 intakeCommands.intake(() -> 0.1),
-                moveToState(() -> isHorizontal && level.get() == 3 ? RobotPositions.preScoringState.onlyElevator().noPosition() : state.get().onlyElevator().noPosition(), 1)
+                moveToState(() -> isHorizontal && level.get() == 3 ? RobotPositions.preScoringState.onlyElevator().noPosition() : state.get().onlyElevator().noPosition())
             ),
-            moveToState(() -> state.get().noElevator().noPosition(), 1)
+            moveToState(() -> state.get().noElevator().noPosition())
         );
 
         if (isHorizontal && level.get() == 3) {
@@ -268,7 +269,7 @@ public class MultiCommands {
     public Command placeCoralVertical(int level, boolean autoAlign) {
         Supplier<RobotState> state = level == 0 ? () -> RobotPositions.scoringStatesVertical[level][level] : () -> getClosestState(RobotPositions.scoringStatesVertical[level]);
         return new SequentialCommandGroup(
-            moveToState(() -> (state.get().robotPosition != null && autoAlign ? RobotPositions.preScoringState.withPosition(state.get().robotPosition) : RobotPositions.preScoringState).noElevator(), 3),
+            moveToState(() -> (state.get().robotPosition != null && autoAlign ? RobotPositions.preScoringState.withPosition(state.get().robotPosition) : RobotPositions.preScoringState).noElevator()),
             new ParallelCommandGroup(
                 intakeCommands.intake(() -> 0.1),
                 moveToState(() -> state.get().onlyElevator().noPosition(), 1)

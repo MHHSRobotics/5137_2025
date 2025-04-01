@@ -159,9 +159,9 @@ public class RobotContainer {
 
 		// Configure swerve bindings
 		swerve.setDefaultCommand(swerveCommands.drive(
-			() -> -Math.pow(MathUtil.applyDeadband(driver.getLeftY(), 0.05), 1), 
-			() -> -Math.pow(MathUtil.applyDeadband(driver.getLeftX(), 0.05), 1), 
-			() -> -Math.pow(MathUtil.applyDeadband(driver.getRightX(), 0.05), 1),
+			() -> Math.pow(MathUtil.applyDeadband(driver.getLeftY(), 0.05), 1), 
+			() -> Math.pow(MathUtil.applyDeadband(driver.getLeftX(), 0.05), 1), 
+			() -> Math.pow(MathUtil.applyDeadband(driver.getRightX(), 0.05), 1),
 			(driver.triangle().or(driver.square()).or(driver.circle())).and(driver.R2().negate()))
 		);
 

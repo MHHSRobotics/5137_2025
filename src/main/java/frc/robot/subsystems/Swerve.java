@@ -260,11 +260,45 @@ public class Swerve extends SubsystemBase {
     }
 
     /**
+     * Gets the current pose of the robot.
+     *
+     * @return The current pose of the robot.
+     */
+    public ChassisSpeeds getSpeeds() {
+        return swerve.getState().Speeds;
+    }
+
+    /**
+     * Gets the current pose of the robot.
+     *
+     * @return The current pose of the robot.
+     */
+    public double getAbsSpeed() {
+        ChassisSpeeds speeds=getSpeeds();
+        return Math.hypot(speeds.vxMetersPerSecond,speeds.vyMetersPerSecond);
+    }
+
+    /**
      * Drives the robot with the specified chassis speeds.
      *
      * @param speeds The chassis speeds to apply.
      */
     public void drive(ChassisSpeeds speeds) {
+        double xVel=speeds.vxMetersPerSecond;
+        double yVel=speeds.vyMetersPerSecond;
+        double wVel=speeds.omegaRadiansPerSecond;
+        double theta=Math.atan2(yVel,xVel);
+        double r=Math.hypot(xVel,yVel);
+        if(r>=SwerveConstants.transMin){
+            r+=SwerveConstants.transKS;
+        }
+        if(wVel>=SwerveConstants.rotMin){
+            wVel+=SwerveConstants.rotKS*Math.signum(wVel);
+        }
+        speeds=new ChassisSpeeds(r*Math.cos(theta), r*Math.sin(theta), wVel);
+        System.out.println(speeds.vxMetersPerSecond);
+        System.out.println(speeds.vyMetersPerSecond);
+        System.out.println(speeds.omegaRadiansPerSecond);
         setControl(setChassisSpeeds.withSpeeds(speeds));
     }
 
@@ -386,7 +420,7 @@ public class Swerve extends SubsystemBase {
     }
 
     public boolean atTarget(){
-        return getError()<SwerveConstants.transTol || !autoAlignEnabled || !autoAligning;
+        return (getError()<SwerveConstants.transTol && getAbsSpeed()<0.01) || !autoAlignEnabled || !autoAligning;
     }
 
     public void toggleAutoAlign() {

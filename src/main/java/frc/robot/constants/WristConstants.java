@@ -7,7 +7,7 @@ import frc.robot.Robot;
 
 public class WristConstants {
     // Motor ID
-    public static final int motorId = Robot.isSimulation() ? 23 : 3;
+    public static final int motorId = 23;
     public static final double gearRatio = 16.0;
 
     // Encoder ID

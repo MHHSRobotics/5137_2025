@@ -6,7 +6,7 @@ import frc.robot.Robot;
 
 public class ArmConstants {
     // Motor ID
-    public static final int motorId = Robot.isSimulation()?22:2;
+    public static final int motorId = 22;
     public static final double gearRatio = 700/9.;
     public static final double armOffset = 0;
 

@@ -6,8 +6,8 @@ import frc.robot.Robot;
 
 public class ElevatorConstants {
     // Motor IDs
-    public static final int leftMotorId = Robot.isSimulation()?20:0;
-    public static final int rightMotorId = Robot.isSimulation()?21:1;
+    public static final int leftMotorId = 20;
+    public static final int rightMotorId = 21;
 
     // Encoder ID
     public static final int encoderId = 2;
