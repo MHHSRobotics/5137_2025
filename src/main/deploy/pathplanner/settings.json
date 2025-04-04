@@ -14,7 +14,7 @@
     "Right Autos"
   ],
   "defaultMaxVel": 2.0,
-  "defaultMaxAccel": 1.5,
+  "defaultMaxAccel": 2.0,
   "defaultMaxAngVel": 360.0,
   "defaultMaxAngAccel": 360.0,
   "defaultNominalVoltage": 12.0,

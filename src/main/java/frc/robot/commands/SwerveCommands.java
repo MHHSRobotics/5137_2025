@@ -39,9 +39,9 @@ public class SwerveCommands {
      */
     public SwerveCommands(Swerve swerve) {
         this.swerve = swerve;
-        var xController = new PIDController(2.0, 0, 0);
-        var yController = new PIDController(2.0, 0, 0);
-        var rotController = new ProfiledPIDController(2.0, 0, 0, new Constraints(Units.degreesToRadians(180), Units.degreesToRadians(180)));
+        var xController = new PIDController(2.5, 0, 0);
+        var yController = new PIDController(2.5, 0, 0);
+        var rotController = new ProfiledPIDController(5.0, 0, 0, new Constraints(Units.degreesToRadians(360), Units.degreesToRadians(360)));
         rotController.enableContinuousInput(-Math.PI, Math.PI);
         xController.setTolerance(0.01);
         yController.setTolerance(0.01);
@@ -114,7 +114,7 @@ public class SwerveCommands {
      * @return A command that resets the gyro.
      */
     public Command resetGyro() {
-        return new InstantCommand(() -> swerve.resetGyro(), swerve);
+        return new InstantCommand(() -> swerve.resetGyro());
     }
 
     public Command sysIdQuasistatic(SysIdRoutine.Direction dir){

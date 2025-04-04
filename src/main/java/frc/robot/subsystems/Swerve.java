@@ -37,6 +37,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.units.measure.Force;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
@@ -296,9 +297,6 @@ public class Swerve extends SubsystemBase {
             wVel+=SwerveConstants.rotKS*Math.signum(wVel);
         }
         speeds=new ChassisSpeeds(r*Math.cos(theta), r*Math.sin(theta), wVel);
-        System.out.println(speeds.vxMetersPerSecond);
-        System.out.println(speeds.vyMetersPerSecond);
-        System.out.println(speeds.omegaRadiansPerSecond);
         setControl(setChassisSpeeds.withSpeeds(speeds));
     }
 
@@ -420,7 +418,7 @@ public class Swerve extends SubsystemBase {
     }
 
     public boolean atTarget(){
-        return (getError()<SwerveConstants.transTol && getAbsSpeed()<0.01) || !autoAlignEnabled || !autoAligning;
+        return (getError()<SwerveConstants.transTol && getAbsSpeed()<1) || !autoAlignEnabled || !autoAligning;
     }
 
     public void toggleAutoAlign() {

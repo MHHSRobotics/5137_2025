@@ -151,13 +151,6 @@ public class RobotUtils {
                 Transform2d transform;
                 if (other.robotPosition != null) {
                     transform = other.robotPosition.alliancePos().minus(pose);
-                } else if (other.robotPath != null) {
-                    var pathPose = other.robotPath.getStartingHolonomicPose();
-                    if (pathPose.isPresent()) {
-                        transform = invertToAlliance(pathPose.get()).minus(pose);
-                    } else {
-                        continue;
-                    }
                 } else {
                     continue;
                 }

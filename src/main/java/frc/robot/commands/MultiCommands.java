@@ -91,12 +91,12 @@ public class MultiCommands {
         if (wrist != null && state.wristPosition!=null) {
             wrist.setGoal(state.wristPosition);
         }
-        if (swerve != null && state.robotPath != null) {
-            //swerve.followPath(state.robotPath);
-        }
         if (swerve != null && state.robotPosition != null) {
-            swerveCommands.driveToPose(state.robotPosition.alliancePos()).schedule();
-            //swerve.setRotationTarget(state.robotPosition.bluePos().getRotation());
+            if (state.autoAlign) {
+                swerveCommands.driveToPose(state.robotPosition.alliancePos()).schedule();
+            } else {
+                swerve.setRotationTarget(state.robotPosition.bluePos().getRotation());
+            }
         } else if (swerve != null) {
             swerve.autoAligning = false;
         }
@@ -206,9 +206,9 @@ public class MultiCommands {
         return moveToStateSequenced(() -> RobotPositions.processorState, true).withName("Processor");
     }
 
-    public Command getCoralFromSource(boolean auto) {
+    public Command getCoralFromSource() {
         return new ParallelCommandGroup(
-            moveToState(() -> RobotPositions.sourceStates[0], 1),
+            moveToState(() -> edu.wpi.first.wpilibj.RobotState.isAutonomous() ? RobotPositions.sourceStates[0].noPosition() : RobotPositions.sourceStates[0], 1),
             intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),
             simCoralIntake()
         ).withName("CoralSource");
@@ -281,7 +281,7 @@ public class MultiCommands {
                 intakeCommands.outtake(),
                 simCoralOuttake()
             ),
-            moveToDefault()
+            moveToDefault().onlyIf(() -> !edu.wpi.first.wpilibj.RobotState.isAutonomous())
         );
     }
 

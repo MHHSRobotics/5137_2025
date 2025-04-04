@@ -108,7 +108,7 @@ public class RobotContainer {
 			
 			// Initialize combined systems and commands
 			initMultiCommands();
-			initSysId();
+			//initSysId();
 
 			autoChoice = new SendableChooser<String>();
 			AutoBuilder.getAllAutoNames().forEach((name) -> autoChoice.addOption(name, name));
@@ -140,7 +140,7 @@ public class RobotContainer {
 	private void initControllers() {
 		driver = new CommandPS5Controller(0);
 		operator = new CommandPS5Controller(1);
-		sysIdController = new CommandPS5Controller(2);
+		//sysIdController = new CommandPS5Controller(2);
 	}
 
 	private void initGamepieces() {
@@ -159,10 +159,10 @@ public class RobotContainer {
 
 		// Configure swerve bindings
 		swerve.setDefaultCommand(swerveCommands.drive(
-			() -> Math.pow(MathUtil.applyDeadband(driver.getLeftY(), 0.05), 1), 
-			() -> Math.pow(MathUtil.applyDeadband(driver.getLeftX(), 0.05), 1), 
-			() -> Math.pow(MathUtil.applyDeadband(driver.getRightX(), 0.05), 1),
-			(driver.triangle().or(driver.square()).or(driver.circle())).and(driver.R2().negate()))
+			() -> -Math.pow(MathUtil.applyDeadband(driver.getLeftY(), 0.05), 1), 
+			() -> -Math.pow(MathUtil.applyDeadband(driver.getLeftX(), 0.05), 1), 
+			() -> -Math.pow(MathUtil.applyDeadband(driver.getRightX(), 0.05), 1),
+			(driver.triangle().or(driver.square()).or(driver.circle()).or(driver.cross())).and(driver.R2().negate()))
 		);
 
 		//driver.L3().whileTrue(swerveCommands.lock());
@@ -243,7 +243,7 @@ public class RobotContainer {
 	private void initMultiCommands() {
 		multiCommands = new MultiCommands(arm,elevator,wrist,swerve, swerveCommands, intakeCommands, hangCommands,robotPublisherCommands);
 
-		driver.triangle().debounce(0.05).and(driver.R2().negate()).onTrue(multiCommands.getCoralFromSource(false));
+		driver.triangle().debounce(0.05).and(driver.R2().negate()).onTrue(multiCommands.getCoralFromSource());
 		driver.square().debounce(0.05).and(driver.R2().negate()).onTrue(multiCommands.moveToProcessor());
 		driver.circle().debounce(0.05).and(driver.R2().negate()).onTrue(multiCommands.getAlgaeFromReef());
 		driver.cross().debounce(0.05).and(driver.R2().negate()).onTrue(multiCommands.scoreBarge());
@@ -274,7 +274,7 @@ public class RobotContainer {
 		.onTrue(multiCommands.moveToDefault());
 
 		NamedCommands.registerCommand("Default", multiCommands.moveToDefault());
-		NamedCommands.registerCommand("SourceIntake", multiCommands.getCoralFromSource(true));
+		NamedCommands.registerCommand("SourceIntake", multiCommands.getCoralFromSource());
 		NamedCommands.registerCommand("GroundIntake", multiCommands.getCoralFromGround(true));
 		NamedCommands.registerCommand("L4", multiCommands.placeCoralAuto(3, false));
 		NamedCommands.registerCommand("L4_Horz", multiCommands.placeCoralAuto(3, true));
@@ -325,7 +325,7 @@ public class RobotContainer {
 				return new SequentialCommandGroup(
 					intakeCommands.intake(() -> 0.05),
 					multiCommands.placeCoral(()->3, false, ()->autoChoiceOne.getSelected()),
-					multiCommands.getCoralFromSource(true),
+					multiCommands.getCoralFromSource(),
 					new WaitCommand(0.5),
 					intakeCommands.stop(),
 					multiCommands.placeCoral(()->3, false, ()->autoChoiceTwo.getSelected()),

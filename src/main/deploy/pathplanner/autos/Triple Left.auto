@@ -40,13 +40,13 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "J-GL"
+                        "pathName": "J-SL"
                       }
                     },
                     {
                       "type": "named",
                       "data": {
-                        "name": "GroundIntake"
+                        "name": "SourceIntake"
                       }
                     }
                   ]
@@ -59,7 +59,7 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "GL-L"
+                        "pathName": "SL-K"
                       }
                     },
                     {
@@ -74,7 +74,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "L4_Horz"
+                  "name": "L4"
                 }
               }
             ]
@@ -91,13 +91,13 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "L-GM"
+                        "pathName": "K-SL"
                       }
                     },
                     {
                       "type": "named",
                       "data": {
-                        "name": "GroundIntake"
+                        "name": "SourceIntake"
                       }
                     }
                   ]
@@ -110,7 +110,7 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "GM-A"
+                        "pathName": "SL-L"
                       }
                     },
                     {
@@ -125,16 +125,22 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "L4_Horz"
+                  "name": "L4"
                 }
               }
             ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Default"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "Left Autos",
+  "folder": null,
   "choreoAuto": false
 }
