@@ -176,24 +176,30 @@ public class MultiCommands {
     public Command moveToDefault() {
         return new ConditionalCommand(
             new ParallelCommandGroup(
-                moveToState(() -> RobotPositions.defaultState.withWrist(Units.degreesToRadians(-45))),
-                intakeCommands.pulseIntake(),
-                new InstantCommand(() -> cat = false)),
                 new ConditionalCommand(
-                    new ParallelCommandGroup(
-                        new SequentialCommandGroup(
-                            moveToState(() -> RobotPositions.defaultState.noElevator()),
-                            moveToState(() -> RobotPositions.defaultState.onlyElevator())
-                        ),
-                        intakeCommands.intake(() -> 1.0),
-                        new InstantCommand(() -> cat2 = false)
+                    new SequentialCommandGroup(
+                        moveToState(() -> RobotPositions.defaultState.noWrist()),
+                        moveToState(() -> RobotPositions.defaultState.withWrist(Units.degreesToRadians(-45)).onlyWrist())
                     ),
-                    new ParallelCommandGroup(
-                        moveToState(() -> RobotPositions.defaultState),
-                        intakeCommands.stop()
-                    ),
+                    moveToState(() -> RobotPositions.defaultState.withWrist(Units.degreesToRadians(-45))),
                     () -> cat2
                 ),
+                intakeCommands.pulseIntake(),
+                new InstantCommand(() -> cat = false)),
+            new ConditionalCommand(
+                new ParallelCommandGroup(
+                    new SequentialCommandGroup(
+                        moveToState(() -> RobotPositions.defaultState.onlyArm()),
+                        moveToState(() -> RobotPositions.defaultState.noArm())
+                    ),
+                    intakeCommands.intake(() -> 1.0),
+                    new InstantCommand(() -> cat2 = false)
+                ),
+                new ParallelCommandGroup(
+                    moveToState(() -> RobotPositions.defaultState),
+                    intakeCommands.stop()
+                ),
+                () -> cat2),
             () -> cat)
             .withName("Default");
     }
@@ -237,7 +243,8 @@ public class MultiCommands {
             moveToStateSequenced(() -> RobotPositions.groundAlgaeState, true),
             intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),
             simAlgaeIntake(),
-            new InstantCommand(()->cat=true)
+            new InstantCommand(()->cat=true),
+            new InstantCommand(()->cat2=true)
         ).withName("AlgaeGround");
     }
 
