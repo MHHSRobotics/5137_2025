@@ -34,7 +34,7 @@
           "data": {
             "commands": [
               {
-                "type": "parallel",
+                "type": "deadline",
                 "data": {
                   "commands": [
                     {
@@ -53,6 +53,12 @@
                 }
               },
               {
+                "type": "wait",
+                "data": {
+                  "waitTime": 0.5
+                }
+              },
+              {
                 "type": "parallel",
                 "data": {
                   "commands": [
@@ -63,9 +69,22 @@
                       }
                     },
                     {
-                      "type": "named",
+                      "type": "sequential",
                       "data": {
-                        "name": "Prescore"
+                        "commands": [
+                          {
+                            "type": "named",
+                            "data": {
+                              "name": "Default"
+                            }
+                          },
+                          {
+                            "type": "named",
+                            "data": {
+                              "name": "Prescore"
+                            }
+                          }
+                        ]
                       }
                     }
                   ]
@@ -79,11 +98,17 @@
               }
             ]
           }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Default"
+          }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "Left Autos",
+  "folder": null,
   "choreoAuto": false
 }

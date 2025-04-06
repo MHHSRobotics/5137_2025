@@ -3,12 +3,20 @@ package frc.robot.commands;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.other.SlightlyBetterHolonomicDriveController;
 import frc.robot.subsystems.Swerve;
 
 /**
@@ -19,6 +27,12 @@ import frc.robot.subsystems.Swerve;
 public class SwerveCommands {
     private Swerve swerve;
 
+    // private PIDController xController;
+    // private PIDController yController;
+    // private PIDController rotController;
+
+    private SlightlyBetterHolonomicDriveController sbhdc;
+
     /**
      * Constructor for SwerveCommands.
      *
@@ -26,6 +40,14 @@ public class SwerveCommands {
      */
     public SwerveCommands(Swerve swerve) {
         this.swerve = swerve;
+        var xController = new PIDController(2.5, 0, 0);
+        var yController = new PIDController(2.5, 0, 0);
+        var rotController = new ProfiledPIDController(5.0, 0, 0, new Constraints(Units.degreesToRadians(360), Units.degreesToRadians(360)));
+        rotController.enableContinuousInput(-Math.PI, Math.PI);
+        xController.setTolerance(0.01);
+        yController.setTolerance(0.01);
+        rotController.setTolerance(Units.degreesToRadians(1));
+        sbhdc=new SlightlyBetterHolonomicDriveController(xController, yController, rotController);
     }
 
     /**
@@ -48,7 +70,24 @@ public class SwerveCommands {
             (interrupted) -> {},
             () -> false,
             swerve
-        );
+        ).withName("SwerveDefault");
+    }
+
+    public Command driveToPose(Pose2d target) {
+        return new FunctionalCommand(
+            () -> {
+                swerve.setTargetPose(target);
+                sbhdc.reset(swerve.getPose());
+            },
+            () -> {
+                Pose2d current = new Pose2d(swerve.getPose().getTranslation(), new Rotation2d(((swerve.getPose().getRotation().getRadians() + Math.PI) % (2*Math.PI)) - Math.PI));
+                Rotation2d rotation = new Rotation2d(((target.getRotation().getRadians() + Math.PI) % (2*Math.PI)) - Math.PI);
+                swerve.drive(sbhdc.calculate(current, target, 0, rotation));
+            },
+            (interrupted) -> {},
+            () -> swerve.atTarget(),
+            swerve
+        ).withName("AutoAlign");
     }
 
     public Command overrideDrive(DoubleSupplier dx, DoubleSupplier dy, DoubleSupplier dtheta, BooleanSupplier autoRotate, double time) {        
@@ -78,6 +117,14 @@ public class SwerveCommands {
      * @return A command that resets the gyro.
      */
     public Command resetGyro() {
-        return new InstantCommand(() -> swerve.resetGyro(), swerve);
+        return new InstantCommand(() -> swerve.resetGyro());
+    }
+
+    public Command sysIdQuasistatic(SysIdRoutine.Direction dir){
+        return new InstantCommand(()->swerve.sysIdQuasistatic(dir),swerve);
+    }
+
+    public Command sysIdDynamic(SysIdRoutine.Direction dir){
+        return new InstantCommand(()->swerve.sysIdDynamic(dir),swerve);
     }
 }

@@ -7,7 +7,7 @@ import frc.robot.Robot;
 
 public class WristConstants {
     // Motor ID
-    public static final int motorId = Robot.isSimulation() ? 23 : 3;
+    public static final int motorId = 23;
     public static final double gearRatio = 16.0;
 
     // Encoder ID
@@ -16,7 +16,7 @@ public class WristConstants {
     public static final double encoderOffset = 7.05;
 
     // Limits
-    public static final double minAngle = Units.degreesToRadians(-115);
+    public static final double minAngle = Units.degreesToRadians(-145);
     public static final double maxAngle = Units.degreesToRadians(90);
 
     public static final double feedOffset = Units.degreesToRadians(90);

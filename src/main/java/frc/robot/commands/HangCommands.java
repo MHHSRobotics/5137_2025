@@ -31,7 +31,8 @@ public class HangCommands {
             () -> hang.setSpeed(speed.getAsDouble()),
             (interrupted) -> hang.stop(),
             () -> false,
-            hang);
+            hang)
+            .withName("HangDefault");
     }
 
     public Command stop(){

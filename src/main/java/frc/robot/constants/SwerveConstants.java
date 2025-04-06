@@ -24,6 +24,11 @@ public class SwerveConstants {
     public static final double rotationKI = 0.0;
     public static final double rotationKD = 0.0;
 
+    public static final double transKS = 0.14;
+    public static final double rotKS = 0.1;
+    public static final double transMin = 0.05;
+    public static final double rotMin = 0.05;
+
     public static final PathConstraints constraints = new PathConstraints(
         MetersPerSecond.of(2),
         MetersPerSecondPerSecond.of(1.5),
@@ -32,8 +37,8 @@ public class SwerveConstants {
 
     public static final double coralExpirationTime = 5;
 
-    public static final double transTol = 0.1; // in meters
-    public static final double rotTol = Units.degreesToRadians(10); // in radians
+    public static final double transTol = 0.03; // in meters
+    public static final double rotTol = Units.degreesToRadians(1); // in radians
 
     public static final double moveTimeout = 10; // seconds
 
