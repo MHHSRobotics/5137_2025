@@ -33,8 +33,7 @@ public class IntakeCommands {
      * @return A command that, when executed, stops the intake motor.
      */
     public Command stop() {
-        Command command = new InstantCommand(() -> intake.stop());
-        return command;
+        return new InstantCommand(() -> intake.stop());
     }
 
     /**
@@ -43,9 +42,7 @@ public class IntakeCommands {
      * @return A command that, when executed, stops the intake motor.
      */
     public Command setSpeed(DoubleSupplier speed) {
-        Command command = new InstantCommand(() -> intake.setSpeed(speed.getAsDouble()));
-        command.addRequirements(intake);
-        return command;
+        return new InstantCommand(() -> intake.setSpeed(speed.getAsDouble()));
     }
 
 
@@ -87,6 +84,7 @@ public class IntakeCommands {
             new WaitCommand(time.getAsDouble()),                                                   // Wait for 1 second
             stop()                                                                // Stop the intake
         );
+        command.addRequirements(intake);
         return command;
     }
 

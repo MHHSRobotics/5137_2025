@@ -3,10 +3,10 @@ package frc.robot.commands;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
-import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.other.SlightlyBetterHolonomicDriveController;
 import frc.robot.subsystems.Swerve;
 
 /**
@@ -30,7 +31,7 @@ public class SwerveCommands {
     // private PIDController yController;
     // private PIDController rotController;
 
-    private HolonomicDriveController hdc;
+    private SlightlyBetterHolonomicDriveController sbhdc;
 
     /**
      * Constructor for SwerveCommands.
@@ -46,7 +47,7 @@ public class SwerveCommands {
         xController.setTolerance(0.01);
         yController.setTolerance(0.01);
         rotController.setTolerance(Units.degreesToRadians(1));
-        hdc=new HolonomicDriveController(xController, yController, rotController);
+        sbhdc=new SlightlyBetterHolonomicDriveController(xController, yController, rotController);
     }
 
     /**
@@ -76,10 +77,12 @@ public class SwerveCommands {
         return new FunctionalCommand(
             () -> {
                 swerve.setTargetPose(target);
+                sbhdc.reset(swerve.getPose());
             },
             () -> {
-                Pose2d current = swerve.getPose();
-                swerve.drive(hdc.calculate(current, target, 0, target.getRotation()));
+                Pose2d current = new Pose2d(swerve.getPose().getTranslation(), new Rotation2d(((swerve.getPose().getRotation().getRadians() + Math.PI) % (2*Math.PI)) - Math.PI));
+                Rotation2d rotation = new Rotation2d(((target.getRotation().getRadians() + Math.PI) % (2*Math.PI)) - Math.PI);
+                swerve.drive(sbhdc.calculate(current, target, 0, rotation));
             },
             (interrupted) -> {},
             () -> swerve.atTarget(),

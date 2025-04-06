@@ -203,7 +203,7 @@ public final class RobotPositions {
             0.61, -0.2, -0.2, 0.75 // Horizontal Coral Scoring
         };
         double[] elevatorHeights = {
-            0.01, 0.1, 0.47, 1.2, // Vertical Coral Scoring
+            0.01, 0.08, 0.45, 1.2, // Vertical Coral Scoring
             0.0, 0.02, 0.39, 0.9 // Horizontal Coral Scoring
         };
         double[] wristAngles = {

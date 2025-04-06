@@ -85,6 +85,12 @@
               }
             ]
           }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Default"
+          }
         }
       ]
     }

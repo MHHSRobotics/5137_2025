@@ -207,7 +207,7 @@ public class RobotContainer {
 			.onTrue(intakeCommands.setSpeed(()->IntakeConstants.intakeSpeed))
 			.onFalse(intakeCommands.stop());
 
-		operator.R2().or(driver.R1().and(driver.L1().and(driver.R2().negate())))
+		operator.R2().or(driver.R1())
 			.onTrue(intakeCommands.setSpeed(()->-IntakeConstants.intakeSpeed))
 			.onFalse(intakeCommands.stop());
 		
@@ -248,8 +248,8 @@ public class RobotContainer {
 		driver.circle().debounce(0.05).and(driver.R2().negate()).onTrue(multiCommands.getAlgaeFromReef());
 		driver.cross().debounce(0.05).and(driver.R2().negate()).onTrue(multiCommands.scoreBarge());
 
-		driver.L1().and(driver.R1().negate()).and(driver.R2().negate()).debounce(0.05).onTrue(multiCommands.getCoralFromGround(false));
-		driver.R1().and(driver.L1().negate()).and(driver.R2().negate()).debounce(0.05).onTrue(multiCommands.getAlgaeFromGround());
+		//driver.L1().and(driver.R2().negate()).debounce(0.05).onTrue(multiCommands.getCoralFromGround(false));
+		driver.L1().and(driver.R2().negate()).debounce(0.05).onTrue(multiCommands.getAlgaeFromGround());
 
 		driver.triangle().debounce(0.05).and(driver.R2()).and(driver.L1().negate()).onTrue(multiCommands.placeCoral(3, false));
 		driver.square().debounce(0.05).and(driver.R2()).and(driver.L1().negate()).onTrue(multiCommands.placeCoral(2, false));

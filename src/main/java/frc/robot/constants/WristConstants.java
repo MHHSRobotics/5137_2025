@@ -16,7 +16,7 @@ public class WristConstants {
     public static final double encoderOffset = 7.05;
 
     // Limits
-    public static final double minAngle = Units.degreesToRadians(-135);
+    public static final double minAngle = Units.degreesToRadians(-145);
     public static final double maxAngle = Units.degreesToRadians(90);
 
     public static final double feedOffset = Units.degreesToRadians(90);

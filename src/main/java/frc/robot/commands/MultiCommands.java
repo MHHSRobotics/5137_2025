@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
@@ -160,27 +161,23 @@ public class MultiCommands {
     }
 
     public Command moveToStateSequenced(Supplier<RobotState> state, boolean wristFirst) {
-        if (wristFirst) {
-            return new SequentialCommandGroup(
-                moveToState(() -> state.get().onlyWrist(), 1),
-                moveToState(() -> state.get().noWrist())
-            );
-        } else {
-            return new SequentialCommandGroup(
-                moveToState(() -> state.get().noWrist()),
-                moveToState(() -> state.get().onlyWrist(), 1)
-            );
-        }
+        return new SequentialCommandGroup(
+            moveToState(() -> state.get().withWrist(Units.degreesToRadians(-145)).onlyWrist(), 1).onlyIf(() -> wristFirst),
+            moveToState(() -> state.get().noWrist(), 1.5),
+            moveToState(() -> state.get().onlyWrist(), 1)
+        );
     }
 
     public Command moveToDefault() {
         return new ConditionalCommand(
             new ParallelCommandGroup(
                 new ConditionalCommand(
-                    new SequentialCommandGroup(
-                        moveToState(() -> RobotPositions.defaultState.noWrist()),
-                        moveToState(() -> RobotPositions.defaultState.withWrist(Units.degreesToRadians(-45)).onlyWrist())
-                    ),
+                    new ParallelCommandGroup(
+                        new SequentialCommandGroup(
+                            moveToState(() -> RobotPositions.defaultState.withWrist(Units.degreesToRadians(-145))),
+                            moveToState(() -> RobotPositions.defaultState.withWrist(Units.degreesToRadians(-45)).onlyWrist())
+                        ),
+                        new InstantCommand(() -> cat2 = false)),
                     moveToState(() -> RobotPositions.defaultState.withWrist(Units.degreesToRadians(-45))),
                     () -> cat2
                 ),
@@ -189,14 +186,23 @@ public class MultiCommands {
             new ConditionalCommand(
                 new ParallelCommandGroup(
                     new SequentialCommandGroup(
-                        moveToState(() -> RobotPositions.defaultState.onlyArm()),
-                        moveToState(() -> RobotPositions.defaultState.noArm())
+                        new ParallelCommandGroup(
+                            moveToState(() -> RobotPositions.defaultState.noElevator().withWrist(Units.degreesToRadians(-145))),
+                            intakeCommands.intake(() -> 1.0)
+                        ),
+                        new ParallelDeadlineGroup(
+                            moveToState(() -> RobotPositions.defaultState.noArm()),
+                            intakeCommands.pulseIntake()
+                        ),
+                        intakeCommands.stop()
                     ),
-                    intakeCommands.intake(() -> 1.0),
                     new InstantCommand(() -> cat2 = false)
                 ),
-                new ParallelCommandGroup(
-                    moveToState(() -> RobotPositions.defaultState),
+                new SequentialCommandGroup(
+                    new ParallelDeadlineGroup(
+                        moveToState(() -> RobotPositions.defaultState),
+                        intakeCommands.pulseIntake()
+                    ),
                     intakeCommands.stop()
                 ),
                 () -> cat2),
@@ -214,7 +220,7 @@ public class MultiCommands {
 
     public Command getCoralFromSource() {
         return new ParallelCommandGroup(
-            moveToState(() -> edu.wpi.first.wpilibj.RobotState.isAutonomous() ? RobotPositions.sourceStates[0].noPosition() : RobotPositions.sourceStates[0], 1),
+            moveToState(() -> edu.wpi.first.wpilibj.RobotState.isAutonomous() ? RobotPositions.sourceStates[0].noPosition() : getClosestState(RobotPositions.sourceStates), 1),
             intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),
             simCoralIntake()
         ).withName("CoralSource");
@@ -230,8 +236,12 @@ public class MultiCommands {
     }
 
     public Command getAlgaeFromReef() {
+        Supplier<RobotState> state = () -> getClosestState(RobotPositions.algaeStates);
         return new ParallelCommandGroup(
-            moveToStateSequenced(() -> getClosestState(RobotPositions.algaeStates), true),
+            new SequentialCommandGroup(
+                moveToState(() -> state.get().onlyWrist()),
+                moveToState(() -> state.get().noWrist())
+            ),
             intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),
             simAlgaeIntake(),
             new InstantCommand(()->cat=true)
@@ -251,7 +261,7 @@ public class MultiCommands {
     public Command placeCoral(Supplier<Integer> level, boolean isHorizontal, Supplier<Integer> branch) {
         Supplier<RobotState> state = () -> (isHorizontal ? RobotPositions.scoringStatesHorizontal : RobotPositions.scoringStatesVertical)[level.get()][branch.get()];
         Command moveToPosition = new SequentialCommandGroup(
-            moveToState(() -> (state.get().robotPosition != null ? RobotPositions.preScoringState.withPosition(state.get().robotPosition) : RobotPositions.preScoringState).noElevator()),
+            moveToState(() -> (state.get().robotPosition != null ? RobotPositions.preScoringState.withPosition(state.get().robotPosition) : RobotPositions.preScoringState).noElevator(), 2.5),
             new ParallelCommandGroup(
                 intakeCommands.intake(() -> 0.1),
                 moveToState(() -> isHorizontal && level.get() == 3 ? RobotPositions.preScoringState.onlyElevator().noPosition() : state.get().onlyElevator().noPosition())
@@ -276,13 +286,13 @@ public class MultiCommands {
     public Command placeCoralVertical(int level, boolean autoAlign) {
         Supplier<RobotState> state = level == 0 ? () -> RobotPositions.scoringStatesVertical[level][level] : () -> getClosestState(RobotPositions.scoringStatesVertical[level]);
         return new SequentialCommandGroup(
-            moveToState(() -> (state.get().robotPosition != null && autoAlign ? RobotPositions.preScoringState.withPosition(state.get().robotPosition) : RobotPositions.preScoringState).noElevator()),
+            moveToState(() -> (state.get().robotPosition != null && autoAlign ? RobotPositions.preScoringState.withPosition(state.get().robotPosition) : RobotPositions.preScoringState).noElevator(), 2),
             new ParallelCommandGroup(
-                intakeCommands.intake(() -> 0.1),
-                moveToState(() -> state.get().onlyElevator().noPosition(), 1)
+                intakeCommands.intake(() -> 0.2),
+                moveToState(() -> state.get().onlyElevator().noPosition(), level == 3 ? 1 : 0.2)
             ),
-            moveToState(() -> state.get().noElevator().noPosition(), 1),
-            new WaitCommand(0.2),
+            moveToState(() -> state.get().noElevator().noPosition(), level == 3 ? 1 : 0.5),
+            new WaitCommand(0.2).onlyIf(() -> level == 3),
             intakeCommands.intake(() -> 0.05),
             new ParallelCommandGroup(
                 intakeCommands.outtake(),
@@ -295,7 +305,7 @@ public class MultiCommands {
     public Command placeCoralHorizontal(int level, boolean autoAlign) {
         Supplier<RobotState> state = level == 0 ? () -> RobotPositions.scoringStatesHorizontal[level][level] : () -> getClosestState(RobotPositions.scoringStatesHorizontal[level]);
         return new SequentialCommandGroup(
-            moveToState(() -> (state.get().robotPosition != null && autoAlign ? RobotPositions.preScoringState.withPosition(state.get().robotPosition) : RobotPositions.preScoringState).noElevator(), 3),
+            moveToState(() -> (state.get().robotPosition != null && autoAlign ? RobotPositions.preScoringState.withPosition(state.get().robotPosition) : RobotPositions.preScoringState).noElevator(), 2.5),
             new ParallelCommandGroup(
                 intakeCommands.intake(() -> 0.1),
                 moveToState(() -> level == 1 || level == 2 ? state.get().withArm(0.3).noPosition() : (level == 3 ? RobotPositions.preScoringState : state.get()).onlyElevator().noPosition(), 1)
@@ -326,14 +336,20 @@ public class MultiCommands {
 
     public Command scoreBarge() {
         return new SequentialCommandGroup(
-            moveToState(() -> RobotPositions.bargeStates[0].noElevator()),
+            new ParallelDeadlineGroup(
+                moveToState(() -> RobotPositions.bargeStates[0].noElevator()),
+                intakeCommands.pulseIntake()
+            ),
             new ParallelCommandGroup(
                 moveToState(() -> RobotPositions.bargeStates[0].onlyElevator()),
                 new SequentialCommandGroup(
                     new WaitCommand(0.2),
                     moveToState(() -> RobotPositions.bargeStates[1])),
                 new SequentialCommandGroup(
-                    new WaitCommand(0.7),
+                    new ParallelDeadlineGroup(
+                        new WaitCommand(0.7),
+                        intakeCommands.pulseIntake()
+                    ),
                     new ParallelCommandGroup(
                         intakeCommands.outtake(),
                         simAlgaeOuttake()
