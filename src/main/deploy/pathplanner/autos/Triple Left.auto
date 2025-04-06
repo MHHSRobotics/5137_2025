@@ -130,11 +130,17 @@
               }
             ]
           }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Default"
+          }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "Left Autos",
+  "folder": null,
   "choreoAuto": false
 }

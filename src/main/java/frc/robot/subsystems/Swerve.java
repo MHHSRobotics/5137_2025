@@ -6,11 +6,15 @@ import frc.robot.motorSystem.EnhancedTalonFX;
 import frc.robot.other.RobotUtils;
 import frc.robot.other.SwerveFactory;
 
+import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.Volts;
+
 import java.io.File;
 import java.util.List;
 
 import org.photonvision.EstimatedRobotPose;
 
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
@@ -25,6 +29,7 @@ import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -32,6 +37,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.units.measure.Force;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
@@ -41,6 +47,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 /**
  * The Swerve subsystem controls the swerve drivetrain of the robot.
@@ -59,12 +66,80 @@ public class Swerve extends SubsystemBase {
 
     // Swerve control requests
     private SwerveRequest.FieldCentric fieldOrientedDrive; // Field-oriented driving request
+    private SwerveRequest.FieldCentric autoDrive; // Field-oriented driving request
     private SwerveRequest.FieldCentricFacingAngle facingAngleDrive; // Robot-oriented driving request
     private SwerveRequest.ApplyRobotSpeeds setChassisSpeeds; // Request to set chassis speeds directly
     private SwerveRequest.SwerveDriveBrake lock; // Request to lock the swerve modules in place
 
+     /* Swerve requests to apply during SysId characterization */
+    private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
+    private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
+    private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
+
+    /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
+    private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
+        new SysIdRoutine.Config(
+            null,        // Use default ramp rate (1 V/s)
+            Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
+            null,        // Use default timeout (10 s)
+            // Log state with SignalLogger class
+            state -> SignalLogger.writeString("SysIdTranslation_State", state.toString())
+        ),
+        new SysIdRoutine.Mechanism(
+            output -> {setControl(m_translationCharacterization.withVolts(output));},
+            null,
+            this
+        )
+    );
+
+    /* SysId routine for characterizing steer. This is used to find PID gains for the steer motors. */
+    private final SysIdRoutine m_sysIdRoutineSteer = new SysIdRoutine(
+        new SysIdRoutine.Config(
+            null,        // Use default ramp rate (1 V/s)
+            Volts.of(7), // Use dynamic voltage of 7 V
+            null,        // Use default timeout (10 s)
+            // Log state with SignalLogger class
+            state -> SignalLogger.writeString("SysIdSteer_State", state.toString())
+        ),
+        new SysIdRoutine.Mechanism(
+            volts -> setControl(m_steerCharacterization.withVolts(volts)),
+            null,
+            this
+        )
+    );
+
+    /*
+     * SysId routine for characterizing rotation.
+     * This is used to find PID gains for the FieldCentricFacingAngle HeadingController.
+     * See the documentation of SwerveRequest.SysIdSwerveRotation for info on importing the log to SysId.
+     */
+    private final SysIdRoutine m_sysIdRoutineRotation = new SysIdRoutine(
+        new SysIdRoutine.Config(
+            /* This is in radians per second², but SysId only supports "volts per second" */
+            Volts.of(Math.PI / 6).per(Second),
+            /* This is in radians per second, but SysId only supports "volts" */
+            Volts.of(Math.PI),
+            null, // Use default timeout (10 s)
+            // Log state with SignalLogger class
+            state -> SignalLogger.writeString("SysIdRotation_State", state.toString())
+        ),
+        new SysIdRoutine.Mechanism(
+            output -> {
+                /* output is actually radians per second, but SysId only supports "volts" */
+                setControl(m_rotationCharacterization.withRotationalRate(output.in(Volts)));
+                /* also log the requested output for SysId */
+                SignalLogger.writeDouble("Rotational_Rate", output.in(Volts));
+            },
+            null,
+            this
+        )
+    );
+
+    /* The SysId routine to test */
+    private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
+
     // Target pose
-    private PathPlannerPath targetPath=null;
+    private Pose2d targetPose=new Pose2d();
     private Rotation2d rotationTarget=null;
 
     private StructArrayPublisher<Pose2d> estPosePublisher = NetworkTableInstance.getDefault().getStructArrayTopic("SmartDashboard/estimatedPoses",Pose2d.struct).publish();
@@ -72,6 +147,7 @@ public class Swerve extends SubsystemBase {
     private Command currentAuto;
 
     private boolean autoAlignEnabled = true;
+    public boolean autoAligning = false;
 
     //private PIDController xController;
     //private PIDController yController;
@@ -95,6 +171,12 @@ public class Swerve extends SubsystemBase {
             .withDeadband(maxSpeed * SwerveConstants.translationalDeadband)
             .withRotationalDeadband(maxAngularSpeed * SwerveConstants.rotationalDeadband)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+        
+        autoDrive = new SwerveRequest.FieldCentric()
+            .withDeadband(maxSpeed * SwerveConstants.translationalDeadband)
+            .withRotationalDeadband(maxAngularSpeed * SwerveConstants.rotationalDeadband)
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
+            .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance);
 
         facingAngleDrive = new SwerveRequest.FieldCentricFacingAngle()
             .withDeadband(maxSpeed * SwerveConstants.translationalDeadband)
@@ -102,6 +184,7 @@ public class Swerve extends SubsystemBase {
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
             .withHeadingPID(SwerveConstants.rotationKP, SwerveConstants.rotationKI, SwerveConstants.rotationKD)
             .withMaxAbsRotationalRate(Units.degreesToRadians(360));
+        facingAngleDrive.HeadingController.setTolerance(SwerveConstants.rotTol);
 
         setChassisSpeeds = new SwerveRequest.ApplyRobotSpeeds(); // Request to set chassis speeds
         lock = new SwerveRequest.SwerveDriveBrake(); // Request to lock the swerve modules
@@ -120,8 +203,8 @@ public class Swerve extends SubsystemBase {
                 this::getCurrentSpeeds, // Method to get the current chassis speeds
                 (speeds, feedforwards) -> drive(speeds), // Method to drive the robot
                 new PPHolonomicDriveController(
-                        new PIDConstants(SwerveConstants.translationKP, SwerveConstants.translationKI, SwerveConstants.translationKD),
-                        new PIDConstants(SwerveConstants.rotationKP, SwerveConstants.rotationKI, SwerveConstants.rotationKD)
+                    new PIDConstants(SwerveConstants.translationKP, SwerveConstants.translationKI, SwerveConstants.translationKD),
+                    new PIDConstants(SwerveConstants.rotationKP, SwerveConstants.rotationKI, SwerveConstants.rotationKD)
                 ),
                 config,
                 () -> RobotUtils.onRedAlliance(), // Method to check if the robot is on the red alliance
@@ -178,11 +261,42 @@ public class Swerve extends SubsystemBase {
     }
 
     /**
+     * Gets the current pose of the robot.
+     *
+     * @return The current pose of the robot.
+     */
+    public ChassisSpeeds getSpeeds() {
+        return swerve.getState().Speeds;
+    }
+
+    /**
+     * Gets the current pose of the robot.
+     *
+     * @return The current pose of the robot.
+     */
+    public double getAbsSpeed() {
+        ChassisSpeeds speeds=getSpeeds();
+        return Math.hypot(speeds.vxMetersPerSecond,speeds.vyMetersPerSecond);
+    }
+
+    /**
      * Drives the robot with the specified chassis speeds.
      *
      * @param speeds The chassis speeds to apply.
      */
     public void drive(ChassisSpeeds speeds) {
+        double xVel=speeds.vxMetersPerSecond;
+        double yVel=speeds.vyMetersPerSecond;
+        double wVel=speeds.omegaRadiansPerSecond;
+        double theta=Math.atan2(yVel,xVel);
+        double r=Math.hypot(xVel,yVel);
+        if(r>=SwerveConstants.transMin){
+            r+=SwerveConstants.transKS;
+        }
+        if(wVel>=SwerveConstants.rotMin){
+            wVel+=SwerveConstants.rotKS*Math.signum(wVel);
+        }
+        speeds=new ChassisSpeeds(r*Math.cos(theta), r*Math.sin(theta), wVel);
         setControl(setChassisSpeeds.withSpeeds(speeds));
     }
 
@@ -236,12 +350,24 @@ public class Swerve extends SubsystemBase {
         }
     }
 
+    public void autoDrive(double dx, double dy, double dtheta) {
+        double absSpeedX = dx*maxSpeed;
+        double absSpeedY = dy*maxSpeed;
+        double absRot = dtheta*maxAngularSpeed;
+        setControl(autoDrive
+            .withVelocityX(absSpeedX)
+            .withVelocityY(absSpeedY)
+            .withRotationalRate(absRot)
+        );
+    }
+
     public Rotation2d getRotationTarget() {
         return rotationTarget;
     }
 
     public void setRotationTarget(Rotation2d rotationTarget) {
         this.rotationTarget = rotationTarget;
+        autoAligning = false;
     }
 
     /**
@@ -259,24 +385,16 @@ public class Swerve extends SubsystemBase {
         this.setControl(lock);
     }
 
-    public PathPlannerPath getTargetPath(){
-        return targetPath;
+    public void setTargetPose(Pose2d pose) {
+        autoAligning = true;
+        targetPose = pose;
     }
 
     public Pose2d getTargetPose() {
-        if (targetPath != null) {
-            var pathPoses = targetPath.getPathPoses();
-            return RobotUtils.invertToAlliance(pathPoses.get(pathPoses.size() - 1));
-        }
-        return getPose();
+        return targetPose;
     }
 
-    /*public void setTargetPose(Pose2d target){
-        targetPose = target;
-        startAuto(AutoBuilder.pathfindToPose(target, SwerveConstants.constraints, 0.0));
-    }*/
-
-    public void followPath(PathPlannerPath path) {
+    /*public void followPath(PathPlannerPath path) {
         if (autoAlignEnabled) {
             try {
                 targetPath = path;
@@ -285,14 +403,13 @@ public class Swerve extends SubsystemBase {
                 e.printStackTrace();
             }
         }
-    }
+    }*/
 
     public double getError() {
-        if(targetPath==null || !autoAlignEnabled){
+        if(!autoAlignEnabled){
             return 0;
         }
-        Pose2d currentPose=getPose();
-        Pose2d targetPose = getTargetPose();
+        Pose2d currentPose = getPose();
         if (targetPose != null) {
             return currentPose.getTranslation().getDistance(targetPose.getTranslation());
         } else {
@@ -301,11 +418,33 @@ public class Swerve extends SubsystemBase {
     }
 
     public boolean atTarget(){
-        return getError()<SwerveConstants.transTol;
+        return (getError()<SwerveConstants.transTol && getAbsSpeed()<1) || !autoAlignEnabled || !autoAligning;
     }
 
     public void toggleAutoAlign() {
         autoAlignEnabled = !autoAlignEnabled;
+    }
+
+        /**
+     * Runs the SysId Quasistatic test in the given direction for the routine
+     * specified by {@link #m_sysIdRoutineToApply}.
+     *
+     * @param direction Direction of the SysId Quasistatic test
+     * @return Command to run
+     */
+    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+        return m_sysIdRoutineToApply.quasistatic(direction);
+    }
+
+    /**
+     * Runs the SysId Dynamic test in the given direction for the routine
+     * specified by {@link #m_sysIdRoutineToApply}.
+     *
+     * @param direction Direction of the SysId Dynamic test
+     * @return Command to run
+     */
+    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+        return m_sysIdRoutineToApply.dynamic(direction);
     }
 
     /**

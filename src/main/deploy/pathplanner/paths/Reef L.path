@@ -16,12 +16,12 @@
     },
     {
       "anchor": {
-        "x": 3.5080434530752664,
-        "y": 4.976086496423792
+        "x": 3.5248393079969613,
+        "y": 4.939210134435583
       },
       "prevControl": {
-        "x": 3.3830434530752664,
-        "y": 5.192592847369902
+        "x": 3.3998393079969613,
+        "y": 5.155716485381692
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,8 +33,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 5.0,
-    "maxAcceleration": 3.0,
+    "maxVelocity": 2.0,
+    "maxAcceleration": 2.0,
     "maxAngularVelocity": 360.0,
     "maxAngularAcceleration": 360.0,
     "nominalVoltage": 12.0,
@@ -45,7 +45,7 @@
     "rotation": 119.99999999999999
   },
   "reversed": false,
-  "folder": "Reef Auto Align",
+  "folder": null,
   "idealStartingState": {
     "velocity": 0.0,
     "rotation": 119.99999999999999

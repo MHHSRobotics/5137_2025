@@ -13,6 +13,7 @@ import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Robot;
 import frc.robot.positions.FieldPositions;
 import frc.robot.positions.RobotState;
 
@@ -150,13 +151,6 @@ public class RobotUtils {
                 Transform2d transform;
                 if (other.robotPosition != null) {
                     transform = other.robotPosition.alliancePos().minus(pose);
-                } else if (other.robotPath != null) {
-                    var pathPose = other.robotPath.getStartingHolonomicPose();
-                    if (pathPose.isPresent()) {
-                        transform = invertToAlliance(pathPose.get()).minus(pose);
-                    } else {
-                        continue;
-                    }
                 } else {
                     continue;
                 }
@@ -178,7 +172,7 @@ public class RobotUtils {
     }
     // Converts an exception to an error string, or throws it if testing
     public static String processError(RuntimeException e){
-        if(testing.getSelected()){
+        if(testing.getSelected() || Robot.isSimulation()){
             throw e;
         }else{
             StringBuilder sb=new StringBuilder();

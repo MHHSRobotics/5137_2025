@@ -33,9 +33,7 @@ public class IntakeCommands {
      * @return A command that, when executed, stops the intake motor.
      */
     public Command stop() {
-        Command command = new InstantCommand(() -> intake.stop());
-        command.addRequirements(intake);
-        return command;
+        return new InstantCommand(() -> intake.stop());
     }
 
     /**
@@ -44,9 +42,7 @@ public class IntakeCommands {
      * @return A command that, when executed, stops the intake motor.
      */
     public Command setSpeed(DoubleSupplier speed) {
-        Command command = new InstantCommand(() -> intake.setSpeed(speed.getAsDouble()));
-        command.addRequirements(intake);
-        return command;
+        return new InstantCommand(() -> intake.setSpeed(speed.getAsDouble()));
     }
 
 
@@ -75,6 +71,16 @@ public class IntakeCommands {
     public Command intake(DoubleSupplier time) {
         Command command = new SequentialCommandGroup(
             new InstantCommand(() -> intake.setSpeed(IntakeConstants.intakeSpeed)), // Start the intake
+            new WaitCommand(time.getAsDouble()),                                                   // Wait for 1 second
+            stop()                                                                // Stop the intake
+        );
+        command.addRequirements(intake);
+        return command;
+    }
+
+    public Command setSpeed(DoubleSupplier time, DoubleSupplier speed) {
+        Command command = new SequentialCommandGroup(
+            new InstantCommand(() -> intake.setSpeed(speed.getAsDouble())), // Start the intake
             new WaitCommand(time.getAsDouble()),                                                   // Wait for 1 second
             stop()                                                                // Stop the intake
         );
@@ -111,6 +117,16 @@ public class IntakeCommands {
         Command command = new SequentialCommandGroup(
             new InstantCommand(() -> intake.setSpeed(-IntakeConstants.intakeSpeed)), // Start the intake
             new WaitCommand(IntakeConstants.outtakeTime),                                                   // Wait for 1 second
+            stop()                                                                // Stop the intake
+        );
+        command.addRequirements(intake);
+        return command;
+    }
+
+    public Command outtake(DoubleSupplier time) {
+        Command command = new SequentialCommandGroup(
+            new InstantCommand(() -> intake.setSpeed(-IntakeConstants.intakeSpeed)), // Start the intake
+            new WaitCommand(time.getAsDouble()),                                                   // Wait for 1 second
             stop()                                                                // Stop the intake
         );
         command.addRequirements(intake);

@@ -6,7 +6,7 @@ import frc.robot.Robot;
 
 public class ArmConstants {
     // Motor ID
-    public static final int motorId = Robot.isSimulation()?22:2;
+    public static final int motorId = 22;
     public static final double gearRatio = 700/9.;
     public static final double armOffset = 0;
 
@@ -34,7 +34,7 @@ public class ArmConstants {
     
     // Simulation constants
     public static final double minAngle = Units.degreesToRadians(-135);
-    public static final double maxAngle = Units.degreesToRadians(35);
+    public static final double maxAngle = Units.degreesToRadians(50);
     public static final double momentOfInertia = 4.8944;
     public static final double armLength = 0.594;
     public static final DCMotor motorSim = DCMotor.getKrakenX60Foc(1);

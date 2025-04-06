@@ -44,8 +44,9 @@ public class ElevatorCommands{
             () -> {},
             () -> elevator.setGoal(elevator.getGoal() + change.getAsDouble()),
             (interrupted) -> {},
-            () -> {return false;},
-            elevator);
+            () -> false,
+            elevator)
+            .withName("ElevatorDefault");
     }
 
     public Command upShift() {
